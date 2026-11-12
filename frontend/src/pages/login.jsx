@@ -1,8 +1,9 @@
 
 import { useState } from "react";
+import { iniciarSesion } from "../services/authService.js";
 import "./Login.css";
 
-function Login() {
+function Login({ onLogin }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -10,6 +11,8 @@ function Login() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Validar los datos del formulario
   const validateForm = () => {
@@ -51,7 +54,7 @@ function Login() {
   };
 
   // Enviar formulario
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const isValid = validateForm();
@@ -60,7 +63,18 @@ function Login() {
       return;
     }
 
-    console.log("Datos del login:", formData);
+    setServerError("");
+    setLoading(true);
+
+    try {
+      const datos = await iniciarSesion(formData);
+      localStorage.setItem("sesion", JSON.stringify(datos));
+      onLogin(datos);
+    } catch (error) {
+      setServerError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -124,8 +138,10 @@ function Login() {
             </span>
           )}
 
-          <button type="submit" className="login-button">
-            Iniciar sesión
+          {serverError && <span className="error-message">{serverError}</span>}
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </button>
         </form>
       </section>
