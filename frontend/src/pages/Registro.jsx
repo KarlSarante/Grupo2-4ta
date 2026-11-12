@@ -97,6 +97,7 @@ function Registro({ onVolverLogin }) {
   return (
     <main className="login-container">
       <section className="login-card">
+        <strong className="auth-brand">fintrack</strong>
         <h1>Crear cuenta</h1>
         <p>Regístrate en tu gestor de finanzas personales</p>
 

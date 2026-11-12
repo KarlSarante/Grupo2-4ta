@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Login from "./pages/login.jsx";
+import Inicio from "./pages/Inicio.jsx";
 import Registro from "./pages/Registro.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import FinancePanel from "./pages/FinancePanel.jsx";
@@ -8,7 +9,7 @@ import { cerrarSesion } from "./services/authService.js";
 import "./App.css";
 
 function App() {
-  const [mostrarRegistro, setMostrarRegistro] = useState(false);
+  const [pantalla, setPantalla] = useState("inicio");
 
   const [sesion, setSesion] = useState(() => {
     try {
@@ -26,23 +27,22 @@ function App() {
   };
 
   if (!sesion?.usuario || !sesion?.token) {
-    if (mostrarRegistro) {
+    if (pantalla === "registro") {
       return (
-        <Registro onVolverLogin={() => setMostrarRegistro(false)} />
+        <Registro onVolverLogin={() => setPantalla("login")} />
       );
+    }
+
+    if (pantalla === "inicio") {
+      return <Inicio onLogin={() => setPantalla("login")} />;
     }
 
     return (
       <div>
-        <Login onLogin={setSesion} />
-        <div style={{ textAlign: "center", padding: "0 20px 24px" }}>
-          <button
-            type="button"
-            onClick={() => setMostrarRegistro(true)}
-          >
-            ¿No tienes cuenta? Regístrate
-          </button>
-        </div>
+        <Login
+          onLogin={setSesion}
+          onRegister={() => setPantalla("registro")}
+        />
       </div>
     );
   }

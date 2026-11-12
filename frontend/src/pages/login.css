@@ -4,7 +4,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f3f6f4;
+  background: #123d32;
   padding: 20px;
 }
 
@@ -15,6 +15,15 @@
   padding: 40px;
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+.auth-brand {
+  display: block;
+  margin-bottom: 24px;
+  color: #176b45;
+  font-size: 22px;
+  letter-spacing: -0.5px;
+  text-align: center;
 }
 
 .login-card h1 {
@@ -96,6 +105,18 @@
 
 .login-button:hover {
   background: #105436;
+}
+
+.register-link {
+  display: block;
+  margin: 24px auto 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #176b45;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 @media (max-width: 480px) {

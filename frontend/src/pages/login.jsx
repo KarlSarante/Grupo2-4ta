@@ -3,7 +3,7 @@ import { useState } from "react";
 import { iniciarSesion } from "../services/authService.js";
 import "./login.css";
 
-function Login({ onLogin }) {
+function Login({ onLogin, onRegister }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -80,6 +80,7 @@ function Login({ onLogin }) {
   return (
     <main className="login-container">
       <section className="login-card">
+        <strong className="auth-brand">fintrack</strong>
         <h1>Bienvenido</h1>
 
         <p>Ingresa a tu gestor de finanzas personales</p>
@@ -144,6 +145,10 @@ function Login({ onLogin }) {
             {loading ? "Iniciando sesión..." : "Iniciar sesión"}
           </button>
         </form>
+
+        <button type="button" className="register-link" onClick={onRegister}>
+          ¿No tienes cuenta? Regístrate
+        </button>
       </section>
     </main>
   );
