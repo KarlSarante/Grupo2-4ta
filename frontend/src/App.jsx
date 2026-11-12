@@ -48,7 +48,11 @@ function App() {
   }
 
   return sesion.usuario.rol === "administrador" ? (
-    <AdminPanel usuario={sesion.usuario} onLogout={handleLogout} />
+    <AdminPanel
+      usuario={sesion.usuario}
+      token={sesion.token}
+      onLogout={handleLogout}
+    />
   ) : (
     <FinancePanel usuario={sesion.usuario} onLogout={handleLogout} />
   );
