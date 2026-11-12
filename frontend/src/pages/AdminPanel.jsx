@@ -63,6 +63,7 @@ function AdminPanel({ usuario, token, onLogout }) {
                   <th>Nombre</th>
                   <th>Correo electrónico</th>
                   <th>Rol</th>
+                  <th>Estado</th>
                 </tr>
               </thead>
 
@@ -72,6 +73,16 @@ function AdminPanel({ usuario, token, onLogout }) {
                     <td>{cuenta.nombre}</td>
                     <td>{cuenta.email}</td>
                     <td>{cuenta.rol}</td>
+                    <td>
+                      <span
+                        className={`estado-cuenta ${Number(cuenta.activo) === 1
+                            ? "estado-activo"
+                            : "estado-inactivo"
+                          }`}
+                      >
+                        {Number(cuenta.activo) === 1 ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
