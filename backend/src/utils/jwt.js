@@ -1,5 +1,6 @@
 
 import "dotenv/config";
+import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -18,6 +19,7 @@ export function generarToken(usuario) {
     JWT_SECRET,
     {
       expiresIn: JWT_EXPIRES_IN,
+      jwtid: randomUUID(), // identificador único: permite invalidar este token
     }
   );
 }
