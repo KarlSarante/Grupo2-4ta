@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import Login from "./pages/Login.jsx";
+import Login from "./pages/login.jsx";
 import AdminPanel from "./pages/AdminPanel.jsx";
 import FinancePanel from "./pages/FinancePanel.jsx";
 import { cerrarSesion } from "./services/authService.js";
@@ -8,8 +8,13 @@ import "./App.css";
 
 function App() {
   const [sesion, setSesion] = useState(() => {
-    const sesionGuardada = localStorage.getItem("sesion");
-    return sesionGuardada ? JSON.parse(sesionGuardada) : null;
+    try {
+      const sesionGuardada = localStorage.getItem("sesion");
+      return sesionGuardada ? JSON.parse(sesionGuardada) : null;
+    } catch {
+      localStorage.removeItem("sesion");
+      return null;
+    }
   });
 
   const handleLogout = () => {
@@ -17,7 +22,7 @@ function App() {
     setSesion(null);
   };
 
-  if (!sesion) {
+  if (!sesion?.usuario || !sesion?.token) {
     return <Login onLogin={setSesion} />;
   }
 
@@ -27,5 +32,8 @@ function App() {
     <FinancePanel usuario={sesion.usuario} onLogout={handleLogout} />
   );
 }
+
+export default App;
+
 
 export default App;
