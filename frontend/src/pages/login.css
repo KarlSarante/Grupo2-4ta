@@ -98,6 +98,18 @@
   background: #105436;
 }
 
+.register-link {
+  display: block;
+  margin: 24px auto 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #176b45;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 28px 22px;

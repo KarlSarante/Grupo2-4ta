@@ -34,15 +34,10 @@ function App() {
 
     return (
       <div>
-        <Login onLogin={setSesion} />
-        <div style={{ textAlign: "center", padding: "0 20px 24px" }}>
-          <button
-            type="button"
-            onClick={() => setMostrarRegistro(true)}
-          >
-            ¿No tienes cuenta? Regístrate
-          </button>
-        </div>
+        <Login
+          onLogin={setSesion}
+          onRegister={() => setMostrarRegistro(true)}
+        />
       </div>
     );
   }
