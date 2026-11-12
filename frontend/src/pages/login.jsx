@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { iniciarSesion } from "../services/authService.js";
-import "./Login.css";
+import "./login.css";
 
 function Login({ onLogin }) {
   const [formData, setFormData] = useState({
