@@ -80,6 +80,7 @@ function Login({ onLogin, onRegister }) {
   return (
     <main className="login-container">
       <section className="login-card">
+        <strong className="auth-brand">fintrack</strong>
         <h1>Bienvenido</h1>
 
         <p>Ingresa a tu gestor de finanzas personales</p>
