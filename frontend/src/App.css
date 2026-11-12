@@ -320,6 +320,7 @@
   border: 1px solid #fca5a5;
 }
 
+
 .logout-toast {
   position: fixed;
   top: 20px;
@@ -335,4 +336,126 @@
   font-size: 14px;
   font-weight: 700;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+}
+
+/* HU-013 / #42: Búsqueda de usuarios */
+
+.usuarios-busqueda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.usuarios-busqueda label {
+  color: #173d32;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.usuarios-busqueda input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #173d32;
+  font: inherit;
+}
+
+.usuarios-busqueda input::placeholder {
+  color: #667b70;
+}
+
+.usuarios-busqueda input:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+
+/* HU-013 / #42: Filtros de usuarios */
+
+.usuarios-filtros {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+  margin: 0 0 24px;
+}
+
+.usuarios-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.usuarios-filtro label {
+  color: #173d32;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.usuarios-filtro select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #173d32;
+  font: inherit;
+  cursor: pointer;
+}
+
+.usuarios-filtro select:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .usuarios-filtros {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+.usuarios-acciones {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  margin: 0 0 20px;
+}
+
+.role-card .usuarios-limpiar {
+  padding: 10px 18px;
+  min-height: 40px;
+  border: 1px solid #166534;
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: #166534;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.role-card .usuarios-limpiar:hover:not(:disabled) {
+  background-color: #edf7ef;
+}
+
+.role-card .usuarios-limpiar:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+.role-card .usuarios-limpiar:disabled {
+  border-color: #cbd5cf;
+  background-color: #f3f5f4;
+  color: #667b70;
+  cursor: not-allowed;
 }
