@@ -3,6 +3,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import financeRoutes from "./routes/finance.routes.js";
+import { limpiarTokensExpirados } from "./services/sesion.service.js";
 
 const app = express();
 const PORT = 3000;
@@ -20,6 +21,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/finanzas", financeRoutes);
+
+setInterval(() => limpiarTokensExpirados().catch(console.error), 60 * 60 * 1000); //Borra los tokens expirados
 
 app.listen(PORT, () => {
   console.log(`Servidor ejecutándose en http://localhost:${PORT}`);
