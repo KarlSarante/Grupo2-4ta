@@ -273,7 +273,7 @@
 
   .inicio-layout {
     display: block;
-    margin-top: 72px;
+    margin: 14px auto 0;
   }
 
   .inicio-actions {
@@ -286,10 +286,20 @@
   }
 
   .inicio-preview {
-    margin-top: 42px;
+    margin-top: 20px;
   }
 
   .inicio-footer {
     margin-top: 48px;
+  }
+}
+
+@media (min-width: 601px) {
+  .inicio-layout {
+    margin-top: clamp(36px, 8vh, 90px);
+  }
+
+  .inicio-footer {
+    margin-top: clamp(24px, 5vh, 56px);
   }
 }

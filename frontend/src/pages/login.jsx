@@ -1,9 +1,8 @@
-
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { iniciarSesion } from "../services/authService.js";
 import "./login.css";
 
-function Login({ onLogin, onRegister }) {
+function Login({ onLogin, onRegister, onVolverInicio }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -13,6 +12,8 @@ function Login({ onLogin, onRegister }) {
   const [errors, setErrors] = useState({});
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
 
   // Validar los datos del formulario
   const validateForm = () => {
@@ -34,6 +35,12 @@ function Login({ onLogin, onRegister }) {
 
     setErrors(newErrors);
 
+    if (newErrors.email) {
+      emailRef.current?.focus();
+    } else if (newErrors.password) {
+      passwordRef.current?.focus();
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -51,6 +58,7 @@ function Login({ onLogin, onRegister }) {
       ...prev,
       [name]: "",
     }));
+    setServerError("");
   };
 
   // Enviar formulario
@@ -71,7 +79,11 @@ function Login({ onLogin, onRegister }) {
       localStorage.setItem("sesion", JSON.stringify(datos));
       onLogin(datos);
     } catch (error) {
-      setServerError(error.message);
+      setServerError(
+        error.message || "No se pudo iniciar sesión."
+      );
+
+      passwordRef.current?.focus();
     } finally {
       setLoading(false);
     }
@@ -89,6 +101,7 @@ function Login({ onLogin, onRegister }) {
           <label htmlFor="email">Correo electrónico</label>
 
           <input
+            ref={emailRef}
             type="email"
             id="email"
             name="email"
@@ -109,6 +122,7 @@ function Login({ onLogin, onRegister }) {
 
           <div className="password-container">
             <input
+              ref={passwordRef}
               type={showPassword ? "text" : "password"}
               id="password"
               name="password"
@@ -128,8 +142,41 @@ function Login({ onLogin, onRegister }) {
               aria-label={
                 showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
               }
+              aria-pressed={showPassword}
             >
-              {showPassword ? "Ocultar" : "Mostrar"}
+              {showPassword ? (
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c5 0 9.3 3.1 11 7a11.6 11.6 0 0 1-4.2 5.2" />
+                  <path d="M6.6 6.6A11.6 11.6 0 0 0 1 12c1.7 3.9 6 7 11 7 1.7 0 3.3-.4 4.7-1.1" />
+                  <path d="M10 10a2.8 2.8 0 0 0 4 4" />
+                  <path d="M3 3l18 18" />
+                </svg>
+              ) : (
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              )}
             </button>
           </div>
 
@@ -148,6 +195,14 @@ function Login({ onLogin, onRegister }) {
 
         <button type="button" className="register-link" onClick={onRegister}>
           ¿No tienes cuenta? Regístrate
+        </button>
+
+        <button
+          type="button"
+          className="register-link"
+          onClick={onVolverInicio}
+        >
+          ← Volver al inicio
         </button>
       </section>
     </main>
