@@ -1,6 +1,6 @@
 import "./inicio.css";
 
-function Inicio({ onLogin }) {
+function Inicio({ onLogin, onRegistro }) {
   return (
     <main className="inicio-container">
       <header className="inicio-header">
@@ -20,9 +20,10 @@ function Inicio({ onLogin }) {
           </p>
 
           <div className="inicio-actions">
-            <button type="button" className="inicio-primary-action" onClick={onLogin}>
+            <button type="button" className="inicio-primary-action" onClick={onRegistro}>
               Comenzar ahora
             </button>
+
             <span>Tu información, siempre en orden.</span>
           </div>
         </section>

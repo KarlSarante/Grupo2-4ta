@@ -8,7 +8,29 @@ import { cerrarSesion } from "./services/authService.js";
 import "./App.css";
 
 function App() {
-  const [pantalla, setPantalla] = useState("inicio");
+
+  const [pantalla, setPantalla] = useState(() => {
+    try {
+      const pantallaGuardada = sessionStorage.getItem("pantallaActual");
+
+      return ["inicio", "login", "registro"].includes(pantallaGuardada)
+        ? pantallaGuardada
+        : "inicio";
+    } catch {
+      return "inicio";
+    }
+  });
+
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem("pantallaActual", pantalla);
+    } catch {
+      // La navegación continúa funcionando aunque el almacenamiento falle.
+    }
+  }, [pantalla]);
+
+
   const [avisoCierre, setAvisoCierre] = useState(false);
 
   const [sesion, setSesion] = useState(() => {
@@ -25,10 +47,10 @@ function App() {
     // La sesión se borra al instante dentro de cerrarSesion();
     // la promesa devuelve el mensaje de confirmación del backend.
     const respuestaBackend = cerrarSesion();
- 
+
     setSesion(null);       // limpia el estado de autenticación de la app
     setPantalla("login");  // vuelve al login, no a Inicio
- 
+
     const mensaje = await respuestaBackend;
     // Si el backend no respondió, se usa un texto por defecto
     setAvisoCierre(mensaje || "Sesión cerrada correctamente.");
@@ -54,14 +76,27 @@ function App() {
   }, []);
 
   if (!sesion?.usuario || !sesion?.token) {
+
     if (pantalla === "registro") {
       return (
-        <Registro onVolverLogin={() => setPantalla("login")} />
+        <Registro
+          onVolverLogin={() => setPantalla("login")}
+          onVolverInicio={() => setPantalla("inicio")}
+          onRegistroExitoso={(nuevaSesion) => {
+            setAvisoCierre(false);
+            setSesion(nuevaSesion);
+          }}
+        />
       );
     }
 
     if (pantalla === "inicio") {
-      return <Inicio onLogin={() => setPantalla("login")} />;
+      return (
+        <Inicio
+          onLogin={() => setPantalla("login")}
+          onRegistro={() => setPantalla("registro")}
+        />
+      );
     }
 
     return (
@@ -71,12 +106,14 @@ function App() {
             Sesión cerrada correctamente.
           </div>
         )}
+
         <Login
           onLogin={(nuevaSesion) => {
             setAvisoCierre(false);
             setSesion(nuevaSesion);
           }}
           onRegister={() => setPantalla("registro")}
+          onVolverInicio={() => setPantalla("inicio")}
         />
       </div>
     );
