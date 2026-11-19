@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import IngresoForm from "./IngresoForm.jsx";
 import { obtenerIngresos } from "../services/ingresoService.js";
+import { obtenerTransacciones } from "../services/financeService.js";
 
 // HU004 / #64: Panel financiero y navegación visual.
-function FinancePanel({ usuario, onLogout }) {
+function FinancePanel({ usuario, token, onLogout }) {
   const [pestanaActiva, setPestanaActiva] = useState(() => {
     const guardada = sessionStorage.getItem("finanzas-pestana");
 
@@ -21,7 +22,46 @@ function FinancePanel({ usuario, onLogout }) {
   });
   const [menuPerfilAbierto, setMenuPerfilAbierto] = useState(false);
   const referenciaPerfil = useRef(null);
+  // HU006: Historial general de ingresos y gastos.
+  const [transacciones, setTransacciones] = useState([]);
+  const [cargandoTransacciones, setCargandoTransacciones] = useState(false);
+  const [errorTransacciones, setErrorTransacciones] = useState("");
+  const [recargaTransacciones, setRecargaTransacciones] = useState(0);
 
+  useEffect(() => {
+    if (pestanaActiva !== "resumen") return;
+
+    let activo = true;
+
+    async function cargarTransacciones() {
+      setCargandoTransacciones(true);
+      setErrorTransacciones("");
+
+      try {
+        const datos = await obtenerTransacciones(token);
+
+        if (activo) {
+          setTransacciones(datos);
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorTransacciones(
+            error.message || "No se pudieron consultar las transacciones."
+          );
+        }
+      } finally {
+        if (activo) {
+          setCargandoTransacciones(false);
+        }
+      }
+    }
+
+    cargarTransacciones();
+
+    return () => {
+      activo = false;
+    };
+  }, [pestanaActiva, token, recargaTransacciones]);
   // HU004 / #66: Confirmación después de registrar un ingreso.
   const [mensajeIngreso, setMensajeIngreso] = useState("");
 
@@ -278,17 +318,82 @@ function FinancePanel({ usuario, onLogout }) {
           ))}
         </nav>
 
-        {/* Resumen: pendiente de sus historias de usuario. */}
+        {/* HU006: Historial general de transacciones. */}
         {pestanaActiva === "resumen" && (
-          <section className="admin-seccion">
-            <h2>Resumen financiero</h2>
-            <p>
-              El resumen mensual se implementará en las
-              historias de usuario correspondientes.
-            </p>
+          <section className="admin-seccion historial-seccion">
+            <div className="historial-cabecera">
+              <h2>Historial de transacciones</h2>
+
+              <button
+                type="button"
+                className="historial-actualizar"
+                disabled={cargandoTransacciones}
+                onClick={() => setRecargaTransacciones((valor) => valor + 1)}
+              >
+                Actualizar
+              </button>
+            </div>
+
+            {cargandoTransacciones ? (
+              <p role="status">Cargando transacciones...</p>
+            ) : errorTransacciones ? (
+              <p role="alert" className="historial-error">
+                {errorTransacciones}
+              </p>
+            ) : transacciones.length === 0 ? (
+              <p role="status">No tienes transacciones registradas.</p>
+            ) : (
+              <div className="historial-tabla-contenedor">
+                <table className="historial-tabla">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Descripción</th>
+                      <th>Categoría</th>
+                      <th>Tipo</th>
+                      <th>Monto</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {transacciones.map((transaccion) => (
+                      <tr key={transaccion.id}>
+                        <td>
+                          {String(transaccion.fecha).slice(0, 10)}
+                        </td>
+
+                        <td>
+                          {transaccion.descripcion || "Sin descripción"}
+                        </td>
+
+                        <td>
+                          {transaccion.categoria || "Sin categoría"}
+                        </td>
+
+                        <td>
+                          <span
+                            className={`tipo-transaccion tipo-${transaccion.tipo}`}
+                          >
+                            {transaccion.tipo === "ingreso"
+                              ? "Ingreso"
+                              : "Gasto"}
+                          </span>
+                        </td>
+
+                        <td>
+                          {new Intl.NumberFormat("es-DO", {
+                            style: "currency",
+                            currency: "DOP",
+                          }).format(Number(transaccion.monto))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         )}
-
         {/* HU004 / #64: Registro de ingresos. */}
         {pestanaActiva === "ingresos" && (
           <>

@@ -1,6 +1,6 @@
 import pool from "../config/database.js";
 
-// Crear una transacción de ingreso o gasto asociada a un usuario.
+// Crear una transacción asociada al usuario autenticado.
 export async function crearTransaccion({
   usuarioId,
   categoriaId,
@@ -27,18 +27,22 @@ export async function crearTransaccion({
   };
 }
 
-// Consultar las transacciones pertenecientes a un usuario.
-// Permite filtrar opcionalmente por ingreso o gasto.
-export async function consultarTransaccionesPorUsuario(
-  usuarioId,
-  tipo = null
-) {
+// Consultar el historial de un usuario, opcionalmente filtrado por tipo.
+export async function consultarTransacciones(usuarioId, tipo = null) {
+  const parametros = [usuarioId];
+  let filtroTipo = "";
+
   if (tipo !== null) {
-    const [transacciones] = await pool.execute(
-      `SELECT
+    filtroTipo = " AND t.tipo = ?";
+    parametros.push(tipo);
+  }
+
+  const [transacciones] = await pool.execute(
+    `SELECT
        t.id,
        t.usuario_id,
        t.categoria_id,
+       c.nombre AS categoria,
        c.nombre AS categoria_nombre,
        t.tipo,
        t.monto,
@@ -48,28 +52,21 @@ export async function consultarTransaccionesPorUsuario(
      FROM transacciones AS t
      LEFT JOIN categorias_generales AS c
        ON c.id = t.categoria_id
-     WHERE t.usuario_id = ?
-       AND t.tipo = ?
-     ORDER BY t.fecha DESC, t.id DESC`,
-      [usuarioId, tipo]
-    );
-
-    return transacciones;
-  }
-
-  const [transacciones] = await pool.execute(
-    `SELECT id, usuario_id, categoria_id, tipo,
-            monto, fecha, descripcion, created_at
-     FROM transacciones
-     WHERE usuario_id = ?
-     ORDER BY fecha DESC, id DESC`,
-    [usuarioId]
+     WHERE t.usuario_id = ?${filtroTipo}
+     ORDER BY t.fecha DESC, t.created_at DESC, t.id DESC`,
+    parametros
   );
 
   return transacciones;
 }
 
-// Buscar una transacción por su ID, verificando que pertenezca al usuario.
+// Compatibilidad con el controlador de ingresos HU004.
+export async function consultarTransaccionesPorUsuario(
+  usuarioId,
+  tipo = null
+) {
+  return consultarTransacciones(usuarioId, tipo);
+}
 export async function buscarTransaccionPorId(id, usuarioId) {
   const [transacciones] = await pool.execute(
     `SELECT id, usuario_id, categoria_id, tipo,
