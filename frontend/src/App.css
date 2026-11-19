@@ -777,11 +777,6 @@ html {
   outline-offset: 2px;
 }
 
-/* Conserva el hover claro del botón Limpiar filtros. */
-.role-card .usuarios-limpiar:hover:not(:disabled) {
-  background-color: #edf7ef;
-}
-
 /* Conserva el hover de las pestañas administrativas. */
 .role-card.admin-card .admin-tab:hover:not(:disabled) {
   background-color: #edf4ef;
@@ -898,4 +893,154 @@ html {
   .paginacion-controles {
     justify-content: space-between;
   }
+}
+
+
+/* ==========================================================
+   HU004 / #64: Formulario de registro de ingresos
+   ========================================================== */
+
+/* Iguala los selectores y las áreas de texto con los inputs. */
+.ingreso-formulario .categorias-campo select,
+.ingreso-formulario .categorias-campo textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #173d32;
+  font: inherit;
+}
+
+/* Mantiene la descripción alineada y permite ampliar su altura. */
+.ingreso-formulario .categorias-campo textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Foco visible, coherente con el panel administrativo. */
+.ingreso-formulario .categorias-campo select:focus-visible,
+.ingreso-formulario .categorias-campo textarea:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+/* HU004 / #64: Encabezado de la sección de ingresos. */
+.ingresos-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.role-card.admin-card .ingresos-encabezado h2 {
+  margin: 0;
+}
+
+.role-card.admin-card .ingresos-encabezado .categorias-crear-boton {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .ingresos-encabezado {
+    align-items: flex-start;
+  }
+}
+
+/* Evita duplicar el espacio superior del formulario. */
+.role-card.admin-card .ingreso-formulario {
+  margin-top: 0;
+}
+
+
+/* HU004 / #64: Acciones del formulario de ingresos. */
+.ingreso-acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* Elimina los márgenes heredados de los botones generales. */
+.role-card.admin-card .ingreso-acciones button {
+  margin: 0;
+}
+
+/* Botón secundario Cancelar. */
+.role-card.admin-card .ingreso-cancelar {
+  padding: 12px 20px;
+  border: 1px solid #176b45;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #176b45;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover del botón Cancelar. */
+.role-card.admin-card .ingreso-cancelar:hover:not(:disabled) {
+  background: #edf7ef;
+  color: #176b45;
+}
+
+/* Foco accesible para navegación con teclado. */
+.role-card.admin-card .ingreso-cancelar:focus-visible {
+  outline: 2px solid #176b45;
+  outline-offset: 2px;
+}
+
+/* Contenedor del campo Fecha y su botón de calendario. */
+.ingreso-fecha-contenedor {
+  position: relative;
+  width: 100%;
+}
+
+/* Reserva espacio para el icono a la derecha. */
+.ingreso-fecha-contenedor input[type="date"] {
+  width: 100%;
+  padding-right: 52px;
+}
+
+/* Oculta el indicador nativo para evitar iconos duplicados. */
+.ingreso-fecha-contenedor input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+/* Botón de calendario dentro del campo Fecha. */
+.role-card.admin-card .ingreso-fecha-boton {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #176b45;
+  cursor: pointer;
+}
+
+/* Hover coherente con AdminPanel. */
+.role-card.admin-card .ingreso-fecha-boton:hover:not(:disabled) {
+  background: #edf7ef;
+  color: #176b45;
+}
+
+/* Foco accesible. */
+.role-card.admin-card .ingreso-fecha-boton:focus-visible {
+  outline: 2px solid #176b45;
+  outline-offset: 2px;
 }
