@@ -23,3 +23,19 @@ export async function obtenerTransacciones(req, res) {
     });
   }
 }
+
+export async function obtenerIngresos(req, res) {
+  try {
+    const ingresos = await consultarTransacciones(req.usuario.id, "ingreso");
+
+    return res.status(200).json({
+      transacciones: ingresos,
+    });
+  } catch (error) {
+    console.error("Error al consultar ingresos:", error);
+
+    return res.status(500).json({
+      mensaje: "Error interno al consultar ingresos",
+    });
+  }
+}
