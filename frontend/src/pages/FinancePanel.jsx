@@ -48,6 +48,7 @@ function FinancePanel({ usuario, token, onLogout }) {
 
     async function cargarTransacciones() {
       try {
+        setError("");
         const resultado = await obtenerTransacciones(token);
 
         if (activo) {
@@ -71,6 +72,20 @@ function FinancePanel({ usuario, token, onLogout }) {
     };
   }, [token]);
 
+  async function actualizarHistorial() {
+    setCargando(true);
+    setError("");
+
+    try {
+      const resultado = await obtenerTransacciones(token);
+      setTransacciones(organizarTransacciones(resultado));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
+  }
+
   return (
     <main className="role-panel">
       <section className="role-card finance-card">
@@ -79,7 +94,17 @@ function FinancePanel({ usuario, token, onLogout }) {
         <p>Desde aquí puedes gestionar tus ingresos, gastos y resumen financiero.</p>
 
         <section className="historial-seccion" aria-label="Historial de transacciones">
-          <h2>Historial de transacciones</h2>
+          <div className="historial-cabecera">
+            <h2>Historial de transacciones</h2>
+            <button
+              type="button"
+              className="historial-actualizar"
+              onClick={actualizarHistorial}
+              disabled={cargando}
+            >
+              {cargando ? "Actualizando..." : "Actualizar"}
+            </button>
+          </div>
 
           {cargando && <p role="status">Cargando transacciones...</p>}
 
