@@ -45,8 +45,9 @@
 
 /* HU-013: Tabla de usuarios registrados */
 
-.role-card:has(.usuarios-tabla-contenedor) {
+.role-card.admin-card {
   width: min(100%, 920px);
+  box-sizing: border-box;
   text-align: left;
 }
 
@@ -90,7 +91,7 @@
 }
 
 @media (max-width: 600px) {
-  .role-card:has(.usuarios-tabla-contenedor) {
+  .role-card.admin-card {
     padding: 24px 16px;
   }
 
@@ -274,4 +275,228 @@
   background-color: #f3f5f4;
   color: #667b70;
   cursor: not-allowed;
+}
+
+/* HU-016 / #91: Navegación del panel administrativo */
+
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin: 28px 0 24px;
+  padding-bottom: 0;
+  border-bottom: 1px solid #dce5df;
+}
+
+.role-card.admin-card .admin-tab {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: #66736c;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.role-card.admin-card .admin-tab:hover {
+  background: #edf4ef;
+  color: #173d32;
+}
+
+.role-card.admin-card .admin-tab-activa {
+  border-bottom-color: #176b45;
+  background: #edf4ef;
+  color: #176b45;
+  font-weight: 700;
+}
+
+.role-card.admin-card .admin-tab:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: -2px;
+}
+
+.admin-seccion {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .role-card.admin-card .admin-tab {
+    padding: 12px 8px;
+    font-size: 14px;
+  }
+}
+
+/* HU-016 / #91: Jerarquía tipográfica del AdminPanel */
+
+.role-card.admin-card {
+  font-family: inherit;
+}
+
+.role-card.admin-card h1 {
+  margin: 12px 0 8px;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+
+.role-card.admin-card h2 {
+  margin: 0 0 16px;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.role-card.admin-card p {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.role-card.admin-card .role-label {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.role-card.admin-card .usuarios-tabla {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.role-card.admin-card .usuarios-busqueda label,
+.role-card.admin-card .usuarios-filtro label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .role-card.admin-card h1 {
+    font-size: 25px;
+  }
+
+  .role-card.admin-card h2 {
+    font-size: 19px;
+  }
+}
+
+/* HU-016 / #91: Formulario de categorías generales */
+
+.categorias-formulario {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  width: 100%;
+  max-width: 520px;
+  margin-top: 28px;
+}
+
+.categorias-formulario h3 {
+  margin: 0;
+  color: #173d32;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.categorias-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.categorias-campo label,
+.categorias-tipo legend {
+  color: #173d32;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.categorias-campo input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  background: #fff;
+  color: #173d32;
+  font: inherit;
+}
+
+.categorias-campo input:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+.categorias-tipo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.categorias-tipo legend {
+  margin-bottom: 12px;
+}
+
+.categorias-tipo label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 130px;
+  min-height: 46px;
+  box-sizing: border-box;
+  padding: 10px 16px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  background: #fff;
+  color: #25372d;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.categorias-tipo label:has(input:checked) {
+  border-color: #176b45;
+  background: #edf4ef;
+  color: #176b45;
+}
+
+.categorias-tipo label:focus-within {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+.categorias-tipo input {
+  accent-color: #176b45;
+  margin: 0;
+}
+
+.role-card.admin-card .categorias-formulario button {
+  margin-top: 4px;
+}
+
+.role-card.admin-card .categorias-formulario button:disabled {
+  background: #dce5df;
+  color: #66736c;
+  cursor: not-allowed;
+}
+
+.role-card.admin-card .categorias-aviso {
+  margin: 0;
+  color: #66736c;
+  font-size: 13px;
 }
