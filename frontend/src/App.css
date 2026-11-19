@@ -1,3 +1,4 @@
+/* Contenedor principal: ocupa al menos la altura de la ventana y centra la tarjeta. */
 .role-panel {
   min-height: 100vh;
   display: grid;
@@ -7,6 +8,7 @@
   background: #f3f6f4;
 }
 
+/* Tarjeta base compartida por las vistas de usuario y administrador. */
 .role-card {
   width: min(100%, 620px);
   padding: 48px;
@@ -16,21 +18,25 @@
   text-align: center;
 }
 
+/* Título principal de las tarjetas. */
 .role-card h1 {
   color: #163b2c;
   margin: 12px 0;
   line-height: 1.1;
 }
 
+/* Color base de los párrafos dentro de las tarjetas. */
 .role-card p {
   color: #66736c;
 }
 
+/* Etiqueta pequeña que identifica el tipo de panel; prioridad sobre otros colores. */
 .role-label {
   color: #176b45 !important;
   font-weight: 700;
 }
 
+/* Estilo base de los botones de las tarjetas. */
 .role-card button {
   margin-top: 24px;
   padding: 12px 20px;
@@ -40,17 +46,29 @@
   color: #fff;
   cursor: pointer;
   font-weight: 700;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Oscurece los botones principales al pasar el cursor. */
+.role-card button:hover:not(:disabled) {
+  background-color: #125536;
+}
+
+/* Mantiene el aspecto de los botones deshabilitados. */
+.role-card button:disabled {
+  cursor: not-allowed;
+}
 
 /* HU-013: Tabla de usuarios registrados */
 
+/* Variante administrativa: más ancha, alineada a la izquierda y con box-sizing de borde. */
 .role-card.admin-card {
   width: min(100%, 920px);
   box-sizing: border-box;
   text-align: left;
 }
 
+/* Marco de la tabla: permite desplazamiento horizontal interno cuando falta espacio. */
 .usuarios-tabla-contenedor {
   width: 100%;
   margin: 24px 0;
@@ -59,33 +77,40 @@
   border-radius: 10px;
 }
 
+/* Estructura de la tabla: ocupa el ancho disponible y une los bordes. */
 .usuarios-tabla {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
 
+/* Espaciado, divisores y ajuste de textos largos en encabezados y celdas. */
 .usuarios-tabla th,
+/* Color del contenido de las celdas. */
 .usuarios-tabla td {
   padding: 14px 16px;
   border-bottom: 1px solid #e5ebe7;
   overflow-wrap: anywhere;
 }
 
+/* Encabezados de la tabla: fondo, texto y énfasis. */
 .usuarios-tabla th {
   background-color: #edf4ef;
   color: #234b38;
   font-weight: 600;
 }
 
+/* Color del contenido de las celdas. */
 .usuarios-tabla td {
   color: #25372d;
 }
 
+/* Resalta la fila sobre la que pasa el cursor. */
 .usuarios-tabla tbody tr:hover {
   background-color: #f6faf7;
 }
 
+/* Elimina el borde inferior de la última fila. */
 .usuarios-tabla tbody tr:last-child td {
   border-bottom: none;
 }
@@ -106,6 +131,7 @@
   }
 }
 
+/* Color de los títulos secundarios de las tarjetas. */
 .role-card h2 {
   color: #173d32;
 }
@@ -283,6 +309,7 @@
 
 /* HU-013 / #40: Estados de las cuentas */
 
+/* Etiqueta compacta para mostrar el estado de una cuenta. */
 .estado-cuenta {
   display: inline-flex;
   align-items: center;
@@ -295,19 +322,21 @@
   white-space: nowrap;
 }
 
+/* Colores y borde del estado Activo. */
 .estado-activo {
   background-color: #dcfce7;
   color: #166534;
   border: 1px solid #86efac;
 }
 
+/* Colores y borde del estado Inactivo. */
 .estado-inactivo {
   background-color: #fee2e2;
   color: #991b1b;
   border: 1px solid #fca5a5;
 }
 
-
+/* Notificación flotante de cierre de sesión, centrada arriba de la pantalla. */
 .logout-toast {
   position: fixed;
   top: 20px;
@@ -327,6 +356,7 @@
 
 /* HU-013 / #42: Búsqueda de usuarios */
 
+/* Agrupa la etiqueta y el campo de búsqueda de usuarios. */
 .usuarios-busqueda {
   display: flex;
   flex-direction: column;
@@ -335,12 +365,14 @@
   margin: 20px 0;
 }
 
+/* Texto de la etiqueta del buscador. */
 .usuarios-busqueda label {
   color: #173d32;
   font-size: 14px;
   font-weight: 600;
 }
 
+/* Campo de búsqueda: tamaño, colores y bordes. */
 .usuarios-busqueda input {
   box-sizing: border-box;
   width: 100%;
@@ -353,10 +385,12 @@
   font: inherit;
 }
 
+/* Color del texto de ejemplo del buscador. */
 .usuarios-busqueda input::placeholder {
   color: #667b70;
 }
 
+/* Indicador de foco visible al navegar con teclado. */
 .usuarios-busqueda input:focus-visible {
   outline: 2px solid #166534;
   outline-offset: 2px;
@@ -365,6 +399,7 @@
 
 /* HU-013 / #42: Filtros de usuarios */
 
+/* Distribuye los filtros de rol y estado en dos columnas. */
 .usuarios-filtros {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -373,6 +408,7 @@
   margin: 0 0 24px;
 }
 
+/* Agrupa cada etiqueta con su selector. */
 .usuarios-filtro {
   display: flex;
   flex-direction: column;
@@ -380,12 +416,14 @@
   min-width: 0;
 }
 
+/* Tipografía de las etiquetas de los filtros. */
 .usuarios-filtro label {
   color: #173d32;
   font-size: 14px;
   font-weight: 600;
 }
 
+/* Estilo y dimensiones de los desplegables. */
 .usuarios-filtro select {
   box-sizing: border-box;
   width: 100%;
@@ -399,6 +437,7 @@
   cursor: pointer;
 }
 
+/* Indicador de foco accesible de los desplegables. */
 .usuarios-filtro select:focus-visible {
   outline: 2px solid #166534;
   outline-offset: 2px;
@@ -411,6 +450,7 @@
   }
 }
 
+/* Contenedor de las acciones asociadas a los filtros. */
 .usuarios-acciones {
   display: flex;
   justify-content: flex-start;
@@ -418,6 +458,7 @@
   margin: 0 0 20px;
 }
 
+/* Botón secundario para restablecer filtros; prevalece sobre el botón base. */
 .role-card .usuarios-limpiar {
   padding: 10px 18px;
   min-height: 40px;
@@ -431,15 +472,18 @@
   transition: background-color 0.2s ease;
 }
 
+/* Respuesta visual al pasar el cursor sobre el botón habilitado. */
 .role-card .usuarios-limpiar:hover:not(:disabled) {
   background-color: #edf7ef;
 }
 
+/* Indicador de foco al usar el teclado. */
 .role-card .usuarios-limpiar:focus-visible {
   outline: 2px solid #166534;
   outline-offset: 2px;
 }
 
+/* Aspecto del botón cuando no hay filtros que limpiar. */
 .role-card .usuarios-limpiar:disabled {
   border-color: #cbd5cf;
   background-color: #f3f5f4;
@@ -449,6 +493,7 @@
 
 /* HU-016 / #91: Navegación del panel administrativo */
 
+/* Barra horizontal de navegación entre Usuarios y Categorías. */
 .admin-tabs {
   display: flex;
   gap: 8px;
@@ -458,6 +503,7 @@
   border-bottom: 1px solid #dce5df;
 }
 
+/* Botón de cada pestaña; neutraliza el margen del botón base. */
 .role-card.admin-card .admin-tab {
   flex: 1;
   min-width: 0;
@@ -475,11 +521,13 @@
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Resalta la pestaña bajo el cursor. */
 .role-card.admin-card .admin-tab:hover {
   background: #edf4ef;
   color: #173d32;
 }
 
+/* Identifica la pestaña seleccionada. */
 .role-card.admin-card .admin-tab-activa {
   border-bottom-color: #176b45;
   background: #edf4ef;
@@ -487,11 +535,13 @@
   font-weight: 700;
 }
 
+/* Foco visible de las pestañas para navegación con teclado. */
 .role-card.admin-card .admin-tab:focus-visible {
   outline: 2px solid #166534;
   outline-offset: -2px;
 }
 
+/* Área que contiene la sección activa; evita desbordamientos por ancho mínimo. */
 .admin-seccion {
   width: 100%;
   min-width: 0;
@@ -506,10 +556,12 @@
 
 /* HU-016 / #91: Jerarquía tipográfica del AdminPanel */
 
+/* Variante administrativa: más ancha, alineada a la izquierda y con box-sizing de borde. */
 .role-card.admin-card {
   font-family: inherit;
 }
 
+/* Jerarquía del título principal dentro del panel administrativo. */
 .role-card.admin-card h1 {
   margin: 12px 0 8px;
   font-size: 30px;
@@ -518,6 +570,7 @@
   letter-spacing: -0.5px;
 }
 
+/* Jerarquía de los títulos de sección del panel. */
 .role-card.admin-card h2 {
   margin: 0 0 16px;
   font-size: 21px;
@@ -525,21 +578,25 @@
   line-height: 1.3;
 }
 
+/* Tamaño e interlineado de los párrafos administrativos. */
 .role-card.admin-card p {
   font-size: 15px;
   line-height: 1.5;
 }
 
+/* Tamaño y peso de la etiqueta del panel administrativo. */
 .role-card.admin-card .role-label {
   font-size: 14px;
   font-weight: 700;
 }
 
+/* Tipografía específica de la tabla administrativa. */
 .role-card.admin-card .usuarios-tabla {
   font-size: 14px;
   line-height: 1.5;
 }
 
+/* Unifica el tamaño y peso de las etiquetas de búsqueda y filtros. */
 .role-card.admin-card .usuarios-busqueda label,
 .role-card.admin-card .usuarios-filtro label {
   font-size: 14px;
@@ -558,6 +615,7 @@
 
 /* HU-016 / #91: Formulario de categorías generales */
 
+/* Formulario de creación: elementos apilados, ancho máximo y separación. */
 .categorias-formulario {
   display: flex;
   flex-direction: column;
@@ -568,6 +626,7 @@
   margin-top: 28px;
 }
 
+/* Título interno del formulario. */
 .categorias-formulario h3 {
   margin: 0;
   color: #173d32;
@@ -575,6 +634,7 @@
   font-weight: 700;
 }
 
+/* Agrupa etiqueta, campo de nombre y su error. */
 .categorias-campo {
   display: flex;
   flex-direction: column;
@@ -582,13 +642,16 @@
   width: 100%;
 }
 
+/* Tipografía común de la etiqueta del nombre y la leyenda del tipo. */
 .categorias-campo label,
+/* Separación de la leyenda respecto de las opciones. */
 .categorias-tipo legend {
   color: #173d32;
   font-size: 14px;
   font-weight: 600;
 }
 
+/* Campo de nombre de categoría: ancho, altura y apariencia. */
 .categorias-campo input {
   box-sizing: border-box;
   width: 100%;
@@ -601,11 +664,13 @@
   font: inherit;
 }
 
+/* Foco visible del campo de nombre. */
 .categorias-campo input:focus-visible {
   outline: 2px solid #166534;
   outline-offset: 2px;
 }
 
+/* Agrupa las opciones de tipo Gasto e Ingreso sin borde de fieldset. */
 .categorias-tipo {
   display: flex;
   flex-wrap: wrap;
@@ -616,10 +681,12 @@
   border: 0;
 }
 
+/* Separación de la leyenda respecto de las opciones. */
 .categorias-tipo legend {
   margin-bottom: 12px;
 }
 
+/* Aspecto de cada opción seleccionable de tipo. */
 .categorias-tipo label {
   display: inline-flex;
   align-items: center;
@@ -639,32 +706,39 @@
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Destaca visualmente la opción de tipo seleccionada. */
 .categorias-tipo label:has(input:checked) {
   border-color: #176b45;
   background: #edf4ef;
   color: #176b45;
 }
 
+/* Foco visible cuando el radio interno recibe foco. */
 .categorias-tipo label:focus-within {
   outline: 2px solid #166534;
   outline-offset: 2px;
 }
 
+/* Color y margen de los botones de radio. */
 .categorias-tipo input {
   accent-color: #176b45;
   margin: 0;
 }
 
+/* Ajusta el margen del botón Crear categoría respecto del botón base. */
 .role-card.admin-card .categorias-formulario button {
   margin-top: 4px;
 }
 
+
+/* Impide interacción y comunica visualmente el envío en curso. */
 .role-card.admin-card .categorias-formulario button:disabled {
   background: #dce5df;
   color: #66736c;
   cursor: not-allowed;
 }
 
+/* Estilo del aviso informativo antiguo; conservar solo si existe en el JSX. */
 .role-card.admin-card .categorias-aviso {
   margin: 0;
   color: #66736c;
@@ -673,6 +747,7 @@
 
 /* Validaciones del formulario de categorías */
 
+/* Mensajes de error de validación o respuesta de la API. */
 .categorias-formulario .categorias-error {
   color: #b42318;
   font-size: 0.875rem;
@@ -681,12 +756,472 @@
   margin: 6px 0 12px;
 }
 
+/* Marca con borde rojo los campos inválidos. */
 .categorias-formulario input[aria-invalid="true"] {
   border: 2px solid #b42318;
 }
 
+/* Mantiene el indicador rojo cuando un campo inválido tiene foco. */
 .categorias-formulario input[aria-invalid="true"]:focus {
   border-color: #b42318;
   outline: 2px solid rgba(180, 35, 24, 0.2);
+  outline-offset: 2px;
+}
+
+/* ==========================================================
+   HU-016 / #93: Mensaje de creación exitosa de categorías
+   ========================================================== */
+
+/* Diferencia visualmente las confirmaciones de los errores. */
+.categorias-formulario .categorias-exito {
+  color: #167347;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+/* ==========================================================
+   HU-016: Estabilidad visual del panel administrativo
+   ========================================================== */
+
+/*
+ * Mantiene la tarjeta administrativa alineada desde arriba.
+ * Evita saltos verticales al alternar entre pestañas con
+ * diferentes cantidades de contenido.
+ */
+.role-panel:has(.admin-card) {
+  place-items: start center;
+}
+
+/*
+ * Reserva espacio para la barra de desplazamiento vertical.
+ * Evita que la página salte horizontalmente cuando cambia
+ * la altura del contenido entre pestañas.
+ */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* ==========================================================
+   PANEL ADMINISTRATIVO — CABECERA Y CIERRE DE SESIÓN
+   ========================================================== */
+
+/* Organiza la bienvenida y el botón de salida horizontalmente. */
+.admin-cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+}
+
+/* Permite que la información se adapte al espacio disponible. */
+.admin-cabecera-info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Acción secundaria para cerrar la sesión. */
+.admin-cerrar-sesion {
+  flex-shrink: 0;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* En pantallas pequeñas, evita que se comprima la cabecera. */
+@media (max-width: 600px) {
+  .admin-cabecera {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-cerrar-sesion {
+    align-self: flex-end;
+  }
+}
+
+/* Contenedor del menú de perfil. */
+.admin-perfil {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Botón circular con icono de usuario. */
+.admin-perfil-boton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #d6e5dc;
+  border-radius: 50%;
+  background: #eaf4ee;
+  color: #176b48;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* Mantener el icono de usuario visible y con tamaño fijo. */
+.admin-perfil-boton svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  flex-shrink: 0;
+  stroke: currentColor;
+}
+
+/* Cambia el fondo y el borde del botón de perfil al pasar el cursor sobre él. */
+.admin-perfil-boton:hover {
+  background: #d8ecdf;
+  border-color: #a9cfb7;
+}
+
+/* Resalta el botón de perfil con un contorno visible al recibir el foco mediante el teclado, mejorando la accesibilidad. */
+.admin-perfil-boton:focus-visible {
+  outline: 3px solid #80b99b;
+  outline-offset: 3px;
+}
+
+/* Menú desplegable del perfil. */
+.admin-perfil-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  width: 240px;
+  max-width: calc(100vw - 32px);
+  padding: 10px;
+  border: 1px solid #e0e7e3;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #173b2c;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Información de la cuenta. */
+.admin-perfil-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 4px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Define el tamaño y el color del texto secundario que muestra el rol del usuario en el menú de perfil. */
+.admin-perfil-info span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Opción de salida dentro del menú. */
+.admin-perfil-salir {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #b42318;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Cambia el fondo de la opción "Cerrar sesión" a un rojo claro al pasar el cursor, resaltando la acción. */
+.admin-perfil-salir:hover {
+  background: #fff0ee;
+}
+
+/* Resalta la opción "Cerrar sesión" con un contorno rojo cuando recibe el foco mediante el teclado, mejorando la accesibilidad. */
+.admin-perfil-salir:focus-visible {
+  outline: 2px solid #b42318;
+  outline-offset: 2px;
+}
+
+/* Conserva el hover de las pestañas administrativas. */
+.role-card.admin-card .admin-tab:hover:not(:disabled) {
+  background-color: #edf4ef;
+  color: #173d32;
+}
+
+/* Conserva el hover circular del botón de perfil. */
+.role-card.admin-card .admin-perfil-boton:hover:not(:disabled) {
+  background-color: #d8ecdf;
+  border-color: #a9cfb7;
+}
+
+/* Conserva el hover rojo de la opción Cerrar sesión. */
+.role-card.admin-card .admin-perfil-salir:hover:not(:disabled) {
+  background-color: #fff0ee;
+  color: #b42318;
+}
+
+/* Resalta las opciones de categoría al pasar el cursor. */
+.categorias-tipo label:hover {
+  background-color: #e8f3eb;
+  border-color: #86b99a;
+}
+
+/* Mantiene un efecto diferenciado en la opción seleccionada. */
+.categorias-tipo label:has(input:checked):hover {
+  background-color: #dceee2;
+  border-color: #176b45;
+}
+
+/* Reduce las transiciones para usuarios que prefieren menos movimiento. */
+@media (prefers-reduced-motion: reduce) {
+
+  .role-card button,
+  .categorias-tipo label {
+    transition: none;
+  }
+}
+
+/* Distribuye el resumen y los controles de paginación. */
+.usuarios-paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+/* Muestra la cantidad de registros visibles y el total. */
+.paginacion-resumen {
+  color: #66736c;
+  font-size: 13px;
+}
+
+/* Agrupa los botones y el indicador de página. */
+.paginacion-controles {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Estilo secundario para los botones de navegación. */
+.role-card.admin-card .paginacion-boton {
+  margin: 0;
+  padding: 9px 14px;
+  min-height: 38px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #176b45;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Resalta los botones de paginación habilitados. */
+.role-card.admin-card .paginacion-boton:hover:not(:disabled) {
+  background: #edf7ef;
+  border-color: #176b45;
+}
+
+/* Distingue los controles de paginación deshabilitados. */
+.role-card.admin-card .paginacion-boton:disabled {
+  background: #f3f5f4;
+  border-color: #e0e7e3;
+  color: #9ca9a1;
+  cursor: not-allowed;
+}
+
+/* Mantiene visible el foco al navegar mediante teclado. */
+.role-card.admin-card .paginacion-boton:focus-visible {
+  outline: 2px solid #176b45;
+  outline-offset: 2px;
+}
+
+/* Identifica la página actual sin competir con los botones. */
+.paginacion-indicador {
+  min-width: 54px;
+  text-align: center;
+  color: #173d32;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Adapta los controles a pantallas pequeñas. */
+@media (max-width: 600px) {
+  .usuarios-paginacion {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .paginacion-controles {
+    justify-content: space-between;
+  }
+}
+
+/* ==========================================================
+   HU004 / #64: Formulario de registro de ingresos
+   ========================================================== */
+
+/* HU004 / #65: Resaltar categorías inválidas. */
+.ingreso-formulario .categorias-campo select[aria-invalid="true"] {
+  border: 2px solid #b42318;
+}
+
+.ingreso-formulario .categorias-campo select[aria-invalid="true"]:focus {
+  border-color: #b42318;
+  outline: 2px solid rgba(180, 35, 24, 0.2);
+  outline-offset: 2px;
+}
+
+/* Iguala los selectores y las áreas de texto con los inputs. */
+.ingreso-formulario .categorias-campo select,
+.ingreso-formulario .categorias-campo textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #173d32;
+  font: inherit;
+}
+
+/* Mantiene la descripción alineada y permite ampliar su altura. */
+.ingreso-formulario .categorias-campo textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* Foco visible, coherente con el panel administrativo. */
+.ingreso-formulario .categorias-campo select:focus-visible,
+.ingreso-formulario .categorias-campo textarea:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+/* HU004 / #64: Encabezado de la sección de ingresos. */
+.ingresos-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.role-card.admin-card .ingresos-encabezado h2 {
+  margin: 0;
+}
+
+.role-card.admin-card .ingresos-encabezado .categorias-crear-boton {
+  margin: 0;
+}
+
+@media (max-width: 600px) {
+  .ingresos-encabezado {
+    align-items: flex-start;
+  }
+}
+
+/* Evita duplicar el espacio superior del formulario. */
+.role-card.admin-card .ingreso-formulario {
+  margin-top: 0;
+}
+
+
+/* HU004 / #64: Acciones del formulario de ingresos. */
+.ingreso-acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* Elimina los márgenes heredados de los botones generales. */
+.role-card.admin-card .ingreso-acciones button {
+  margin: 0;
+}
+
+/* Botón secundario Cancelar. */
+.role-card.admin-card .ingreso-cancelar {
+  padding: 12px 20px;
+  border: 1px solid #176b45;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #176b45;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover del botón Cancelar. */
+.role-card.admin-card .ingreso-cancelar:hover:not(:disabled) {
+  background: #edf7ef;
+  color: #176b45;
+}
+
+/* Foco accesible para navegación con teclado. */
+.role-card.admin-card .ingreso-cancelar:focus-visible {
+  outline: 2px solid #176b45;
+  outline-offset: 2px;
+}
+
+/* Contenedor del campo Fecha y su botón de calendario. */
+.ingreso-fecha-contenedor {
+  position: relative;
+  width: 100%;
+}
+
+/* Reserva espacio para el icono a la derecha. */
+.ingreso-fecha-contenedor input[type="date"] {
+  width: 100%;
+  padding-right: 52px;
+}
+
+/* Oculta el indicador nativo para evitar iconos duplicados. */
+.ingreso-fecha-contenedor input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+}
+
+/* Botón de calendario dentro del campo Fecha. */
+.role-card.admin-card .ingreso-fecha-boton {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #176b45;
+  cursor: pointer;
+}
+
+/* Hover coherente con AdminPanel. */
+.role-card.admin-card .ingreso-fecha-boton:hover:not(:disabled) {
+  background: #edf7ef;
+  color: #176b45;
+}
+
+/* Foco accesible. */
+.role-card.admin-card .ingreso-fecha-boton:focus-visible {
+  outline: 2px solid #176b45;
   outline-offset: 2px;
 }
