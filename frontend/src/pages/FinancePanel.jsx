@@ -18,6 +18,26 @@ function formatearMonto(monto) {
   }).format(Number(monto));
 }
 
+function organizarTransacciones(transacciones) {
+  return [...transacciones].sort((primera, segunda) => {
+    const fechaPrimera = String(primera.fecha).slice(0, 10);
+    const fechaSegunda = String(segunda.fecha).slice(0, 10);
+
+    if (fechaPrimera !== fechaSegunda) {
+      return fechaSegunda.localeCompare(fechaPrimera);
+    }
+
+    const creacionPrimera = String(primera.created_at ?? "");
+    const creacionSegunda = String(segunda.created_at ?? "");
+
+    if (creacionPrimera !== creacionSegunda) {
+      return creacionSegunda.localeCompare(creacionPrimera);
+    }
+
+    return Number(segunda.id ?? 0) - Number(primera.id ?? 0);
+  });
+}
+
 function FinancePanel({ usuario, token, onLogout }) {
   const [transacciones, setTransacciones] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -31,7 +51,7 @@ function FinancePanel({ usuario, token, onLogout }) {
         const resultado = await obtenerTransacciones(token);
 
         if (activo) {
-          setTransacciones(resultado);
+          setTransacciones(organizarTransacciones(resultado));
         }
       } catch (err) {
         if (activo) {
