@@ -126,7 +126,11 @@ function App() {
       onLogout={handleLogout}
     />
   ) : (
-    <FinancePanel usuario={sesion.usuario} onLogout={handleLogout} />
+    <FinancePanel
+      usuario={sesion.usuario}
+      token={sesion.token}
+      onLogout={handleLogout}
+    />
   );
 }
 
