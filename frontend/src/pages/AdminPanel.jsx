@@ -6,6 +6,8 @@ function AdminPanel({ usuario, token, onLogout }) {
   const [pestanaActiva, setPestanaActiva] = useState("usuarios");
   const [nombreCategoria, setNombreCategoria] = useState("");
   const [tipoCategoria, setTipoCategoria] = useState("gasto");
+  const [errorNombreCategoria, setErrorNombreCategoria] = useState("");
+  const [errorTipoCategoria, setErrorTipoCategoria] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [filtroRol, setFiltroRol] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
@@ -39,6 +41,57 @@ function AdminPanel({ usuario, token, onLogout }) {
       activo = false;
     };
   }, [token]);
+
+  function validarNombreCategoria(nombre) {
+    const nombreLimpio = nombre.trim();
+
+    if (!nombreLimpio) {
+      return "El nombre de la categoría es obligatorio";
+    }
+
+    if (nombreLimpio.length > 100) {
+      return "El nombre no puede superar los 100 caracteres";
+    }
+
+    // eslint-disable-next-line no-control-regex -- Validación intencional de caracteres de control.
+    if (/[\x00-\x1F\x7F]/.test(nombreLimpio)) {
+      return "El nombre contiene caracteres no permitidos";
+    }
+
+    return "";
+  }
+
+  function validarTipoCategoria(tipo) {
+    if (tipo !== "gasto" && tipo !== "ingreso") {
+      return "El tipo de categoría debe ser ingreso o gasto";
+    }
+
+    return "";
+  }
+
+  function manejarEnvioCategoria(evento) {
+    evento.preventDefault();
+
+    const errorNombre = validarNombreCategoria(nombreCategoria);
+    const errorTipo = validarTipoCategoria(tipoCategoria);
+
+    setErrorNombreCategoria(errorNombre);
+    setErrorTipoCategoria(errorTipo);
+
+    if (errorNombre) {
+      document.getElementById("nombre-categoria")?.focus();
+      return;
+    }
+
+    if (errorTipo) {
+      document.querySelector(
+        'input[name="tipoCategoria"]'
+      )?.focus();
+      return;
+    }
+
+    // La integración con la API se implementará en el #93.
+  }
 
   function limpiarFiltros() {
     setBusqueda("");
@@ -228,7 +281,7 @@ function AdminPanel({ usuario, token, onLogout }) {
             </p>
             <form
               className="categorias-formulario"
-              onSubmit={(evento) => evento.preventDefault()}
+              onSubmit={manejarEnvioCategoria}
             >
               <h3>Crear categoría</h3>
 
@@ -243,8 +296,30 @@ function AdminPanel({ usuario, token, onLogout }) {
                       : "Ej. Salario"
                   }
                   value={nombreCategoria}
-                  onChange={(evento) => setNombreCategoria(evento.target.value)}
+                  onChange={(evento) => {
+                    const nuevoNombre = evento.target.value;
+
+                    setNombreCategoria(nuevoNombre);
+
+                    if (errorNombreCategoria) {
+                      setErrorNombreCategoria(validarNombreCategoria(nuevoNombre));
+                    }
+                  }}
+                  aria-invalid={Boolean(errorNombreCategoria)}
+                  aria-describedby={
+                    errorNombreCategoria ? "error-nombre-categoria" : undefined
+                  }
                 />
+
+                {errorNombreCategoria && (
+                  <p
+                    id="error-nombre-categoria"
+                    className="categorias-error"
+                    role="alert"
+                  >
+                    {errorNombreCategoria}
+                  </p>
+                )}
               </div>
 
               <fieldset className="categorias-tipo">
@@ -256,7 +331,12 @@ function AdminPanel({ usuario, token, onLogout }) {
                     name="tipoCategoria"
                     value="gasto"
                     checked={tipoCategoria === "gasto"}
-                    onChange={(evento) => setTipoCategoria(evento.target.value)}
+                    onChange={(evento) => {
+                      const nuevoTipo = evento.target.value;
+
+                      setTipoCategoria(nuevoTipo);
+                      setErrorTipoCategoria(validarTipoCategoria(nuevoTipo));
+                    }}
                   />
                   Gasto
                 </label>
@@ -267,14 +347,25 @@ function AdminPanel({ usuario, token, onLogout }) {
                     name="tipoCategoria"
                     value="ingreso"
                     checked={tipoCategoria === "ingreso"}
-                    onChange={(evento) => setTipoCategoria(evento.target.value)}
+                    onChange={(evento) => {
+                      const nuevoTipo = evento.target.value;
+
+                      setTipoCategoria(nuevoTipo);
+                      setErrorTipoCategoria(validarTipoCategoria(nuevoTipo));
+                    }}
                   />
                   Ingreso
                 </label>
               </fieldset>
 
-              <button type="submit" disabled>
-                Crear categoría
+              {errorTipoCategoria && (
+                <p className="categorias-error" role="alert">
+                  {errorTipoCategoria}
+                </p>
+              )}
+
+              <button type="submit">
+                Validar categoría
               </button>
 
               <p className="categorias-aviso">
