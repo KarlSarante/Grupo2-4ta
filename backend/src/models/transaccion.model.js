@@ -1,6 +1,6 @@
 import pool from "../config/database.js";
 
-// Crear una transacción de ingreso o gasto asociada a un usuario.
+// Crear una transacción asociada al usuario autenticado.
 export async function crearTransaccion({
   usuarioId,
   categoriaId,
@@ -27,19 +27,24 @@ export async function crearTransaccion({
   };
 }
 
-// Consultar las transacciones pertenecientes a un usuario.
-// Permite filtrar opcionalmente por ingreso o gasto.
-export async function consultarTransaccionesPorUsuario(
-  usuarioId,
-  tipo = null
-) {
+// Consultar el historial de un usuario, opcionalmente filtrado por tipo.
+export async function consultarTransacciones(usuarioId, tipo = null) {
   if (tipo !== null) {
     const [transacciones] = await pool.execute(
-      `SELECT id, usuario_id, categoria_id, tipo,
-              monto, fecha, descripcion, created_at
-       FROM transacciones
-       WHERE usuario_id = ? AND tipo = ?
-       ORDER BY fecha DESC, id DESC`,
+      `SELECT
+         t.id,
+         t.fecha,
+         t.descripcion,
+         t.tipo,
+         t.monto,
+         cg.id AS categoria_id,
+         cg.nombre AS categoria
+       FROM transacciones t
+       INNER JOIN categorias_generales cg
+         ON cg.id = t.categoria_id
+       WHERE t.usuario_id = ?
+         AND t.tipo = ?
+       ORDER BY t.fecha DESC, t.created_at DESC, t.id DESC`,
       [usuarioId, tipo]
     );
 
@@ -47,18 +52,26 @@ export async function consultarTransaccionesPorUsuario(
   }
 
   const [transacciones] = await pool.execute(
-    `SELECT id, usuario_id, categoria_id, tipo,
-            monto, fecha, descripcion, created_at
-     FROM transacciones
-     WHERE usuario_id = ?
-     ORDER BY fecha DESC, id DESC`,
+    `SELECT
+       t.id,
+       t.fecha,
+       t.descripcion,
+       t.tipo,
+       t.monto,
+       cg.id AS categoria_id,
+       cg.nombre AS categoria
+     FROM transacciones t
+     INNER JOIN categorias_generales cg
+       ON cg.id = t.categoria_id
+     WHERE t.usuario_id = ?
+     ORDER BY t.fecha DESC, t.created_at DESC, t.id DESC`,
     [usuarioId]
   );
 
   return transacciones;
 }
 
-// Buscar una transacción por su ID, verificando que pertenezca al usuario.
+// Buscar una transacción verificando que pertenezca al usuario.
 export async function buscarTransaccionPorId(id, usuarioId) {
   const [transacciones] = await pool.execute(
     `SELECT id, usuario_id, categoria_id, tipo,

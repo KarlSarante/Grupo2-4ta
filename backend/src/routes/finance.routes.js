@@ -2,6 +2,11 @@ import { Router } from "express";
 import { autenticarToken } from "../middlewares/auth.middleware.js";
 import { autorizarRoles } from "../middlewares/role.middleware.js";
 import { registrarIngreso } from "../controllers/ingreso.controller.js";
+import {
+  obtenerGastos,
+  obtenerIngresos,
+  obtenerTransacciones,
+} from "../controllers/transaccion.controller.js";
 
 const router = Router();
 
@@ -10,12 +15,11 @@ const router = Router();
 router.use(autenticarToken, autorizarRoles("usuario"));
 
 // Comprobar el acceso autorizado al panel financiero.
-router.get("/", (req, res) => {
-  return res.status(200).json({
-    mensaje: "Acceso autorizado al panel financiero",
-    usuario: req.usuario,
-  });
-});
+router.get("/", obtenerTransacciones);
+router.get("/transacciones", obtenerTransacciones);
+router.get("/historial", obtenerTransacciones);
+router.get("/ingresos", obtenerIngresos);
+router.get("/gastos", obtenerGastos);
 
 // HU004: Registrar un ingreso del usuario autenticado.
 router.post("/ingresos", registrarIngreso);

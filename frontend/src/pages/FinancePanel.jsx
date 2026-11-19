@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import IngresoForm from "./IngresoForm.jsx";
+import { obtenerTransacciones } from "../services/financeService.js";
 
 // HU004 / #64: Panel financiero y navegación visual.
-function FinancePanel({ usuario, onLogout }) {
+function FinancePanel({ usuario, token, onLogout }) {
   const [pestanaActiva, setPestanaActiva] = useState(() => {
     const guardada = sessionStorage.getItem("finanzas-pestana");
 
@@ -20,6 +21,38 @@ function FinancePanel({ usuario, onLogout }) {
   });
   const [menuPerfilAbierto, setMenuPerfilAbierto] = useState(false);
   const referenciaPerfil = useRef(null);
+  const [transacciones, setTransacciones] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let activo = true;
+
+    async function cargarTransacciones() {
+      try {
+        setError("");
+        const resultado = await obtenerTransacciones(token);
+
+        if (activo) {
+          setTransacciones(resultado);
+        }
+      } catch (err) {
+        if (activo) {
+          setError(err.message);
+        }
+      } finally {
+        if (activo) {
+          setCargando(false);
+        }
+      }
+    }
+
+    cargarTransacciones();
+
+    return () => {
+      activo = false;
+    };
+  }, [token]);
 
   // Conservar la pestaña activa al actualizar la página.
   useEffect(() => {
@@ -211,10 +244,56 @@ function FinancePanel({ usuario, onLogout }) {
                   </button>
                 </div>
 
-                <p>
-                  El historial de ingresos estará disponible
-                  cuando se implemente su consulta.
-                </p>
+                {cargando && <p role="status">Cargando transacciones...</p>}
+
+                {!cargando && error && (
+                  <p role="alert">{error}</p>
+                )}
+
+                {!cargando && !error && (
+                  <>
+                    {transacciones.filter(
+                      (transaccion) => transaccion.tipo === "ingreso"
+                    ).length === 0 ? (
+                      <p role="status">No tienes ingresos registrados.</p>
+                    ) : (
+                      <div className="historial-tabla-contenedor">
+                        <table className="historial-tabla">
+                          <thead>
+                            <tr>
+                              <th>Fecha</th>
+                              <th>Descripción</th>
+                              <th>Categoría</th>
+                              <th>Monto</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {transacciones
+                              .filter(
+                                (transaccion) =>
+                                  transaccion.tipo === "ingreso"
+                              )
+                              .map((transaccion) => (
+                                <tr key={transaccion.id}>
+                                  <td>{String(transaccion.fecha).slice(0, 10)}</td>
+                                  <td>
+                                    {transaccion.descripcion || "Sin descripción"}
+                                  </td>
+                                  <td>{transaccion.categoria}</td>
+                                  <td>
+                                    {new Intl.NumberFormat("es-DO", {
+                                      style: "currency",
+                                      currency: "DOP",
+                                    }).format(Number(transaccion.monto))}
+                                  </td>
+                                </tr>
+                              ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </>
+                )}
               </section>
 
             )}
