@@ -54,17 +54,19 @@ export async function crearCategoria(categoria, token) {
  * @param {string} token - JWT del administrador.
  * @returns {Promise<Array>} Listado de categorías.
  */
-export async function obtenerCategorias(token) {
+export async function obtenerCategorias(token, tipo = null) {
   let respuesta;
 
   // Realizar la solicitud autenticada al backend.
   try {
-    respuesta = await fetch(`${API_URL}/categorias`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    respuesta = await fetch(
+      `${API_URL}/categorias${tipo ? `?tipo=${encodeURIComponent(tipo)}` : ""}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
   } catch {
     throw new Error(
       "No se pudo conectar con el servidor. Inténtalo nuevamente."

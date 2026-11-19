@@ -29,49 +29,44 @@ export async function crearTransaccion({
 
 // Consultar el historial de un usuario, opcionalmente filtrado por tipo.
 export async function consultarTransacciones(usuarioId, tipo = null) {
-  if (tipo !== null) {
-    const [transacciones] = await pool.execute(
-      `SELECT
-         t.id,
-         t.fecha,
-         t.descripcion,
-         t.tipo,
-         t.monto,
-         cg.id AS categoria_id,
-         cg.nombre AS categoria
-       FROM transacciones t
-       INNER JOIN categorias_generales cg
-         ON cg.id = t.categoria_id
-       WHERE t.usuario_id = ?
-         AND t.tipo = ?
-       ORDER BY t.fecha DESC, t.created_at DESC, t.id DESC`,
-      [usuarioId, tipo]
-    );
+  const parametros = [usuarioId];
+  let filtroTipo = "";
 
-    return transacciones;
+  if (tipo !== null) {
+    filtroTipo = " AND t.tipo = ?";
+    parametros.push(tipo);
   }
 
   const [transacciones] = await pool.execute(
     `SELECT
        t.id,
-       t.fecha,
-       t.descripcion,
+       t.usuario_id,
+       t.categoria_id,
+       c.nombre AS categoria,
+       c.nombre AS categoria_nombre,
        t.tipo,
        t.monto,
-       cg.id AS categoria_id,
-       cg.nombre AS categoria
-     FROM transacciones t
-     INNER JOIN categorias_generales cg
-       ON cg.id = t.categoria_id
-     WHERE t.usuario_id = ?
+       t.fecha,
+       t.descripcion,
+       t.created_at
+     FROM transacciones AS t
+     LEFT JOIN categorias_generales AS c
+       ON c.id = t.categoria_id
+     WHERE t.usuario_id = ?${filtroTipo}
      ORDER BY t.fecha DESC, t.created_at DESC, t.id DESC`,
-    [usuarioId]
+    parametros
   );
 
   return transacciones;
 }
 
-// Buscar una transacción verificando que pertenezca al usuario.
+// Compatibilidad con el controlador de ingresos HU004.
+export async function consultarTransaccionesPorUsuario(
+  usuarioId,
+  tipo = null
+) {
+  return consultarTransacciones(usuarioId, tipo);
+}
 export async function buscarTransaccionPorId(id, usuarioId) {
   const [transacciones] = await pool.execute(
     `SELECT id, usuario_id, categoria_id, tipo,
