@@ -2,6 +2,7 @@ import { Router } from "express";
 import { autenticarToken } from "../middlewares/auth.middleware.js";
 import { autorizarRoles } from "../middlewares/role.middleware.js";
 import { registrarIngreso } from "../controllers/ingreso.controller.js";
+import { registrarGasto } from "../controllers/gasto.controller.js";
 
 const router = Router();
 
@@ -19,5 +20,8 @@ router.get("/", (req, res) => {
 
 // HU004: Registrar un ingreso del usuario autenticado.
 router.post("/ingresos", registrarIngreso);
+
+// HU005: Registrar un gasto del usuario autenticado.
+router.post("/gastos", registrarGasto);
 
 export default router;
