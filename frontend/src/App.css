@@ -953,7 +953,13 @@ html {
 }
 
 .role-card.admin-card .ingresos-encabezado .categorias-crear-boton {
+  width: auto;
+  min-height: 38px;
   margin: 0;
+  padding: 9px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  flex: 0 0 auto;
 }
 
 @media (max-width: 600px) {
@@ -980,12 +986,18 @@ html {
 
 /* Elimina los márgenes heredados de los botones generales. */
 .role-card.admin-card .ingreso-acciones button {
+  width: auto;
+  min-height: 38px;
   margin: 0;
+  padding: 9px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  flex: 0 0 auto;
 }
 
 /* Botón secundario Cancelar. */
 .role-card.admin-card .ingreso-cancelar {
-  padding: 12px 20px;
+  padding: 9px 14px;
   border: 1px solid #176b45;
   border-radius: 8px;
   background: #ffffff;
@@ -1054,4 +1066,47 @@ html {
 .role-card.admin-card .ingreso-fecha-boton:focus-visible {
   outline: 2px solid #176b45;
   outline-offset: 2px;
+}
+
+/* HU004 / #66: Distribución de la paginación de ingresos. */
+.role-card.admin-card .ingresos-paginacion .paginacion-controles {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  column-gap: 16px;
+}
+
+.role-card.admin-card .ingresos-paginacion .paginacion-indicador {
+  white-space: nowrap;
+}
+/* HU004 / #66: Distribución responsive del formulario de ingresos. */
+.role-card.admin-card .ingreso-formulario {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.role-card.admin-card .ingreso-formulario fieldset {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 24px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.role-card.admin-card .ingreso-formulario .categorias-campo {
+  min-width: 0;
+}
+
+.role-card.admin-card .ingreso-formulario .ingreso-acciones {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .role-card.admin-card .ingreso-formulario fieldset {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
 }

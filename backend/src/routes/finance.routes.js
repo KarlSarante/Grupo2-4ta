@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { autenticarToken } from "../middlewares/auth.middleware.js";
 import { autorizarRoles } from "../middlewares/role.middleware.js";
-import { registrarIngreso } from "../controllers/ingreso.controller.js";
+import { registrarIngreso, consultarIngresos } from "../controllers/ingreso.controller.js";
 
 const router = Router();
 
@@ -19,5 +19,8 @@ router.get("/", (req, res) => {
 
 // HU004: Registrar un ingreso del usuario autenticado.
 router.post("/ingresos", registrarIngreso);
+
+// HU004 / #66: Consultar los ingresos del usuario autenticado.
+router.get("/ingresos", consultarIngresos);
 
 export default router;

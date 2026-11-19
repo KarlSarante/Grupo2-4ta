@@ -35,11 +35,22 @@ export async function consultarTransaccionesPorUsuario(
 ) {
   if (tipo !== null) {
     const [transacciones] = await pool.execute(
-      `SELECT id, usuario_id, categoria_id, tipo,
-              monto, fecha, descripcion, created_at
-       FROM transacciones
-       WHERE usuario_id = ? AND tipo = ?
-       ORDER BY fecha DESC, id DESC`,
+      `SELECT
+       t.id,
+       t.usuario_id,
+       t.categoria_id,
+       c.nombre AS categoria_nombre,
+       t.tipo,
+       t.monto,
+       t.fecha,
+       t.descripcion,
+       t.created_at
+     FROM transacciones AS t
+     LEFT JOIN categorias_generales AS c
+       ON c.id = t.categoria_id
+     WHERE t.usuario_id = ?
+       AND t.tipo = ?
+     ORDER BY t.fecha DESC, t.id DESC`,
       [usuarioId, tipo]
     );
 

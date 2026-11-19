@@ -8,12 +8,12 @@ import {
 
 const router = Router();
 
-// HU-016: Consultar categorías generales.
-// Solo los administradores pueden acceder al listado.
+// HU004 / #66: Permitir consultar categorías a usuarios y administradores.
+// La creación de categorías continúa reservada a administradores.
 router.get(
   "/",
   autenticarToken,
-  autorizarRoles("administrador"),
+  autorizarRoles("administrador", "usuario"),
   listarCategorias
 );
 
