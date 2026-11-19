@@ -66,11 +66,6 @@ body {
   }
 }
 
-body {
-  margin: 0;
-  background: #123d32;
-}
-
 #root {
   width: 100%;
   min-height: 100svh;
@@ -106,8 +101,7 @@ p {
   margin: 0;
 }
 
-code,
-.counter {
+code {
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
