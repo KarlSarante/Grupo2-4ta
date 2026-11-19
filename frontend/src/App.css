@@ -500,3 +500,23 @@
   color: #66736c;
   font-size: 13px;
 }
+
+/* Validaciones del formulario de categorías */
+
+.categorias-formulario .categorias-error {
+  color: #b42318;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 6px 0 12px;
+}
+
+.categorias-formulario input[aria-invalid="true"] {
+  border: 2px solid #b42318;
+}
+
+.categorias-formulario input[aria-invalid="true"]:focus {
+  border-color: #b42318;
+  outline: 2px solid rgba(180, 35, 24, 0.2);
+  outline-offset: 2px;
+}
