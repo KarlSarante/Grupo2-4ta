@@ -1,6 +1,6 @@
 import { z } from "zod";
 import pool from "../config/database.js";
-import { crearTransaccion } from "../models/transaccion.model.js";
+import { crearTransaccion, consultarTransaccionesPorUsuario } from "../models/transaccion.model.js";
 
 // Comprobar que la fecha exista realmente en el calendario.
 function esFechaValida(fecha) {
@@ -135,6 +135,28 @@ export async function registrarIngreso(req, res) {
 
     return res.status(500).json({
       mensaje: "Error interno al registrar el ingreso",
+    });
+  }
+}
+
+// HU004 / #66: Consultar los ingresos del usuario autenticado.
+export async function consultarIngresos(req, res) {
+  const usuarioId = req.usuario.id;
+
+  try {
+    const ingresos = await consultarTransaccionesPorUsuario(
+      usuarioId,
+      "ingreso"
+    );
+
+    return res.status(200).json({
+      ingresos,
+    });
+  } catch (error) {
+    console.error("Error al consultar ingresos:", error);
+
+    return res.status(500).json({
+      mensaje: "Error interno al consultar los ingresos",
     });
   }
 }

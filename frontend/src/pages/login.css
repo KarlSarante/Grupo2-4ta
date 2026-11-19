@@ -284,3 +284,65 @@
     padding-block: 24px;
   }
 }
+
+/* HU004 / #66: Confirmación del registro de ingresos. */
+.ingresos-mensaje-exito {
+  display: block;
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid #86c9a1;
+  border-radius: 8px;
+  background-color: #e8f6ed;
+  color: #17643b;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* HU004 / #66: Estado vacío del historial de ingresos. */
+.ingresos-estado-vacio {
+  margin-top: 20px;
+  padding: 36px 24px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.ingresos-estado-vacio h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.ingresos-estado-vacio p {
+  margin: 0;
+  line-height: 1.6;
+  opacity: 0.8;
+}
+
+/* HU004 / #66: Listado de ingresos registrados. */
+.ingresos-listado {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.ingresos-item {
+  padding: 18px 20px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background-color: rgba(148, 163, 184, 0.06);
+}
+
+.ingresos-item strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.ingresos-item p {
+  margin: 5px 0;
+  line-height: 1.5;
+}

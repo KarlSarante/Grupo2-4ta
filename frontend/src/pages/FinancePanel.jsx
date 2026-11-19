@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import IngresoForm from "./IngresoForm.jsx";
 import GastoForm from "./GastoForm.jsx";
+import { obtenerIngresos } from "../services/ingresoService.js";
+import { obtenerTransacciones } from "../services/financeService.js";
 
 // HU004 / #64: Panel financiero y navegación visual.
-function FinancePanel({ usuario, onLogout }) {
+function FinancePanel({ usuario, token, onLogout }) {
   const [pestanaActiva, setPestanaActiva] = useState(() => {
     const guardada = sessionStorage.getItem("finanzas-pestana");
 
@@ -30,6 +32,58 @@ function FinancePanel({ usuario, onLogout }) {
   });
   const [menuPerfilAbierto, setMenuPerfilAbierto] = useState(false);
   const referenciaPerfil = useRef(null);
+  // HU006: Historial general de ingresos y gastos.
+  const [transacciones, setTransacciones] = useState([]);
+  const [cargandoTransacciones, setCargandoTransacciones] = useState(false);
+  const [errorTransacciones, setErrorTransacciones] = useState("");
+  const [recargaTransacciones, setRecargaTransacciones] = useState(0);
+
+  useEffect(() => {
+    if (pestanaActiva !== "resumen") return;
+
+    let activo = true;
+
+    async function cargarTransacciones() {
+      setCargandoTransacciones(true);
+      setErrorTransacciones("");
+
+      try {
+        const datos = await obtenerTransacciones(token);
+
+        if (activo) {
+          setTransacciones(datos);
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorTransacciones(
+            error.message || "No se pudieron consultar las transacciones."
+          );
+        }
+      } finally {
+        if (activo) {
+          setCargandoTransacciones(false);
+        }
+      }
+    }
+
+    cargarTransacciones();
+
+    return () => {
+      activo = false;
+    };
+  }, [pestanaActiva, token, recargaTransacciones]);
+  // HU004 / #66: Confirmación después de registrar un ingreso.
+  const [mensajeIngreso, setMensajeIngreso] = useState("");
+
+  // HU004 / #66: Historial de ingresos del usuario autenticado.
+  const [ingresos, setIngresos] = useState([]);
+  const [cargandoIngresos, setCargandoIngresos] = useState(true);
+  const [errorIngresos, setErrorIngresos] = useState("");
+  const [recargaIngresos, setRecargaIngresos] = useState(0);
+
+  // HU004 / #66: Paginación del historial de ingresos.
+  const [paginaIngresos, setPaginaIngresos] = useState(1);
+  const ingresosPorPagina = 5;
 
   // Conservar la pestaña activa al actualizar la página.
   useEffect(() => {
@@ -45,6 +99,56 @@ function FinancePanel({ usuario, onLogout }) {
   useEffect(() => {
     sessionStorage.setItem("finanzas-vista-gastos", vistaGastos);
   }, [vistaGastos]);
+  // HU004 / #66: Cargar el historial de ingresos del usuario autenticado.
+  useEffect(() => {
+    if (pestanaActiva !== "ingresos" || vistaIngresos !== "listado") {
+      return;
+    }
+
+    let activo = true;
+
+    async function cargarIngresos() {
+      setCargandoIngresos(true);
+      setErrorIngresos("");
+
+      try {
+        const sesion = JSON.parse(
+          localStorage.getItem("sesion") ||
+          sessionStorage.getItem("sesion") ||
+          "null"
+        );
+
+        if (!sesion?.token) {
+          throw new Error(
+            "La sesión ha expirado. Inicia sesión nuevamente."
+          );
+        }
+
+        const datos = await obtenerIngresos(sesion.token);
+
+        if (activo) {
+          setIngresos(datos);
+        }
+      } catch (error) {
+        if (activo) {
+          setIngresos([]);
+          setErrorIngresos(
+            error.message || "No se pudieron cargar los ingresos."
+          );
+        }
+      } finally {
+        if (activo) {
+          setCargandoIngresos(false);
+        }
+      }
+    }
+
+    cargarIngresos();
+
+    return () => {
+      activo = false;
+    };
+  }, [pestanaActiva, vistaIngresos, recargaIngresos]);
 
   // Cerrar el menú al hacer clic fuera o presionar Escape.
   useEffect(() => {
@@ -77,10 +181,41 @@ function FinancePanel({ usuario, onLogout }) {
   }, [menuPerfilAbierto]);
 
   function cambiarPestana(pestana) {
+    setMensajeIngreso("");
     setPestanaActiva(pestana);
     setVistaIngresos("listado");
     setVistaGastos("listado");
   }
+
+  // HU004 / #66: Regresar al listado despues de agregar un ingreso y actualizar los ingresos.
+  function manejarIngresoRegistrado(mensaje) {
+    setMensajeIngreso(mensaje || "Ingreso registrado correctamente.");
+    setPaginaIngresos(1);
+    setRecargaIngresos((anterior) => anterior + 1);
+    setPestanaActiva("ingresos");
+    setVistaIngresos("listado");
+  }
+
+  // HU004 / #66: Calcular los registros visibles por página.
+  const totalIngresos = ingresos.length;
+
+  const totalPaginasIngresos = Math.max(
+    1,
+    Math.ceil(totalIngresos / ingresosPorPagina)
+  );
+
+  const paginaActualIngresos = Math.min(
+    Math.max(1, paginaIngresos),
+    totalPaginasIngresos
+  );
+
+  const indiceInicialIngresos =
+    (paginaActualIngresos - 1) * ingresosPorPagina;
+
+  const ingresosVisibles = ingresos.slice(
+    indiceInicialIngresos,
+    indiceInicialIngresos + ingresosPorPagina
+  );
 
   return (
     <main className="role-panel">
@@ -199,17 +334,82 @@ function FinancePanel({ usuario, onLogout }) {
           ))}
         </nav>
 
-        {/* Resumen: pendiente de sus historias de usuario. */}
+        {/* HU006: Historial general de transacciones. */}
         {pestanaActiva === "resumen" && (
-          <section className="admin-seccion">
-            <h2>Resumen financiero</h2>
-            <p>
-              El resumen mensual se implementará en las
-              historias de usuario correspondientes.
-            </p>
+          <section className="admin-seccion historial-seccion">
+            <div className="historial-cabecera">
+              <h2>Historial de transacciones</h2>
+
+              <button
+                type="button"
+                className="historial-actualizar"
+                disabled={cargandoTransacciones}
+                onClick={() => setRecargaTransacciones((valor) => valor + 1)}
+              >
+                Actualizar
+              </button>
+            </div>
+
+            {cargandoTransacciones ? (
+              <p role="status">Cargando transacciones...</p>
+            ) : errorTransacciones ? (
+              <p role="alert" className="historial-error">
+                {errorTransacciones}
+              </p>
+            ) : transacciones.length === 0 ? (
+              <p role="status">No tienes transacciones registradas.</p>
+            ) : (
+              <div className="historial-tabla-contenedor">
+                <table className="historial-tabla">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Descripción</th>
+                      <th>Categoría</th>
+                      <th>Tipo</th>
+                      <th>Monto</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {transacciones.map((transaccion) => (
+                      <tr key={transaccion.id}>
+                        <td>
+                          {String(transaccion.fecha).slice(0, 10)}
+                        </td>
+
+                        <td>
+                          {transaccion.descripcion || "Sin descripción"}
+                        </td>
+
+                        <td>
+                          {transaccion.categoria || "Sin categoría"}
+                        </td>
+
+                        <td>
+                          <span
+                            className={`tipo-transaccion tipo-${transaccion.tipo}`}
+                          >
+                            {transaccion.tipo === "ingreso"
+                              ? "Ingreso"
+                              : "Gasto"}
+                          </span>
+                        </td>
+
+                        <td>
+                          {new Intl.NumberFormat("es-DO", {
+                            style: "currency",
+                            currency: "DOP",
+                          }).format(Number(transaccion.monto))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         )}
-
         {/* HU004 / #64: Registro de ingresos. */}
         {pestanaActiva === "ingresos" && (
           <>
@@ -222,16 +422,135 @@ function FinancePanel({ usuario, onLogout }) {
                   <button
                     type="button"
                     className="categorias-crear-boton"
-                    onClick={() => setVistaIngresos("formulario")}
+                    onClick={() => {
+                      setMensajeIngreso("");
+                      setVistaIngresos("formulario");
+                    }}
                   >
                     + Registrar ingreso
                   </button>
                 </div>
 
-                <p>
-                  El historial de ingresos estará disponible
-                  cuando se implemente su consulta.
-                </p>
+                {/* HU004 / #66: Confirmación visible después del registro. */}
+                {mensajeIngreso && (
+                  <p
+                    className="ingresos-mensaje-exito"
+                    role="status"
+                  >
+                    {mensajeIngreso}
+                  </p>
+                )}
+
+                {/* HU004 / #66: Historial de ingresos del usuario. */}
+                {cargandoIngresos ? (
+                  <p role="status">Cargando ingresos...</p>
+                ) : errorIngresos ? (
+                  <div role="alert">
+                    <p>{errorIngresos}</p>
+
+                    <button
+                      type="button"
+                      className="categorias-crear-boton"
+                      onClick={() =>
+                        setRecargaIngresos((anterior) => anterior + 1)
+                      }
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                ) : ingresos.length === 0 ? (
+                  <div className="ingresos-estado-vacio">
+                    <h3>Todavía no tienes ingresos registrados</h3>
+                    <p>
+                      Registra tu primer ingreso para comenzar a llevar
+                      el control de tus finanzas.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="ingresos-listado">
+                    {ingresosVisibles.map((ingreso) => {
+                      const monto = Number(ingreso.monto);
+                      const fecha = String(ingreso.fecha).slice(0, 10);
+
+                      return (
+                        <article
+                          key={ingreso.id}
+                          className="ingresos-item"
+                        >
+                          <div>
+                            <strong>
+                              {Number.isFinite(monto)
+                                ? monto.toLocaleString("es-DO", {
+                                  style: "currency",
+                                  currency: "DOP",
+                                })
+                                : "Monto no disponible"}
+                            </strong>
+
+                            <p>
+                              Fecha: {fecha}
+                            </p>
+
+                            <p>Categoría: {ingreso.categoria_nombre ?? "Sin categoría"}</p>
+
+                            {ingreso.descripcion && (
+                              <p>{ingreso.descripcion}</p>
+                            )}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                )}
+                {/* HU004 / #66: Controles de paginación del historial. */}
+                {!cargandoIngresos &&
+                  !errorIngresos &&
+                  totalIngresos > ingresosPorPagina && (
+                    <nav
+                      className="usuarios-paginacion ingresos-paginacion"
+                      aria-label="Paginación de ingresos"
+                    >
+                      <p className="paginacion-resumen">
+                        Mostrando {indiceInicialIngresos + 1}–
+                        {Math.min(
+                          indiceInicialIngresos + ingresosPorPagina,
+                          totalIngresos
+                        )} de {totalIngresos} ingresos
+                      </p>
+
+                      <div className="paginacion-controles">
+                        <button
+                          type="button"
+                          className="paginacion-boton"
+                          disabled={paginaActualIngresos === 1}
+                          onClick={() =>
+                            setPaginaIngresos((anterior) =>
+                              Math.max(1, anterior - 1)
+                            )
+                          }
+                        >
+                          Anterior
+                        </button>
+
+                        <span className="paginacion-indicador">
+                          Página {paginaActualIngresos} de {totalPaginasIngresos}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="paginacion-boton"
+                          disabled={paginaActualIngresos === totalPaginasIngresos}
+                          onClick={() =>
+                            setPaginaIngresos((anterior) =>
+                              Math.min(totalPaginasIngresos, anterior + 1)
+                            )
+                          }
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    </nav>
+                  )}
               </section>
 
             )}
@@ -241,6 +560,7 @@ function FinancePanel({ usuario, onLogout }) {
                 onVolver={() =>
                   setVistaIngresos("listado")
                 }
+                onIngresoRegistrado={manejarIngresoRegistrado}
               />
             )}
           </>
