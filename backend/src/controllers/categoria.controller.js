@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { crearCategoria, buscarCategoriaPorNombreYTipo } from "../models/categoria.model.js";
-
+import { crearCategoria, buscarCategoriaPorNombreYTipo, consultarCategorias } from "../models/categoria.model.js";
 
 const categoriaSchema = z.strictObject({
     nombre: z.string()
@@ -81,4 +80,40 @@ export async function registrarCategoria(req, res) {
             mensaje: "Error interno al crear la categoría",
         });
     }
+}
+
+/**
+ * HU-016: Consultar categorías generales.
+ *
+ * GET /api/categorias
+ *
+ * Devuelve las categorías registradas en MySQL.
+ * Permite filtrar opcionalmente por tipo:
+ * ?tipo=ingreso o ?tipo=gasto
+ */
+export async function listarCategorias(req, res) {
+  const { tipo } = req.query;
+
+  // Validar el filtro cuando se proporciona.
+  if (tipo !== undefined && !["ingreso", "gasto"].includes(tipo)) {
+    return res.status(400).json({
+      mensaje: "El tipo debe ser ingreso o gasto",
+    });
+  }
+
+  try {
+    // Reutilizar la consulta existente del modelo.
+    const categorias = await consultarCategorias(tipo ?? null);
+
+    return res.status(200).json({
+      mensaje: "Categorías consultadas correctamente",
+      categorias,
+    });
+  } catch (error) {
+    console.error("Error al consultar categorías:", error);
+
+    return res.status(500).json({
+      mensaje: "Error interno al consultar las categorías",
+    });
+  }
 }
