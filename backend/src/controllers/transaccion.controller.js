@@ -2,6 +2,12 @@ import { consultarTransacciones } from "../models/transaccion.model.js";
 
 export async function obtenerTransacciones(req, res) {
   try {
+    if (!Number.isInteger(req.usuario?.id) || req.usuario.id <= 0) {
+      return res.status(401).json({
+        mensaje: "Usuario autenticado no válido",
+      });
+    }
+
     const tipo = req.query.tipo ?? null;
 
     if (tipo !== null && !["ingreso", "gasto"].includes(tipo)) {

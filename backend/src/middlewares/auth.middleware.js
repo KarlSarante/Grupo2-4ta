@@ -22,6 +22,12 @@ export async function autenticarToken(req, res, next) {
     });
   }
 
+  if (!Number.isInteger(datosUsuario.id) || datosUsuario.id <= 0) {
+    return res.status(401).json({
+      mensaje: "El token no contiene una identidad de usuario válida",
+    });
+  }
+
   // Tokens emitidos antes de este cambio no traen jti: se exige iniciar sesión de nuevo
   if (!datosUsuario.jti) {
     return res.status(401).json({
