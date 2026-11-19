@@ -809,6 +809,7 @@ html {
 
 /* Reduce las transiciones para usuarios que prefieren menos movimiento. */
 @media (prefers-reduced-motion: reduce) {
+
   .role-card button,
   .categorias-tipo label {
     transition: none;
@@ -895,10 +896,20 @@ html {
   }
 }
 
-
 /* ==========================================================
    HU004 / #64: Formulario de registro de ingresos
    ========================================================== */
+
+/* HU004 / #65: Resaltar categorías inválidas. */
+.ingreso-formulario .categorias-campo select[aria-invalid="true"] {
+  border: 2px solid #b42318;
+}
+
+.ingreso-formulario .categorias-campo select[aria-invalid="true"]:focus {
+  border-color: #b42318;
+  outline: 2px solid rgba(180, 35, 24, 0.2);
+  outline-offset: 2px;
+}
 
 /* Iguala los selectores y las áreas de texto con los inputs. */
 .ingreso-formulario .categorias-campo select,
