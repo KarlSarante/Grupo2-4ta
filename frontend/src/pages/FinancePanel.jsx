@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import IngresoForm from "./IngresoForm.jsx";
+import GastoForm from "./GastoForm.jsx";
 import { obtenerIngresos } from "../services/ingresoService.js";
 import { obtenerTransacciones } from "../services/financeService.js";
 
@@ -15,6 +16,15 @@ function FinancePanel({ usuario, token, onLogout }) {
 
   const [vistaIngresos, setVistaIngresos] = useState(() => {
     const guardada = sessionStorage.getItem("finanzas-vista-ingresos");
+
+    return ["listado", "formulario"].includes(guardada)
+      ? guardada
+      : "listado";
+  });
+
+  // HU005: Vista activa dentro de la pestaña de gastos.
+  const [vistaGastos, setVistaGastos] = useState(() => {
+    const guardada = sessionStorage.getItem("finanzas-vista-gastos");
 
     return ["listado", "formulario"].includes(guardada)
       ? guardada
@@ -85,6 +95,10 @@ function FinancePanel({ usuario, token, onLogout }) {
     sessionStorage.setItem("finanzas-vista-ingresos", vistaIngresos);
   }, [vistaIngresos]);
 
+  // HU005: Conservar la vista de gastos al actualizar la página.
+  useEffect(() => {
+    sessionStorage.setItem("finanzas-vista-gastos", vistaGastos);
+  }, [vistaGastos]);
   // HU004 / #66: Cargar el historial de ingresos del usuario autenticado.
   useEffect(() => {
     if (pestanaActiva !== "ingresos" || vistaIngresos !== "listado") {
@@ -170,6 +184,7 @@ function FinancePanel({ usuario, token, onLogout }) {
     setMensajeIngreso("");
     setPestanaActiva(pestana);
     setVistaIngresos("listado");
+    setVistaGastos("listado");
   }
 
   // HU004 / #66: Regresar al listado despues de agregar un ingreso y actualizar los ingresos.
@@ -262,6 +277,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                   onClick={() => {
                     sessionStorage.removeItem("finanzas-pestana");
                     sessionStorage.removeItem("finanzas-vista-ingresos");
+                    sessionStorage.removeItem("finanzas-vista-gastos");
                     onLogout();
                   }}
                 >
@@ -550,15 +566,39 @@ function FinancePanel({ usuario, token, onLogout }) {
           </>
         )}
 
-        {/* Gastos: pendiente de su implementación. */}
+        {/* HU005: Registro de gastos. */}
         {pestanaActiva === "gastos" && (
-          <section className="admin-seccion">
-            <h2>Mis gastos</h2>
-            <p>
-              La gestión de gastos estará disponible cuando
-              se implemente su historia de usuario.
-            </p>
-          </section>
+          <>
+            {vistaGastos === "listado" && (
+              <section className="admin-seccion">
+                <div className="ingresos-encabezado">
+                  <h2>Mis gastos</h2>
+
+                  <button
+                    type="button"
+                    className="categorias-crear-boton"
+                    onClick={() => setVistaGastos("formulario")}
+                  >
+                    + Registrar gasto
+                  </button>
+                </div>
+
+                <p>
+                  El historial de gastos estará disponible
+                  cuando se implemente su consulta.
+                </p>
+              </section>
+            )}
+
+            {vistaGastos === "formulario" && (
+              <GastoForm
+                onVolver={() =>
+                  setVistaGastos("listado")
+                }
+                onSesionExpirada={onLogout}
+              />
+            )}
+          </>
         )}
       </section>
     </main>

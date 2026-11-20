@@ -1238,6 +1238,18 @@ html {
   outline-offset: 2px;
 }
 
+/* Al confirmar un gasto*/
+.gasto-confirmacion {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border: 1px solid #d3fb64;
+  border-radius: 10px;
+  background: #123d32;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+ 
 /* HU004 / #66: Distribución de la paginación de ingresos. */
 .role-card.admin-card .ingresos-paginacion .paginacion-controles {
   display: flex;

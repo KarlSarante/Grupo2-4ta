@@ -1,14 +1,9 @@
 import { Router } from "express";
 import { autenticarToken } from "../middlewares/auth.middleware.js";
 import { autorizarRoles } from "../middlewares/role.middleware.js";
-import {
-  registrarIngreso,
-  consultarIngresos,
-} from "../controllers/ingreso.controller.js";
-import {
-  obtenerGastos,
-  obtenerTransacciones,
-} from "../controllers/transaccion.controller.js";
+import { registrarIngreso, consultarIngresos } from "../controllers/ingreso.controller.js";
+import { registrarGasto } from "../controllers/gasto.controller.js";
+import { obtenerGastos, obtenerTransacciones } from "../controllers/transaccion.controller.js";
 
 const router = Router();
 
@@ -25,5 +20,8 @@ router.get("/gastos", obtenerGastos);
 // HU004: Registro y consulta de ingresos.
 router.post("/ingresos", registrarIngreso);
 router.get("/ingresos", consultarIngresos);
+
+// HU005: Registrar un gasto del usuario autenticado.
+router.post("/gastos", registrarGasto);
 
 export default router;
