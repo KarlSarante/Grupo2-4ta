@@ -14,6 +14,7 @@ import {
   obtenerObjetivos,
   agregarAportacion,
 } from "../services/objetivoService.js";
+import { obtenerGastos } from "../services/gastoService.js";
 
 // HU004 / #64: Panel financiero y navegación visual.
 function FinancePanel({ usuario, token, onLogout }) {
@@ -75,6 +76,9 @@ function FinancePanel({ usuario, token, onLogout }) {
   const [errorObjetivo, setErrorObjetivo] = useState("");
   const [mensajeObjetivo, setMensajeObjetivo] = useState("");
   const [aportaciones, setAportaciones] = useState({});
+  // HU006: Paginación del historial general de transacciones.
+  const [paginaTransacciones, setPaginaTransacciones] = useState(1);
+  const transaccionesPorPagina = 5;
 
   useEffect(() => {
     if (pestanaActiva !== "resumen") return;
@@ -166,9 +170,18 @@ function FinancePanel({ usuario, token, onLogout }) {
       activo = false;
     };
   }, [pestanaActiva, token]);
-
   // HU004 / #66: Confirmación después de registrar un ingreso.
   const [mensajeIngreso, setMensajeIngreso] = useState("");
+  const [mensajeGasto, setMensajeGasto] = useState("");
+
+  const [gastos, setGastos] = useState([]);
+  const [cargandoGastos, setCargandoGastos] = useState(false);
+  const [errorGastos, setErrorGastos] = useState("");
+  const [recargaGastos, setRecargaGastos] = useState(0);
+
+  // HU005: Paginación del historial de gastos.
+  const [paginaGastos, setPaginaGastos] = useState(1);
+  const gastosPorPagina = 5;
 
   // HU004 / #66: Historial de ingresos del usuario autenticado.
   const [ingresos, setIngresos] = useState([]);
@@ -245,6 +258,45 @@ function FinancePanel({ usuario, token, onLogout }) {
     };
   }, [pestanaActiva, vistaIngresos, recargaIngresos]);
 
+  // HU005: Cargar el historial de gastos del usuario autenticado.
+  useEffect(() => {
+    if (pestanaActiva !== "gastos" || vistaGastos !== "listado") {
+      return;
+    }
+
+    let activo = true;
+
+    async function cargarGastos() {
+      setCargandoGastos(true);
+      setErrorGastos("");
+
+      try {
+        const datos = await obtenerGastos();
+
+        if (activo) {
+          setGastos(datos);
+        }
+      } catch (error) {
+        if (activo) {
+          setGastos([]);
+          setErrorGastos(
+            error.message || "No se pudieron cargar los gastos."
+          );
+        }
+      } finally {
+        if (activo) {
+          setCargandoGastos(false);
+        }
+      }
+    }
+
+    cargarGastos();
+
+    return () => {
+      activo = false;
+    };
+  }, [pestanaActiva, vistaGastos, recargaGastos]);
+
   // Cerrar el menú al hacer clic fuera o presionar Escape.
   useEffect(() => {
     if (!menuPerfilAbierto) {
@@ -282,6 +334,7 @@ function FinancePanel({ usuario, token, onLogout }) {
     setPestanaActiva(pestana);
     setVistaIngresos("listado");
     setVistaGastos("listado");
+    setMensajeGasto("");
   }
 
   // HU004 / #66: Regresar al listado despues de agregar un ingreso y actualizar los ingresos.
@@ -295,6 +348,11 @@ function FinancePanel({ usuario, token, onLogout }) {
 
   function manejarGastoRegistrado(mensaje, alertas = []) {
     setRecargaTransacciones((valor) => valor + 1);
+    setMensajeGasto(mensaje || "Gasto registrado correctamente.");
+    setPestanaActiva("gastos");
+    setVistaGastos("listado");
+    setRecargaGastos((anterior) => anterior + 1);
+    setPaginaGastos(1);
 
     if (alertas.length > 0) {
       const nivel = Math.max(...alertas.map((alerta) => alerta.nivel));
@@ -329,6 +387,48 @@ function FinancePanel({ usuario, token, onLogout }) {
   const ingresosVisibles = ingresos.slice(
     indiceInicialIngresos,
     indiceInicialIngresos + ingresosPorPagina
+  );
+
+  // HU005: Calcular los gastos visibles por página.
+  const totalGastos = gastos.length;
+
+  const totalPaginasGastos = Math.max(
+    1,
+    Math.ceil(totalGastos / gastosPorPagina)
+  );
+
+  const paginaActualGastos = Math.min(
+    Math.max(1, paginaGastos),
+    totalPaginasGastos
+  );
+
+  const indiceInicialGastos =
+    (paginaActualGastos - 1) * gastosPorPagina;
+
+  const gastosVisibles = gastos.slice(
+    indiceInicialGastos,
+    indiceInicialGastos + gastosPorPagina
+  );
+
+  // HU006: Calcular las transacciones visibles por página.
+  const totalTransacciones = transacciones.length;
+
+  const totalPaginasTransacciones = Math.max(
+    1,
+    Math.ceil(totalTransacciones / transaccionesPorPagina)
+  );
+
+  const paginaActualTransacciones = Math.min(
+    Math.max(1, paginaTransacciones),
+    totalPaginasTransacciones
+  );
+
+  const indiceInicialTransacciones =
+    (paginaActualTransacciones - 1) * transaccionesPorPagina;
+
+  const transaccionesVisibles = transacciones.slice(
+    indiceInicialTransacciones,
+    indiceInicialTransacciones + transaccionesPorPagina
   );
 
   return (
@@ -502,7 +602,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                   </thead>
 
                   <tbody>
-                    {transacciones.map((transaccion) => (
+                    {transaccionesVisibles.map((transaccion) => (
                       <tr key={transaccion.id}>
                         <td>
                           {String(transaccion.fecha).slice(0, 10)}
@@ -538,6 +638,55 @@ function FinancePanel({ usuario, token, onLogout }) {
                 </table>
               </div>
             )}
+            {/* HU006: Paginación del historial general. */}
+            {!cargandoTransacciones &&
+              !errorTransacciones &&
+              totalTransacciones > transaccionesPorPagina && (
+                <nav
+                  className="usuarios-paginacion ingresos-paginacion"
+                  aria-label="Paginación de transacciones"
+                >
+                  <p className="paginacion-resumen">
+                    Mostrando {indiceInicialTransacciones + 1}–
+                    {Math.min(
+                      indiceInicialTransacciones + transaccionesPorPagina,
+                      totalTransacciones
+                    )} de {totalTransacciones} transacciones
+                  </p>
+
+                  <div className="paginacion-controles">
+                    <button
+                      type="button"
+                      className="paginacion-boton"
+                      disabled={paginaActualTransacciones === 1}
+                      onClick={() =>
+                        setPaginaTransacciones((anterior) =>
+                          Math.max(1, anterior - 1)
+                        )
+                      }
+                    >
+                      Anterior
+                    </button>
+
+                    <span className="paginacion-indicador">
+                      Página {paginaActualTransacciones} de {totalPaginasTransacciones}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="paginacion-boton"
+                      disabled={paginaActualTransacciones === totalPaginasTransacciones}
+                      onClick={() =>
+                        setPaginaTransacciones((anterior) =>
+                          Math.min(totalPaginasTransacciones, anterior + 1)
+                        )
+                      }
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </nav>
+              )}
           </section>
         )}
 
@@ -1027,39 +1176,49 @@ function FinancePanel({ usuario, token, onLogout }) {
                     </p>
                   </div>
                 ) : (
-                  <div className="ingresos-listado">
-                    {ingresosVisibles.map((ingreso) => {
-                      const monto = Number(ingreso.monto);
-                      const fecha = String(ingreso.fecha).slice(0, 10);
+                  <div className="historial-tabla-contenedor">
+                    <table className="historial-tabla">
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Descripción</th>
+                          <th>Categoría</th>
+                          <th>Tipo</th>
+                          <th>Monto</th>
+                        </tr>
+                      </thead>
 
-                      return (
-                        <article
-                          key={ingreso.id}
-                          className="ingresos-item"
-                        >
-                          <div>
-                            <strong>
-                              {Number.isFinite(monto)
-                                ? monto.toLocaleString("es-DO", {
-                                  style: "currency",
-                                  currency: "DOP",
-                                })
-                                : "Monto no disponible"}
-                            </strong>
+                      <tbody>
+                        {ingresosVisibles.map((ingreso) => (
+                          <tr key={ingreso.id}>
+                            <td>
+                              {String(ingreso.fecha).slice(0, 10)}
+                            </td>
 
-                            <p>
-                              Fecha: {fecha}
-                            </p>
+                            <td>
+                              {ingreso.descripcion || "Sin descripción"}
+                            </td>
 
-                            <p>Categoría: {ingreso.categoria_nombre ?? "Sin categoría"}</p>
+                            <td>
+                              {ingreso.categoria_nombre || "Sin categoría"}
+                            </td>
 
-                            {ingreso.descripcion && (
-                              <p>{ingreso.descripcion}</p>
-                            )}
-                          </div>
-                        </article>
-                      );
-                    })}
+                            <td>
+                              <span className="tipo-transaccion tipo-ingreso">
+                                Ingreso
+                              </span>
+                            </td>
+
+                            <td>
+                              {new Intl.NumberFormat("es-DO", {
+                                style: "currency",
+                                currency: "DOP",
+                              }).format(Number(ingreso.monto))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
                 {/* HU004 / #66: Controles de paginación del historial. */}
@@ -1143,11 +1302,131 @@ function FinancePanel({ usuario, token, onLogout }) {
                   </button>
                 </div>
 
-                <p>
-                  El historial de gastos estará disponible
-                  cuando se implemente su consulta.
-                </p>
+                {mensajeGasto && (
+                  <p className="ingresos-mensaje-exito" role="status">
+                    {mensajeGasto}
+                  </p>
+                )}
+                {/* HU005: Historial de gastos del usuario. */}
+                {cargandoGastos ? (
+                  <p role="status">Cargando gastos...</p>
+                ) : errorGastos ? (
+                  <div role="alert">
+                    <p>{errorGastos}</p>
+
+                    <button
+                      type="button"
+                      className="categorias-crear-boton"
+                      onClick={() =>
+                        setRecargaGastos((anterior) => anterior + 1)
+                      }
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                ) : gastos.length === 0 ? (
+                  <div className="ingresos-estado-vacio">
+                    <h3>Todavía no tienes gastos registrados</h3>
+                    <p>
+                      Registra tu primer gasto para comenzar a llevar
+                      el control de tus finanzas.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="historial-tabla-contenedor">
+                    <table className="historial-tabla">
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Descripción</th>
+                          <th>Categoría</th>
+                          <th>Tipo</th>
+                          <th>Monto</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {gastosVisibles.map((gasto) => (
+                          <tr key={gasto.id}>
+                            <td>{String(gasto.fecha).slice(0, 10)}</td>
+
+                            <td>
+                              {gasto.descripcion || "Sin descripción"}
+                            </td>
+
+                            <td>
+                              {gasto.categoria || "Sin categoría"}
+                            </td>
+
+                            <td>
+                              <span className="tipo-transaccion tipo-gasto">
+                                Gasto
+                              </span>
+                            </td>
+
+                            <td>
+                              {new Intl.NumberFormat("es-DO", {
+                                style: "currency",
+                                currency: "DOP",
+                              }).format(Number(gasto.monto))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {/* HU005: Paginación del historial de gastos. */}
+                {!cargandoGastos &&
+                  !errorGastos &&
+                  totalGastos > gastosPorPagina && (
+                    <nav
+                      className="usuarios-paginacion ingresos-paginacion"
+                      aria-label="Paginación de gastos"
+                    >
+                      <p className="paginacion-resumen">
+                        Mostrando {indiceInicialGastos + 1}–
+                        {Math.min(
+                          indiceInicialGastos + gastosPorPagina,
+                          totalGastos
+                        )} de {totalGastos} gastos
+                      </p>
+
+                      <div className="paginacion-controles">
+                        <button
+                          type="button"
+                          className="paginacion-boton"
+                          disabled={paginaActualGastos === 1}
+                          onClick={() =>
+                            setPaginaGastos((anterior) =>
+                              Math.max(1, anterior - 1)
+                            )
+                          }
+                        >
+                          Anterior
+                        </button>
+
+                        <span className="paginacion-indicador">
+                          Página {paginaActualGastos} de {totalPaginasGastos}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="paginacion-boton"
+                          disabled={paginaActualGastos === totalPaginasGastos}
+                          onClick={() =>
+                            setPaginaGastos((anterior) =>
+                              Math.min(totalPaginasGastos, anterior + 1)
+                            )
+                          }
+                        >
+                          Siguiente
+                        </button>
+                      </div>
+                    </nav>
+                  )}
               </section>
+
             )}
 
             {vistaGastos === "formulario" && (

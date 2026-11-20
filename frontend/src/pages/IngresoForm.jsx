@@ -215,10 +215,25 @@ function IngresoForm({ onVolver, onIngresoRegistrado }) {
 
             const respuesta = await registrarIngreso(ingreso, sesion.token);
 
-            // Notificar al panel financiero después del registro exitoso.
-            onIngresoRegistrado(
-                respuesta.mensaje || "Ingreso registrado correctamente."
+            const categoriaSeleccionada = categoriasIngreso.find(
+                (item) => Number(item.id) === ingreso.categoria_id
             );
+
+            const montoFormateado = ingreso.monto.toLocaleString("es-DO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+
+            const detalleIngreso = categoriaSeleccionada
+                ? `RD$ ${montoFormateado} en ${categoriaSeleccionada.nombre}`
+                : `RD$ ${montoFormateado}`;
+
+            const mensajeExito = respuesta?.mensaje
+                ? `${respuesta.mensaje} (${detalleIngreso}).`
+                : `Ingreso de ${detalleIngreso} guardado correctamente.`;
+
+            // Notificar al panel financiero después del registro exitoso.
+            onIngresoRegistrado(mensajeExito);
         } catch (error) {
             setErrorRegistro(
                 error.message || "No se pudo registrar el ingreso."

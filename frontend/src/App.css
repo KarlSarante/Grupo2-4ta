@@ -1408,7 +1408,7 @@ html {
   font-size: 14px;
   font-weight: 700;
 }
- 
+
 /* HU004 / #66: Distribución de la paginación de ingresos. */
 .role-card.admin-card .ingresos-paginacion .paginacion-controles {
   display: flex;
@@ -1420,6 +1420,7 @@ html {
 .role-card.admin-card .ingresos-paginacion .paginacion-indicador {
   white-space: nowrap;
 }
+
 /* HU004 / #66: Distribución responsive del formulario de ingresos. */
 .role-card.admin-card .ingreso-formulario {
   width: 100%;
@@ -1450,4 +1451,84 @@ html {
     grid-template-columns: minmax(0, 1fr);
     gap: 18px;
   }
+}
+
+/* ==========================================================
+   Consistencia visual: AdminPanel y FinancePanel
+   ========================================================== */
+
+/* Botón principal del listado de categorías. */
+.role-card.admin-card .categorias-crear-boton {
+  width: auto;
+  min-height: 38px;
+  margin: 0;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #176b45;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.role-card.admin-card .categorias-crear-boton:hover:not(:disabled) {
+  background: #125536;
+}
+
+/* Botón principal del formulario de categorías. */
+.role-card.admin-card .categorias-formulario button[type="submit"] {
+  width: auto;
+  min-height: 38px;
+  margin: 4px 0 0;
+  padding: 9px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Botón secundario para regresar al listado. */
+.role-card.admin-card .categorias-volver {
+  width: auto;
+  min-height: 38px;
+  margin: 0;
+  padding: 9px 14px;
+  border: 1px solid #176b45;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #176b45;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.role-card.admin-card .categorias-volver:hover:not(:disabled) {
+  background: #edf7ef;
+  color: #176b45;
+}
+
+/* Botón secundario para limpiar filtros. */
+.role-card.admin-card .usuarios-limpiar {
+  width: auto;
+  min-height: 38px;
+  margin: 0;
+  padding: 9px 14px;
+  border-color: #176b45;
+  color: #176b45;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.role-card.admin-card .usuarios-limpiar:hover:not(:disabled) {
+  background: #edf7ef;
+}
+
+/* Indicadores de foco para navegación por teclado. */
+.role-card.admin-card .categorias-crear-boton:focus-visible,
+.role-card.admin-card .categorias-volver:focus-visible {
+  outline: 2px solid #176b45;
+  outline-offset: 2px;
 }
