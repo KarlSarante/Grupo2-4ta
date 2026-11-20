@@ -78,9 +78,14 @@ export async function obtenerCategorias(token, tipo = null) {
 
   // Conservar los mensajes de error del backend.
   if (!respuesta.ok) {
-    throw new Error(
+    const error = new Error(
       datos.mensaje || "No se pudieron consultar las categorías"
     );
+
+    error.estado = respuesta.status;
+    error.errores = datos.errores ?? [];
+
+    throw error;
   }
 
   // Garantizar que el componente reciba un listado válido.
