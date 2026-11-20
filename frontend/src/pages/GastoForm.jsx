@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { useEffect, useRef, useState } from "react";
+import { obtenerCategorias } from "../services/categoriaService.js";
 import { registrarGasto } from "../services/gastoService.js";
 
-// HU005: Comprueba que la fecha exista en el calendario.
+// HU005 / #75: Comprueba que la fecha exista en el calendario.
 function esFechaValida(fecha) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
         return false;
@@ -23,7 +24,7 @@ function esFechaValida(fecha) {
     );
 }
 
-// HU005: Esquema Zod del formulario de gastos.
+// HU005 / #75: Esquema Zod del formulario de gastos.
 const gastoFormSchema = z.object({
     monto: z.string()
         .trim()
@@ -68,36 +69,102 @@ const gastoFormSchema = z.object({
         .max(255, "La descripción no puede superar los 255 caracteres"),
 });
 
-
-// HU005: Formulario de registro de gastos.
-// Usa las mismas clases CSS que IngresoForm para mantener el diseño unificado.
-// onSesionExpirada: se ejecuta si el servidor responde 401 (token inválido, vencido o revocado).
-function GastoForm({ onVolver, onSesionExpirada }) {
+// HU005 / #75: Formulario de registro de gastos.
+// Mantiene la estructura visual de los formularios del AdminPanel / IngresoForm.
+function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada }) {
     const [monto, setMonto] = useState("");
     const [categoria, setCategoria] = useState("");
     const [fecha, setFecha] = useState("");
     const [descripcion, setDescripcion] = useState("");
     const [errores, setErrores] = useState({});
-    const [enviando, setEnviando] = useState(false);
-    const [errorGeneral, setErrorGeneral] = useState("");
+    const [categoriasGasto, setCategoriasGasto] = useState([]);
+    const [cargandoCategorias, setCargandoCategorias] = useState(true);
+    const [errorCategorias, setErrorCategorias] = useState("");
+    const [guardandoGasto, setGuardandoGasto] = useState(false);
+    const [errorRegistro, setErrorRegistro] = useState("");
     const [confirmacion, setConfirmacion] = useState("");
 
     // Referencia al campo para abrir el calendario.
     const referenciaFecha = useRef(null);
 
-    // La confirmación de registro desaparece sola a los 6 segundos.
+    // HU005 / #75: Bloqueo inmediato contra solicitudes duplicadas.
+    const envioEnCurso = useRef(false);
+
+    // Ocultar mensaje de confirmación automáticamente tras 5 segundos.
     useEffect(() => {
         if (!confirmacion) {
             return;
         }
 
-        const temporizador = setTimeout(() => setConfirmacion(""), 6000);
-
+        const temporizador = setTimeout(() => setConfirmacion(""), 5000);
         return () => clearTimeout(temporizador);
     }, [confirmacion]);
 
+    // HU005 / #75: Cargar las categorías de gasto desde MySQL.
+    useEffect(() => {
+        let activo = true;
+
+        async function cargarCategorias() {
+            setCargandoCategorias(true);
+            setErrorCategorias("");
+
+            try {
+                const sesion = JSON.parse(
+                    localStorage.getItem("sesion") ||
+                    sessionStorage.getItem("sesion") ||
+                    "null"
+                );
+
+                if (!sesion?.token) {
+                    throw new Error("La sesión ha expirado. Inicia sesión nuevamente.");
+                }
+
+                const resultado = await obtenerCategorias(sesion.token, "gasto");
+                const lista = Array.isArray(resultado)
+                    ? resultado
+                    : (resultado?.categorias ?? []);
+
+                if (activo) {
+                    setCategoriasGasto(lista);
+                }
+            } catch (error) {
+                if (error?.estado === 401) {
+                    onSesionExpirada?.();
+                    return;
+                }
+
+                if (activo) {
+                    setCategoriasGasto([]);
+                    setErrorCategorias(
+                        error.message || "No se pudieron cargar las categorías."
+                    );
+                }
+            } finally {
+                if (activo) {
+                    setCargandoCategorias(false);
+                }
+            }
+        }
+
+        cargarCategorias();
+
+        return () => {
+            activo = false;
+        };
+    }, [onSesionExpirada]);
+
+    // HU005 / #75: Validar y registrar gastos mediante la API.
     async function manejarEnvio(evento) {
         evento.preventDefault();
+
+        // HU005 / #75: Evitar envíos duplicados.
+        if (envioEnCurso.current) {
+            return;
+        }
+
+        // Limpiar mensajes de intentos anteriores.
+        setErrorRegistro("");
+        setConfirmacion("");
 
         const resultado = gastoFormSchema.safeParse({
             monto,
@@ -139,58 +206,96 @@ function GastoForm({ onVolver, onSesionExpirada }) {
         }
 
         setErrores({});
-        setErrorGeneral("");
-        setConfirmacion("");
-        setEnviando(true);
+
+        envioEnCurso.current = true;
+        setGuardandoGasto(true);
 
         try {
-            // POST /api/finanzas/gastos con el token JWT de la sesión.
-            const respuesta = await registrarGasto({
-                categoria_id: Number(categoria),
-                monto: Number(monto),
-                fecha,
-                descripcion: descripcion.trim() || null,
+            const sesion = JSON.parse(
+                localStorage.getItem("sesion") ||
+                sessionStorage.getItem("sesion") ||
+                "null"
+            );
+
+            if (!sesion?.token) {
+                throw new Error(
+                    "La sesión ha expirado. Inicia sesión nuevamente."
+                );
+            }
+
+            const montoFormateado = Number(resultado.data.monto).toLocaleString("es-DO", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
             });
 
-            // Limpiar el formulario y confirmar el registro.
+            const categoriaSeleccionada = categoriasGasto.find(
+                (item) => String(item.id) === String(resultado.data.categoria)
+            );
+
+            const gasto = {
+                categoria_id: Number(resultado.data.categoria),
+                monto: Number(resultado.data.monto),
+                fecha: resultado.data.fecha,
+                descripcion: resultado.data.descripcion.trim() || null,
+            };
+
+            const respuesta = await registrarGasto(gasto, sesion.token);
+            const detalleGasto = categoriaSeleccionada
+                ? `RD$ ${montoFormateado} en ${categoriaSeleccionada.nombre}`
+                : `RD$ ${montoFormateado}`;
+
+            const mensajeExito =
+                respuesta?.mensaje
+                    ? `${respuesta.mensaje} (${detalleGasto}).`
+                    : `Gasto de ${detalleGasto} guardado correctamente.`;
+
+            // Limpiar campos tras registrar con éxito.
             setMonto("");
             setCategoria("");
             setFecha("");
             setDescripcion("");
-            setConfirmacion(
-                respuesta?.mensaje || "Gasto registrado correctamente"
-            );
+            setConfirmacion(mensajeExito);
+
+            // Notificar al padre para cerrar/actualizar si está conectado.
+            if (typeof onGastoRegistrado === "function") {
+                onGastoRegistrado(mensajeExito);
+            }
         } catch (error) {
-            if (error.estado === 401) {
-                // Token inválido, vencido o revocado: volver al inicio de sesión.
+            if (error?.estado === 401) {
                 onSesionExpirada?.();
                 return;
             }
 
-            // Errores por campo enviados por el servidor.
-            const erroresServidor = {};
+            setErrorRegistro(
+                error.message || "No se pudo registrar el gasto."
+            );
 
-            for (const item of error.errores ?? []) {
-                const campo = item.campo === "categoria_id" ? "categoria" : item.campo;
+            // Mostrar los errores de validación devueltos por el backend.
+            if (Array.isArray(error.errores)) {
+                const erroresServidor = {};
 
-                if (
-                    ["monto", "categoria", "fecha", "descripcion"].includes(campo) &&
-                    !erroresServidor[campo]
-                ) {
-                    erroresServidor[campo] = item.mensaje;
+                const equivalencias = {
+                    categoria_id: "categoria",
+                    monto: "monto",
+                    fecha: "fecha",
+                    descripcion: "descripcion",
+                };
+
+                for (const detalle of error.errores) {
+                    const campo = equivalencias[detalle.campo];
+
+                    if (campo && !erroresServidor[campo]) {
+                        erroresServidor[campo] = detalle.mensaje;
+                    }
                 }
-            }
 
-            if (Object.keys(erroresServidor).length > 0) {
                 setErrores(erroresServidor);
-            } else {
-                setErrorGeneral(error.message || "No se pudo registrar el gasto");
             }
         } finally {
-            setEnviando(false);
+            envioEnCurso.current = false;
+            setGuardandoGasto(false);
         }
     }
-
 
     return (
         <section
@@ -200,11 +305,42 @@ function GastoForm({ onVolver, onSesionExpirada }) {
 
             <h2>Registrar gasto</h2>
 
-            {/* Confirmación del registro exitoso. */}
             {confirmacion && (
-                <p className="gasto-confirmacion" role="status">
-                    {confirmacion}
-                </p>
+                <div className="gasto-confirmacion" role="status" aria-live="polite">
+                    <span className="gasto-confirmacion-icono" aria-hidden="true">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                    </span>
+
+                    <div className="gasto-confirmacion-contenido">
+                        <strong className="gasto-confirmacion-titulo">
+                            ¡Registro exitoso!
+                        </strong>
+                        <p className="gasto-confirmacion-texto">
+                            {confirmacion}
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="gasto-confirmacion-cerrar"
+                        aria-label="Cerrar mensaje de confirmación"
+                        onClick={() => setConfirmacion("")}
+                    >
+                        ×
+                    </button>
+                </div>
             )}
 
             <form
@@ -212,247 +348,274 @@ function GastoForm({ onVolver, onSesionExpirada }) {
                 onSubmit={manejarEnvio}
                 noValidate
             >
-                {/* Monto del gasto en pesos dominicanos. */}
-                <div className="categorias-campo">
-                    <label htmlFor="gasto-monto">
-                        Monto (RD$)
-                    </label>
+                <fieldset
+                    disabled={guardandoGasto}
+                    style={{ border: "none", padding: 0, margin: 0, minWidth: 0 }}
+                >
 
-                    <input
-                        id="gasto-monto"
-                        name="monto"
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        placeholder="Ej. 1500.00"
-                        value={monto}
-                        onChange={(evento) => {
-                            const nuevoMonto = evento.target.value;
-                            setMonto(nuevoMonto);
+                    {/* Monto del gasto en pesos dominicanos. */}
+                    <div className="categorias-campo">
+                        <label htmlFor="gasto-monto">
+                            Monto (RD$)
+                        </label>
 
-                            if (errores.monto) {
-                                const resultado = gastoFormSchema.shape.monto.safeParse(nuevoMonto);
-
-                                setErrores((anteriores) => ({
-                                    ...anteriores,
-                                    monto: resultado.success
-                                        ? ""
-                                        : resultado.error.issues[0]?.message || "",
-                                }));
-                            }
-                        }}
-
-                        aria-invalid={Boolean(errores.monto)}
-                        aria-describedby={errores.monto ? "error-gasto-monto" : undefined}
-
-                    />
-                    {errores.monto && (
-                        <p
-                            id="error-gasto-monto"
-                            className="categorias-error"
-                            role="alert"
-                        >
-                            {errores.monto}
-                        </p>
-                    )}
-                </div>
-
-                {/* Selector de categorías de tipo gasto. */}
-                <div className="categorias-campo">
-                    <label htmlFor="gasto-categoria">
-                        Categoría
-                    </label>
-
-                    <select
-                        id="gasto-categoria"
-                        name="categoria"
-                        value={categoria}
-                        onChange={(evento) => {
-                            const nuevaCategoria = evento.target.value;
-                            setCategoria(nuevaCategoria);
-
-                            if (errores.categoria) {
-                                const resultado = gastoFormSchema.shape.categoria.safeParse(nuevaCategoria);
-
-                                setErrores((anteriores) => ({
-                                    ...anteriores,
-                                    categoria: resultado.success
-                                        ? ""
-                                        : resultado.error.issues[0]?.message || "",
-                                }));
-                            }
-                        }}
-
-                        aria-invalid={Boolean(errores.categoria)}
-                        aria-describedby={errores.categoria ? "error-gasto-categoria" : undefined}
-                    >
-                        <option value="">
-                            Selecciona una categoría
-                        </option>
-
-                        {/* HU005: Cargar categorías de gasto desde la API. */}
-                    </select>
-
-                    {errores.categoria && (
-                        <p
-                            id="error-gasto-categoria"
-                            className="categorias-error"
-                            role="alert"
-                        >
-                            {errores.categoria}
-                        </p>
-                    )}
-
-                </div>
-
-                {/* Fecha correspondiente al gasto. */}
-                <div className="categorias-campo">
-                    <label htmlFor="gasto-fecha">
-                        Fecha
-                    </label>
-
-                    <div className="ingreso-fecha-contenedor">
                         <input
-                            ref={referenciaFecha}
-                            id="gasto-fecha"
-                            name="fecha"
-                            type="date"
-                            value={fecha}
+                            id="gasto-monto"
+                            name="monto"
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="Ej. 1500.00"
+                            value={monto}
                             onChange={(evento) => {
-                                const nuevaFecha = evento.target.value;
-                                setFecha(nuevaFecha);
+                                const nuevoMonto = evento.target.value;
+                                setMonto(nuevoMonto);
 
-                                if (errores.fecha) {
-                                    const resultado = gastoFormSchema.shape.fecha.safeParse(nuevaFecha);
+                                if (errores.monto) {
+                                    const resultado = gastoFormSchema.shape.monto.safeParse(nuevoMonto);
 
                                     setErrores((anteriores) => ({
                                         ...anteriores,
-                                        fecha: resultado.success
+                                        monto: resultado.success
                                             ? ""
                                             : resultado.error.issues[0]?.message || "",
                                     }));
                                 }
                             }}
 
-                            aria-invalid={Boolean(errores.fecha)}
-                            aria-describedby={errores.fecha ? "error-gasto-fecha" : undefined}
+                            aria-invalid={Boolean(errores.monto)}
+                            aria-describedby={errores.monto ? "error-gasto-monto" : undefined}
 
                         />
+                        {errores.monto && (
+                            <p
+                                id="error-gasto-monto"
+                                className="categorias-error"
+                                role="alert"
+                            >
+                                {errores.monto}
+                            </p>
+                        )}
+                    </div>
 
-                        <button
-                            type="button"
-                            className="ingreso-fecha-boton"
-                            aria-label="Seleccionar fecha"
-                            onClick={() => {
-                                const campo = referenciaFecha.current;
+                    {/* Selector de categorías de tipo gasto. */}
+                    <div className="categorias-campo">
+                        <label htmlFor="gasto-categoria">
+                            Categoría
+                        </label>
 
-                                if (typeof campo?.showPicker === "function") {
-                                    campo.showPicker();
-                                } else {
-                                    campo?.focus();
-                                    campo?.click();
+                        <select
+                            id="gasto-categoria"
+                            name="categoria"
+                            value={categoria}
+                            onChange={(evento) => {
+                                const nuevaCategoria = evento.target.value;
+                                setCategoria(nuevaCategoria);
+
+                                if (errores.categoria) {
+                                    const resultado = gastoFormSchema.shape.categoria.safeParse(nuevaCategoria);
+
+                                    setErrores((anteriores) => ({
+                                        ...anteriores,
+                                        categoria: resultado.success
+                                            ? ""
+                                            : resultado.error.issues[0]?.message || "",
+                                    }));
                                 }
                             }}
+
+                            aria-invalid={Boolean(errores.categoria)}
+                            aria-describedby={errores.categoria ? "error-gasto-categoria" : undefined}
+                            disabled={cargandoCategorias || Boolean(errorCategorias)}
                         >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                aria-hidden="true"
+
+                            <option value="">
+                                {cargandoCategorias
+                                    ? "Cargando categorías..."
+                                    : "Selecciona una categoría"}
+                            </option>
+
+                            {categoriasGasto.map((categoriaGasto) => (
+                                <option
+                                    key={categoriaGasto.id}
+                                    value={categoriaGasto.id}
+                                >
+                                    {categoriaGasto.nombre}
+                                </option>
+                            ))}
+                        </select>
+
+                        {/* HU005 / #75: Mostrar errores al consultar categorías. */}
+                        {errorCategorias && (
+                            <p className="categorias-error" role="alert">
+                                {errorCategorias}
+                            </p>
+                        )}
+
+                        {errores.categoria && (
+                            <p
+                                id="error-gasto-categoria"
+                                className="categorias-error"
+                                role="alert"
                             >
-                                <rect x="3" y="5" width="18" height="16" rx="2" />
-                                <path d="M16 3v4M8 3v4M3 10h18" />
-                            </svg>
+                                {errores.categoria}
+                            </p>
+                        )}
+
+                    </div>
+
+                    {/* Fecha correspondiente al gasto. */}
+                    <div className="categorias-campo">
+                        <label htmlFor="gasto-fecha">
+                            Fecha
+                        </label>
+
+                        <div className="ingreso-fecha-contenedor">
+                            <input
+                                ref={referenciaFecha}
+                                id="gasto-fecha"
+                                name="fecha"
+                                type="date"
+                                value={fecha}
+                                onChange={(evento) => {
+                                    const nuevaFecha = evento.target.value;
+                                    setFecha(nuevaFecha);
+
+                                    if (errores.fecha) {
+                                        const resultado = gastoFormSchema.shape.fecha.safeParse(nuevaFecha);
+
+                                        setErrores((anteriores) => ({
+                                            ...anteriores,
+                                            fecha: resultado.success
+                                                ? ""
+                                                : resultado.error.issues[0]?.message || "",
+                                        }));
+                                    }
+                                }}
+
+                                aria-invalid={Boolean(errores.fecha)}
+                                aria-describedby={errores.fecha ? "error-gasto-fecha" : undefined}
+
+                            />
+
+                            <button
+                                type="button"
+                                className="ingreso-fecha-boton"
+                                aria-label="Seleccionar fecha"
+                                onClick={() => {
+                                    const campo = referenciaFecha.current;
+
+                                    if (typeof campo?.showPicker === "function") {
+                                        campo.showPicker();
+                                    } else {
+                                        campo?.focus();
+                                        campo?.click();
+                                    }
+                                }}
+                            >
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    <rect x="3" y="5" width="18" height="16" rx="2" />
+                                    <path d="M16 3v4M8 3v4M3 10h18" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {errores.fecha && (
+                            <p
+                                id="error-gasto-fecha"
+                                className="categorias-error"
+                                role="alert"
+                            >
+                                {errores.fecha}
+                            </p>
+                        )}
+
+                    </div>
+
+                    {/* Información adicional opcional. */}
+                    <div className="categorias-campo">
+                        <label htmlFor="gasto-descripcion">
+                            Descripción (opcional)
+                        </label>
+
+                        <textarea
+                            id="gasto-descripcion"
+                            name="descripcion"
+                            placeholder="Ej. Compra del supermercado"
+                            value={descripcion}
+                            onChange={(evento) => {
+                                const nuevaDescripcion = evento.target.value;
+                                setDescripcion(nuevaDescripcion);
+
+                                if (errores.descripcion) {
+                                    const resultado = gastoFormSchema.shape.descripcion.safeParse(nuevaDescripcion);
+
+                                    setErrores((anteriores) => ({
+                                        ...anteriores,
+                                        descripcion: resultado.success
+                                            ? ""
+                                            : resultado.error.issues[0]?.message || "",
+                                    }));
+                                }
+                            }}
+                            maxLength={255}
+                            rows={3}
+
+                            aria-invalid={Boolean(errores.descripcion)}
+                            aria-describedby={errores.descripcion ? "error-gasto-descripcion" : undefined}
+                        />
+
+                        {errores.descripcion && (
+                            <p
+                                id="error-gasto-descripcion"
+                                className="categorias-error"
+                                role="alert"
+                            >
+                                {errores.descripcion}
+                            </p>
+                        )}
+
+                    </div>
+
+                    {/* HU005 / #75: Acciones del formulario. */}
+                    <div className="ingreso-acciones">
+                        <button
+                            type="button"
+                            className="ingreso-cancelar"
+                            onClick={onVolver}
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            className="ingreso-guardar"
+                            disabled={guardandoGasto || cargandoCategorias || Boolean(errorCategorias)}
+                            aria-busy={guardandoGasto}
+                        >
+                            {guardandoGasto ? "Guardando gasto..." : "Guardar gasto"}
                         </button>
                     </div>
 
-                    {errores.fecha && (
-                        <p
-                            id="error-gasto-fecha"
-                            className="categorias-error"
-                            role="alert"
-                        >
-                            {errores.fecha}
+                    {/* HU005 / #75: Resultado del registro mediante la API. */}
+                    {errorRegistro && (
+                        <p className="categorias-error" role="alert">
+                            {errorRegistro}
                         </p>
                     )}
 
-                </div>
-
-                {/* Información adicional opcional. */}
-                <div className="categorias-campo">
-                    <label htmlFor="gasto-descripcion">
-                        Descripción (opcional)
-                    </label>
-
-                    <textarea
-                        id="gasto-descripcion"
-                        name="descripcion"
-                        placeholder="Ej. Compra del supermercado"
-                        value={descripcion}
-                        onChange={(evento) => {
-                            const nuevaDescripcion = evento.target.value;
-                            setDescripcion(nuevaDescripcion);
-
-                            if (errores.descripcion) {
-                                const resultado = gastoFormSchema.shape.descripcion.safeParse(nuevaDescripcion);
-
-                                setErrores((anteriores) => ({
-                                    ...anteriores,
-                                    descripcion: resultado.success
-                                        ? ""
-                                        : resultado.error.issues[0]?.message || "",
-                                }));
-                            }
-                        }}
-                        maxLength={255}
-                        rows={3}
-
-                        aria-invalid={Boolean(errores.descripcion)}
-                        aria-describedby={errores.descripcion ? "error-gasto-descripcion" : undefined}
-                    />
-
-                    {errores.descripcion && (
-                        <p
-                            id="error-gasto-descripcion"
-                            className="categorias-error"
-                            role="alert"
-                        >
-                            {errores.descripcion}
-                        </p>
-                    )}
-
-                </div>
-
-                {/* Error general del servidor o de conexión. */}
-                {errorGeneral && (
-                    <p className="categorias-error" role="alert">
-                        {errorGeneral}
-                    </p>
-                )}
-
-                <div className="ingreso-acciones">
-                    <button
-                        type="button"
-                        className="ingreso-cancelar"
-                        onClick={onVolver}
-                    >
-                        Cancelar
-                    </button>
-
-                    <button
-                        type="submit"
-                        className="ingreso-guardar"
-                        disabled={enviando}
-                    >
-                        {enviando ? "Guardando..." : "Guardar gasto"}
-                    </button>
-                </div>
+                </fieldset>
             </form>
         </section>
     );

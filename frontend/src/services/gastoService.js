@@ -30,6 +30,48 @@ async function leerJson(respuesta) {
   }
 }
 
+// GET /api/categorias?tipo=gasto
+// Devuelve { mensaje, categorias } si se consultaron; lanza ErrorApi en cualquier otro caso.
+export async function obtenerCategoriasGasto() {
+  const token = obtenerToken();
+
+  if (!token) {
+    throw new ErrorApi("Tu sesión ha expirado. Inicia sesión nuevamente.", {
+      estado: 401,
+    });
+  }
+
+  let respuesta;
+  try {
+    respuesta = await fetch(`${API_URL}/categorias?tipo=gasto`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new ErrorApi(
+      "No se pudo conectar con el servidor. Intenta nuevamente."
+    );
+  }
+
+  const cuerpo = await leerJson(respuesta);
+
+  if (!respuesta.ok) {
+    const mensaje =
+      respuesta.status === 401
+        ? "Tu sesión ha expirado. Inicia sesión nuevamente."
+        : cuerpo?.mensaje || "No se pudieron cargar las categorías";
+
+    throw new ErrorApi(mensaje, {
+      estado: respuesta.status,
+      errores: cuerpo?.errores ?? [],
+    });
+  }
+
+  return cuerpo;
+}
+
 // POST /api/finanzas/gastos
 // datos: { categoria_id, monto, fecha, descripcion }
 // Devuelve { mensaje, gasto } si se registró; lanza ErrorApi en cualquier otro caso.
@@ -74,4 +116,3 @@ export async function registrarGasto(datos) {
 
   return cuerpo;
 }
-
