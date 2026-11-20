@@ -44,6 +44,10 @@ function App() {
   });
 
   const handleLogout = async () => {
+    sessionStorage.removeItem("finanzas-pestana");
+    sessionStorage.removeItem("finanzas-vista-ingresos");
+    sessionStorage.removeItem("finanzas-vista-gastos");
+
     // La sesión se borra al instante dentro de cerrarSesion();
     // la promesa devuelve el mensaje de confirmación del backend.
     const respuestaBackend = cerrarSesion();
