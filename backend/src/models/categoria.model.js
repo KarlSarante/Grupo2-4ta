@@ -14,15 +14,16 @@ export async function buscarCategoriaPorNombreYTipo(nombre, tipo) {
 }
 
 // Crear una categoría general.
-export async function crearCategoria(nombre, tipo) {
+export async function crearCategoria(nombre, tipo, usuarioId = null) {
   const [resultado] = await pool.execute(
-    `INSERT INTO categorias_generales (nombre, tipo)
-     VALUES (?, ?)`,
-    [nombre, tipo]
+    `INSERT INTO categorias_generales (usuario_id, nombre, tipo)
+     VALUES (?, ?, ?)`,
+    [usuarioId, nombre, tipo]
   );
 
   return {
     id: resultado.insertId,
+    usuario_id: usuarioId,
     nombre,
     tipo,
   };
@@ -30,23 +31,30 @@ export async function crearCategoria(nombre, tipo) {
 
 // Consultar categorías generales.
 // Si se proporciona un tipo, filtrar por ingreso o gasto.
-export async function consultarCategorias(tipo = null) {
-  if (tipo !== null) {
-    const [categorias] = await pool.execute(
-      `SELECT id, nombre, tipo
-       FROM categorias_generales
-       WHERE tipo = ?
-       ORDER BY nombre ASC`,
-      [tipo]
-    );
+export async function consultarCategorias(tipo = null, usuarioId = null, incluirTodas = false) {
+  const parametros = [];
+  const filtros = [];
 
-    return categorias;
+  if (tipo !== null) {
+    filtros.push("tipo = ?");
+    parametros.push(tipo);
   }
 
+  if (!incluirTodas) {
+    filtros.push("(usuario_id IS NULL OR usuario_id = ?)");
+    parametros.push(usuarioId);
+  }
+
+  const filtro = filtros.length > 0
+    ? `WHERE ${filtros.join(" AND ")}`
+    : "";
+
   const [categorias] = await pool.execute(
-    `SELECT id, nombre, tipo
+    `SELECT id, usuario_id, nombre, tipo
      FROM categorias_generales
-     ORDER BY tipo ASC, nombre ASC`
+     ${filtro}
+     ORDER BY tipo ASC, nombre ASC`,
+    parametros
   );
 
   return categorias;

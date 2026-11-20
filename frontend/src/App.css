@@ -779,6 +779,165 @@
   margin-top: 12px;
 }
 
+.meta-umbrales {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  width: 100%;
+}
+
+.presupuesto-listado,
+.notificaciones-listado {
+  width: 100%;
+  max-width: 620px;
+  margin-top: 24px;
+}
+
+.presupuesto-listado {
+  display: grid;
+  gap: 14px;
+}
+
+.presupuesto-item {
+  padding: 16px;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.presupuesto-item > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #173d32;
+}
+
+.presupuesto-item p {
+  margin: 10px 0 0;
+  color: #66736c;
+  font-size: 13px;
+}
+
+.presupuesto-progreso {
+  height: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eee9;
+}
+
+.presupuesto-progreso div {
+  height: 100%;
+  border-radius: 999px;
+  background: #176b45;
+}
+
+.presupuesto-aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid #f1c27a;
+  border-radius: 8px;
+  background: #fff8e8;
+  color: #7a4b00;
+  font-weight: 600;
+}
+
+.presupuesto-aviso button {
+  min-height: auto;
+  margin: 0;
+  padding: 2px 8px;
+  background: transparent;
+  color: inherit;
+}
+
+.notificaciones-listado p {
+  padding: 10px 12px;
+  border-left: 3px solid #176b45;
+  background: #edf4ef;
+  color: #173d32;
+}
+
+.objetivos-listado {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 620px;
+  margin-top: 24px;
+}
+
+.objetivo-item {
+  padding: 16px;
+  border: 1px solid #dce5df;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.objetivo-encabezado {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #173d32;
+}
+
+.objetivo-progreso {
+  height: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8eee9;
+}
+
+.objetivo-progreso div {
+  height: 100%;
+  border-radius: 999px;
+  background: #176b45;
+}
+
+.objetivo-item p {
+  margin: 10px 0 0;
+  color: #66736c;
+  font-size: 13px;
+}
+
+.objetivo-aportacion {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.objetivo-aportacion input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 180px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5cf;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.objetivo-aportacion button {
+  width: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 14px;
+}
+
+.objetivo-completado {
+  color: #167347 !important;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .meta-umbrales {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ==========================================================
    HU-016: Estabilidad visual del panel administrativo
    ========================================================== */

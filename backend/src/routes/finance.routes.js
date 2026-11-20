@@ -4,6 +4,16 @@ import { autorizarRoles } from "../middlewares/role.middleware.js";
 import { registrarIngreso, consultarIngresos } from "../controllers/ingreso.controller.js";
 import { registrarGasto } from "../controllers/gasto.controller.js";
 import { obtenerGastos, obtenerTransacciones } from "../controllers/transaccion.controller.js";
+import {
+  guardarMeta,
+  listarMetas,
+  listarNotificaciones,
+} from "../controllers/presupuesto.controller.js";
+import {
+  crearMetaFinanciera,
+  listarMetasFinancieras,
+  agregarAportacion,
+} from "../controllers/objetivo.controller.js";
 
 const router = Router();
 
@@ -23,5 +33,13 @@ router.get("/ingresos", consultarIngresos);
 
 // HU005: Registrar un gasto del usuario autenticado.
 router.post("/gastos", registrarGasto);
+
+router.get("/presupuestos", listarMetas);
+router.post("/presupuestos", guardarMeta);
+router.get("/notificaciones", listarNotificaciones);
+
+router.get("/objetivos", listarMetasFinancieras);
+router.post("/objetivos", crearMetaFinanciera);
+router.post("/objetivos/:id/aportaciones", agregarAportacion);
 
 export default router;

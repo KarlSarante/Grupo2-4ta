@@ -3,13 +3,24 @@ import IngresoForm from "./IngresoForm.jsx";
 import GastoForm from "./GastoForm.jsx";
 import { obtenerIngresos } from "../services/ingresoService.js";
 import { obtenerTransacciones } from "../services/financeService.js";
+import { crearCategoria, obtenerCategorias } from "../services/categoriaService.js";
+import {
+  guardarPresupuesto,
+  obtenerPresupuestos,
+  obtenerNotificaciones,
+} from "../services/presupuestoService.js";
+import {
+  crearObjetivo,
+  obtenerObjetivos,
+  agregarAportacion,
+} from "../services/objetivoService.js";
 
 // HU004 / #64: Panel financiero y navegación visual.
 function FinancePanel({ usuario, token, onLogout }) {
   const [pestanaActiva, setPestanaActiva] = useState(() => {
     const guardada = sessionStorage.getItem("finanzas-pestana");
 
-    return ["resumen", "ingresos", "gastos"].includes(guardada)
+    return ["resumen", "ingresos", "gastos", "categorias", "metas", "objetivos"].includes(guardada)
       ? guardada
       : "ingresos";
   });
@@ -37,6 +48,33 @@ function FinancePanel({ usuario, token, onLogout }) {
   const [cargandoTransacciones, setCargandoTransacciones] = useState(false);
   const [errorTransacciones, setErrorTransacciones] = useState("");
   const [recargaTransacciones, setRecargaTransacciones] = useState(0);
+  const [nombreCategoria, setNombreCategoria] = useState("");
+  const [tipoCategoria, setTipoCategoria] = useState("gasto");
+  const [guardandoCategoria, setGuardandoCategoria] = useState(false);
+  const [errorCategorias, setErrorCategorias] = useState("");
+  const [mensajeCategoria, setMensajeCategoria] = useState("");
+  const mesActual = new Date().toISOString().slice(0, 7);
+  const [mesMeta, setMesMeta] = useState(mesActual);
+  const [categoriasGasto, setCategoriasGasto] = useState([]);
+  const [categoriaMeta, setCategoriaMeta] = useState("");
+  const [montoMeta, setMontoMeta] = useState("");
+  const [umbralMedio, setUmbralMedio] = useState(50);
+  const [umbralAlto, setUmbralAlto] = useState(80);
+  const [presupuestos, setPresupuestos] = useState([]);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [guardandoMeta, setGuardandoMeta] = useState(false);
+  const [errorMeta, setErrorMeta] = useState("");
+  const [mensajeMeta, setMensajeMeta] = useState("");
+  const [avisoPresupuesto, setAvisoPresupuesto] = useState("");
+  const [objetivos, setObjetivos] = useState([]);
+  const [nombreObjetivo, setNombreObjetivo] = useState("");
+  const [montoObjetivo, setMontoObjetivo] = useState("");
+  const [montoInicialObjetivo, setMontoInicialObjetivo] = useState("");
+  const [fechaLimiteObjetivo, setFechaLimiteObjetivo] = useState("");
+  const [guardandoObjetivo, setGuardandoObjetivo] = useState(false);
+  const [errorObjetivo, setErrorObjetivo] = useState("");
+  const [mensajeObjetivo, setMensajeObjetivo] = useState("");
+  const [aportaciones, setAportaciones] = useState({});
 
   useEffect(() => {
     if (pestanaActiva !== "resumen") return;
@@ -72,6 +110,63 @@ function FinancePanel({ usuario, token, onLogout }) {
       activo = false;
     };
   }, [pestanaActiva, token, recargaTransacciones]);
+
+  useEffect(() => {
+    if (pestanaActiva !== "metas") return;
+
+    let activo = true;
+
+    async function cargarMetas() {
+      setErrorMeta("");
+      try {
+        const [categoriasResultado, presupuestosResultado, notificacionesResultado] =
+          await Promise.all([
+            obtenerCategorias(token, "gasto"),
+            obtenerPresupuestos(mesMeta),
+            obtenerNotificaciones(),
+          ]);
+
+        if (activo) {
+          setCategoriasGasto(categoriasResultado);
+          setPresupuestos(presupuestosResultado.presupuestos);
+          setNotificaciones(notificacionesResultado.notificaciones);
+        }
+      } catch (error) {
+        if (activo) {
+          setErrorMeta(error.message || "No se pudieron cargar las metas.");
+        }
+      }
+    }
+
+    cargarMetas();
+    return () => {
+      activo = false;
+    };
+  }, [pestanaActiva, token, mesMeta]);
+
+  useEffect(() => {
+    if (pestanaActiva !== "objetivos") return;
+
+    let activo = true;
+
+    async function cargarObjetivos() {
+      setErrorObjetivo("");
+      try {
+        const resultado = await obtenerObjetivos();
+        if (activo) setObjetivos(resultado.objetivos);
+      } catch (error) {
+        if (activo) {
+          setErrorObjetivo(error.message || "No se pudieron cargar las metas.");
+        }
+      }
+    }
+
+    cargarObjetivos();
+    return () => {
+      activo = false;
+    };
+  }, [pestanaActiva, token]);
+
   // HU004 / #66: Confirmación después de registrar un ingreso.
   const [mensajeIngreso, setMensajeIngreso] = useState("");
 
@@ -182,6 +277,8 @@ function FinancePanel({ usuario, token, onLogout }) {
 
   function cambiarPestana(pestana) {
     setMensajeIngreso("");
+    setMensajeCategoria("");
+    setErrorCategorias("");
     setPestanaActiva(pestana);
     setVistaIngresos("listado");
     setVistaGastos("listado");
@@ -194,6 +291,23 @@ function FinancePanel({ usuario, token, onLogout }) {
     setRecargaIngresos((anterior) => anterior + 1);
     setPestanaActiva("ingresos");
     setVistaIngresos("listado");
+  }
+
+  function manejarGastoRegistrado(mensaje, alertas = []) {
+    setRecargaTransacciones((valor) => valor + 1);
+
+    if (alertas.length > 0) {
+      const nivel = Math.max(...alertas.map((alerta) => alerta.nivel));
+      setAvisoPresupuesto(
+        nivel >= 80
+          ? `Alerta: alcanzaste el ${nivel}% de tu presupuesto mensual.`
+          : `Aviso: alcanzaste el ${nivel}% de tu presupuesto mensual.`
+      );
+    }
+
+    if (mensaje) {
+      setMensajeIngreso(mensaje);
+    }
   }
 
   // HU004 / #66: Calcular los registros visibles por página.
@@ -314,6 +428,9 @@ function FinancePanel({ usuario, token, onLogout }) {
             { id: "resumen", texto: "Resumen" },
             { id: "ingresos", texto: "Ingresos" },
             { id: "gastos", texto: "Gastos" },
+            { id: "categorias", texto: "Categorías" },
+            { id: "metas", texto: "Presupuesto" },
+            { id: "objetivos", texto: "Mis metas financieras" },
           ].map((pestana) => (
             <button
               key={pestana.id}
@@ -333,6 +450,19 @@ function FinancePanel({ usuario, token, onLogout }) {
             </button>
           ))}
         </nav>
+
+        {avisoPresupuesto && (
+          <div className="presupuesto-aviso" role="alert">
+            <span>{avisoPresupuesto}</span>
+            <button
+              type="button"
+              onClick={() => setAvisoPresupuesto("")}
+              aria-label="Cerrar aviso"
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* HU006: Historial general de transacciones. */}
         {pestanaActiva === "resumen" && (
@@ -410,6 +540,436 @@ function FinancePanel({ usuario, token, onLogout }) {
             )}
           </section>
         )}
+
+        {pestanaActiva === "objetivos" && (
+          <section className="admin-seccion">
+            <h2>Mis metas financieras</h2>
+            <p>Crea objetivos de ahorro y registra cuánto vas aportando.</p>
+
+            <form
+              className="categorias-formulario"
+              onSubmit={async (evento) => {
+                evento.preventDefault();
+                setGuardandoObjetivo(true);
+                setErrorObjetivo("");
+                setMensajeObjetivo("");
+
+                try {
+                  await crearObjetivo({
+                    nombre: nombreObjetivo.trim(),
+                    monto_objetivo: Number(montoObjetivo),
+                    monto_actual: Number(montoInicialObjetivo || 0),
+                    fecha_limite: fechaLimiteObjetivo || null,
+                  });
+                  setNombreObjetivo("");
+                  setMontoObjetivo("");
+                  setMontoInicialObjetivo("");
+                  setFechaLimiteObjetivo("");
+                  setMensajeObjetivo("Objetivo financiero creado correctamente.");
+                  const resultado = await obtenerObjetivos();
+                  setObjetivos(resultado.objetivos);
+                } catch (error) {
+                  setErrorObjetivo(error.message || "No se pudo crear el objetivo.");
+                } finally {
+                  setGuardandoObjetivo(false);
+                }
+              }}
+            >
+              <div className="categorias-campo">
+                <label htmlFor="objetivo-nombre">Objetivo</label>
+                <input
+                  id="objetivo-nombre"
+                  type="text"
+                  value={nombreObjetivo}
+                  onChange={(evento) => setNombreObjetivo(evento.target.value)}
+                  minLength={2}
+                  maxLength={100}
+                  placeholder="Ej. Fondo de emergencia"
+                  required
+                  disabled={guardandoObjetivo}
+                />
+              </div>
+
+              <div className="categorias-campo">
+                <label htmlFor="objetivo-monto">Monto objetivo (RD$)</label>
+                <input
+                  id="objetivo-monto"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={montoObjetivo}
+                  onChange={(evento) => setMontoObjetivo(evento.target.value)}
+                  placeholder="Ej. 20000"
+                  required
+                  disabled={guardandoObjetivo}
+                />
+              </div>
+
+              <div className="categorias-campo">
+                <label htmlFor="objetivo-inicial">Ahorro inicial (RD$)</label>
+                <input
+                  id="objetivo-inicial"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={montoInicialObjetivo}
+                  onChange={(evento) => setMontoInicialObjetivo(evento.target.value)}
+                  placeholder="Ej. 1000"
+                  disabled={guardandoObjetivo}
+                />
+              </div>
+
+              <div className="categorias-campo">
+                <label htmlFor="objetivo-fecha">Fecha límite (opcional)</label>
+                <input
+                  id="objetivo-fecha"
+                  type="date"
+                  value={fechaLimiteObjetivo}
+                  onChange={(evento) => setFechaLimiteObjetivo(evento.target.value)}
+                  disabled={guardandoObjetivo}
+                />
+              </div>
+
+              <button type="submit" disabled={guardandoObjetivo}>
+                {guardandoObjetivo ? "Creando objetivo..." : "Crear objetivo"}
+              </button>
+
+              {mensajeObjetivo && (
+                <p className="categorias-exito" role="status">{mensajeObjetivo}</p>
+              )}
+              {errorObjetivo && (
+                <p className="categorias-error" role="alert">{errorObjetivo}</p>
+              )}
+            </form>
+
+            {objetivos.length > 0 && (
+              <div className="objetivos-listado">
+                {objetivos.map((objetivo) => {
+                  const actual = Number(objetivo.monto_actual);
+                  const limite = Number(objetivo.monto_objetivo);
+                  const porcentaje = limite > 0
+                    ? Math.min(100, Math.round((actual / limite) * 100))
+                    : 0;
+                  const faltante = Math.max(0, limite - actual);
+                  const aportacion = aportaciones[objetivo.id] ?? "";
+
+                  return (
+                    <article className="objetivo-item" key={objetivo.id}>
+                      <div className="objetivo-encabezado">
+                        <strong>{objetivo.nombre}</strong>
+                        <span>{porcentaje}% logrado</span>
+                      </div>
+
+                      <div className="objetivo-progreso">
+                        <div style={{ width: `${porcentaje}%` }} />
+                      </div>
+
+                      <p>
+                        RD$ {actual.toLocaleString("es-DO")} ahorrados ·
+                        Faltan RD$ {faltante.toLocaleString("es-DO")}
+                      </p>
+                      {objetivo.fecha_limite && (
+                        <p>Fecha límite: {String(objetivo.fecha_limite).slice(0, 10)}</p>
+                      )}
+
+                      {objetivo.estado === "activo" && (
+                        <div className="objetivo-aportacion">
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={aportacion}
+                            onChange={(evento) =>
+                              setAportaciones((anteriores) => ({
+                                ...anteriores,
+                                [objetivo.id]: evento.target.value,
+                              }))
+                            }
+                            placeholder="Aportación RD$"
+                            aria-label={`Aportación para ${objetivo.nombre}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                setErrorObjetivo("");
+                                await agregarAportacion(objetivo.id, Number(aportacion));
+                                setAportaciones((anteriores) => ({
+                                  ...anteriores,
+                                  [objetivo.id]: "",
+                                }));
+                                setMensajeObjetivo("Aportación registrada correctamente.");
+                                const resultado = await obtenerObjetivos();
+                                setObjetivos(resultado.objetivos);
+                              } catch (error) {
+                                setErrorObjetivo(
+                                  error.message || "No se pudo registrar la aportación."
+                                );
+                              }
+                            }}
+                            disabled={!Number(aportacion) || Number(aportacion) <= 0}
+                          >
+                            Aportar
+                          </button>
+                        </div>
+                      )}
+
+                      {objetivo.estado === "completado" && (
+                        <p className="objetivo-completado">¡Objetivo completado!</p>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {pestanaActiva === "metas" && (
+          <section className="admin-seccion">
+            <h2>Presupuesto con alertas inteligente</h2>
+            <p>Establece el presupuesto mensual de cada categoría de gasto.</p>
+
+            <form
+              className="categorias-formulario"
+              onSubmit={async (evento) => {
+                evento.preventDefault();
+                setGuardandoMeta(true);
+                setErrorMeta("");
+                setMensajeMeta("");
+
+                try {
+                  await guardarPresupuesto({
+                    categoria_id: Number(categoriaMeta),
+                    mes: mesMeta,
+                    monto_limite: Number(montoMeta),
+                    umbral_medio: umbralMedio,
+                    umbral_alto: umbralAlto,
+                  });
+                  setMontoMeta("");
+                  setMensajeMeta("Meta financiera guardada correctamente.");
+                  const resultado = await obtenerPresupuestos(mesMeta);
+                  setPresupuestos(resultado.presupuestos);
+                } catch (error) {
+                  setErrorMeta(error.message || "No se pudo guardar la meta.");
+                } finally {
+                  setGuardandoMeta(false);
+                }
+              }}
+              noValidate
+            >
+              <div className="categorias-campo">
+                <label htmlFor="meta-mes">Mes</label>
+                <input
+                  id="meta-mes"
+                  type="month"
+                  value={mesMeta}
+                  onChange={(evento) => setMesMeta(evento.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="categorias-campo">
+                <label htmlFor="meta-categoria">Categoría</label>
+                <select
+                  id="meta-categoria"
+                  value={categoriaMeta}
+                  onChange={(evento) => setCategoriaMeta(evento.target.value)}
+                  required
+                >
+                  <option value="">Selecciona una categoría</option>
+                  {categoriasGasto.map((categoria) => (
+                    <option key={categoria.id} value={categoria.id}>
+                      {categoria.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="categorias-campo">
+                <label htmlFor="meta-monto">Presupuesto mensual (RD$)</label>
+                <input
+                  id="meta-monto"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={montoMeta}
+                  onChange={(evento) => setMontoMeta(evento.target.value)}
+                  placeholder="Ej. 8000"
+                  required
+                />
+              </div>
+
+              <div className="meta-umbrales">
+                <div className="categorias-campo">
+                  <label htmlFor="meta-umbral-medio">Primer aviso (%)</label>
+                  <input
+                    id="meta-umbral-medio"
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={umbralMedio}
+                    onChange={(evento) => setUmbralMedio(Number(evento.target.value))}
+                  />
+                </div>
+                <div className="categorias-campo">
+                  <label htmlFor="meta-umbral-alto">Aviso urgente (%)</label>
+                  <input
+                    id="meta-umbral-alto"
+                    type="number"
+                    min="2"
+                    max="100"
+                    value={umbralAlto}
+                    onChange={(evento) => setUmbralAlto(Number(evento.target.value))}
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={guardandoMeta}>
+                {guardandoMeta ? "Guardando meta..." : "Guardar meta"}
+              </button>
+
+              {mensajeMeta && (
+                <p className="categorias-exito" role="status">{mensajeMeta}</p>
+              )}
+              {errorMeta && (
+                <p className="categorias-error" role="alert">{errorMeta}</p>
+              )}
+            </form>
+
+            {presupuestos.length > 0 && (
+              <div className="presupuesto-listado">
+                {presupuestos.map((presupuesto) => {
+                  const gastado = Number(presupuesto.gastado);
+                  const limite = Number(presupuesto.monto_limite);
+                  const porcentaje = limite > 0
+                    ? Math.min(100, Math.round((gastado / limite) * 100))
+                    : 0;
+
+                  return (
+                    <article className="presupuesto-item" key={presupuesto.id}>
+                      <div>
+                        <strong>{presupuesto.categoria}</strong>
+                        <span>{porcentaje}% utilizado</span>
+                      </div>
+                      <div className="presupuesto-progreso">
+                        <div style={{ width: `${porcentaje}%` }} />
+                      </div>
+                      <p>
+                        RD$ {gastado.toLocaleString("es-DO")} de{" "}
+                        RD$ {limite.toLocaleString("es-DO")}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {notificaciones.length > 0 && (
+              <div className="notificaciones-listado">
+                <h3>Notificaciones</h3>
+                {notificaciones.map((notificacion) => (
+                  <p key={notificacion.id}>
+                    {notificacion.categoria}: alcanzaste el {notificacion.nivel}% del
+                    presupuesto de {notificacion.mes}.
+                  </p>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {pestanaActiva === "categorias" && (
+          <section className="admin-seccion">
+            <h2>Mis categorías</h2>
+            <p>
+              Crea categorías personales para organizar tus ingresos y gastos.
+            </p>
+
+            <form
+              className="categorias-formulario"
+              onSubmit={async (evento) => {
+                evento.preventDefault();
+                setGuardandoCategoria(true);
+                setErrorCategorias("");
+                setMensajeCategoria("");
+
+                try {
+                  await crearCategoria(
+                    {
+                      nombre: nombreCategoria.trim(),
+                      tipo: tipoCategoria,
+                    },
+                    token
+                  );
+                  setNombreCategoria("");
+                  setMensajeCategoria("Categoría creada correctamente.");
+                } catch (error) {
+                  setErrorCategorias(
+                    error.message || "No se pudo crear la categoría."
+                  );
+                } finally {
+                  setGuardandoCategoria(false);
+                }
+              }}
+            >
+              <div className="categorias-campo">
+                <label htmlFor="nueva-categoria-nombre">Nombre</label>
+                <input
+                  id="nueva-categoria-nombre"
+                  type="text"
+                  value={nombreCategoria}
+                  onChange={(evento) => setNombreCategoria(evento.target.value)}
+                  maxLength={100}
+                  required
+                  disabled={guardandoCategoria}
+                  placeholder="Ej. Alimentación"
+                />
+              </div>
+
+              <fieldset className="categorias-tipo" disabled={guardandoCategoria}>
+                <legend>Tipo</legend>
+                <label>
+                  <input
+                    type="radio"
+                    name="tipo-nueva-categoria"
+                    value="gasto"
+                    checked={tipoCategoria === "gasto"}
+                    onChange={(evento) => setTipoCategoria(evento.target.value)}
+                  />
+                  Gasto
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="tipo-nueva-categoria"
+                    value="ingreso"
+                    checked={tipoCategoria === "ingreso"}
+                    onChange={(evento) => setTipoCategoria(evento.target.value)}
+                  />
+                  Ingreso
+                </label>
+              </fieldset>
+
+              <button type="submit" disabled={guardandoCategoria}>
+                {guardandoCategoria ? "Creando categoría..." : "Crear categoría"}
+              </button>
+
+              {mensajeCategoria && (
+                <p className="categorias-exito" role="status">
+                  {mensajeCategoria}
+                </p>
+              )}
+              {errorCategorias && (
+                <p className="categorias-error" role="alert">
+                  {errorCategorias}
+                </p>
+              )}
+            </form>
+
+          </section>
+        )}
+
         {/* HU004 / #64: Registro de ingresos. */}
         {pestanaActiva === "ingresos" && (
           <>
@@ -595,6 +1155,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                 onVolver={() =>
                   setVistaGastos("listado")
                 }
+                onGastoRegistrado={manejarGastoRegistrado}
                 onSesionExpirada={onLogout}
               />
             )}

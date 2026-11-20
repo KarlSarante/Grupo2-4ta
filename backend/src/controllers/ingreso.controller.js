@@ -106,8 +106,9 @@ export async function registrarIngreso(req, res) {
       `SELECT id
        FROM categorias_generales
        WHERE id = ? AND tipo = 'ingreso'
+         AND (usuario_id IS NULL OR usuario_id = ?)
        LIMIT 1`,
-      [categoria_id]
+      [categoria_id, usuarioId]
     );
 
     if (categorias.length === 0) {

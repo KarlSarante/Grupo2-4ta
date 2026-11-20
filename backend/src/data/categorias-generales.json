@@ -1,0 +1,13 @@
+[
+  { "nombre": "Alimentación", "tipo": "gasto" },
+  { "nombre": "Transporte", "tipo": "gasto" },
+  { "nombre": "Vivienda", "tipo": "gasto" },
+  { "nombre": "Servicios", "tipo": "gasto" },
+  { "nombre": "Salud", "tipo": "gasto" },
+  { "nombre": "Educación", "tipo": "gasto" },
+  { "nombre": "Entretenimiento", "tipo": "gasto" },
+  { "nombre": "Salario", "tipo": "ingreso" },
+  { "nombre": "Freelance", "tipo": "ingreso" },
+  { "nombre": "Inversiones", "tipo": "ingreso" },
+  { "nombre": "Otros ingresos", "tipo": "ingreso" }
+]

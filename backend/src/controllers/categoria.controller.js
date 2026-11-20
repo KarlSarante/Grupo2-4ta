@@ -60,7 +60,10 @@ export async function registrarCategoria(req, res) {
             });
         }
 
-        const categoria = await crearCategoria(nombre, tipo);
+        const usuarioId = req.usuario.rol === "administrador"
+            ? null
+            : req.usuario.id;
+        const categoria = await crearCategoria(nombre, tipo, usuarioId);
 
         return res.status(201).json({
             mensaje: "Categoría creada correctamente",
@@ -103,7 +106,12 @@ export async function listarCategorias(req, res) {
 
   try {
     // Reutilizar la consulta existente del modelo.
-    const categorias = await consultarCategorias(tipo ?? null);
+    const esAdministrador = req.usuario.rol === "administrador";
+    const categorias = await consultarCategorias(
+      tipo ?? null,
+      req.usuario.id,
+      esAdministrador
+    );
 
     return res.status(200).json({
       mensaje: "Categorías consultadas correctamente",
