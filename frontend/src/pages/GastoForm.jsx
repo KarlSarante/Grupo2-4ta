@@ -258,7 +258,7 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada }) {
 
             // Notificar al padre para cerrar/actualizar si está conectado.
             if (typeof onGastoRegistrado === "function") {
-                onGastoRegistrado(mensajeExito);
+                onGastoRegistrado(mensajeExito, respuesta?.alertas ?? []);
             }
         } catch (error) {
             if (error?.estado === 401) {

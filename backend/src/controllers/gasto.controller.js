@@ -1,6 +1,7 @@
 import { z } from "zod";
 import pool from "../config/database.js";
 import { crearTransaccion } from "../models/transaccion.model.js";
+import { evaluarPresupuesto } from "../services/presupuesto.service.js";
 
 // Comprobar que la fecha exista realmente en el calendario.
 function esFechaValida(fecha) {
@@ -109,8 +110,9 @@ export async function registrarGasto(req, res) {
       `SELECT id
        FROM categorias_generales
        WHERE id = ? AND tipo = 'gasto'
+         AND (usuario_id IS NULL OR usuario_id = ?)
        LIMIT 1`,
-      [categoria_id]
+      [categoria_id, usuarioId]
     );
 
     if (categorias.length === 0) {
@@ -129,10 +131,12 @@ export async function registrarGasto(req, res) {
       fecha,
       descripcion: descripcion?.trim() || null,
     });
+    const alertas = await evaluarPresupuesto(usuarioId, categoria_id, fecha);
 
     return res.status(201).json({
       mensaje: "Gasto registrado correctamente",
       gasto,
+      alertas,
     });
   } catch (error) {
     console.error("Error al registrar gasto:", error);
