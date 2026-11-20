@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title">
+  <title id="title">Fintrack</title>
+  <defs>
+    <linearGradient id="fintrack-gradient" x1="8" y1="8" x2="39" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d3fb64"/>
+      <stop offset="1" stop-color="#4ade80"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#fintrack-gradient)" d="M27.2 3.5 8.1 25.2c-.8.9-.1 2.3 1.1 2.3h10.2l-1.6 16.9c-.1 1.3 1.6 1.9 2.3.8l19.8-25.3c.7-.9.1-2.2-1.1-2.2H28.1l1.5-12.8c.2-1.4-1.5-2.3-2.4-1.4Z"/>
+</svg>
