@@ -71,3 +71,35 @@ export async function editarTransaccion(id, datos, token) {
 
   return cuerpo.transaccion;
 }
+
+export async function eliminarTransaccion(id, token) {
+  let respuesta;
+  let cuerpo;
+
+  try {
+    respuesta = await fetch(`${API_URL}/finanzas/transacciones/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch {
+    throw new Error("No se pudo conectar con el servidor");
+  }
+
+  try {
+    cuerpo = await respuesta.json();
+  } catch {
+    throw new Error("El servidor devolvió una respuesta no válida");
+  }
+
+  if (!respuesta.ok) {
+    if (respuesta.status === 401) {
+      throw new Error("Tu sesión no es válida o ha expirado");
+    }
+
+    throw new Error(cuerpo.mensaje || "No se pudo eliminar la transacción");
+  }
+
+  return cuerpo;
+}

@@ -7,7 +7,7 @@ import CategoriasPanel from "./CategoriasPanel.jsx";
 import Dashboard from "../components/dashboard/Dashboard.jsx";
 import "./FinancePanel.css";
 import { obtenerIngresos } from "../services/ingresoService.js";
-import { editarTransaccion, obtenerTransacciones } from "../services/financeService.js";
+import { editarTransaccion, eliminarTransaccion, obtenerTransacciones } from "../services/financeService.js";
 import { obtenerCategorias } from "../services/categoriaService.js";
 import {
   consultarLimiteGastos,
@@ -66,6 +66,11 @@ function FinancePanel({ usuario, token, onLogout }) {
   });
   const [guardandoTransaccion, setGuardandoTransaccion] = useState(false);
   const [errorEdicionTransaccion, setErrorEdicionTransaccion] = useState("");
+  const referenciaDialogoEliminacion = useRef(null);
+  const [transaccionEliminando, setTransaccionEliminando] = useState(null);
+  const [guardandoEliminacion, setGuardandoEliminacion] = useState(false);
+  const [errorEliminacion, setErrorEliminacion] = useState("");
+  const [mensajeEliminacion, setMensajeEliminacion] = useState("");
   const [mesSeleccionado, setMesSeleccionado] = useState(() => {
     const hoy = new Date();
     return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
@@ -479,6 +484,64 @@ function FinancePanel({ usuario, token, onLogout }) {
     }
   }
 
+  useEffect(() => {
+    if (!transaccionEliminando) return;
+
+    const dialogo = referenciaDialogoEliminacion.current;
+    if (dialogo && !dialogo.open) dialogo.showModal();
+    dialogo?.querySelector("#cancelar-eliminacion-transaccion")?.focus();
+
+    return () => {
+      if (dialogo?.open) dialogo.close();
+    };
+  }, [transaccionEliminando]);
+
+  function solicitarEliminacionTransaccion(transaccion) {
+    setErrorEliminacion("");
+    setMensajeEliminacion("");
+    setTransaccionEliminando(transaccion);
+  }
+
+  function cancelarEliminacionTransaccion() {
+    if (guardandoEliminacion) return;
+    setTransaccionEliminando(null);
+    setErrorEliminacion("");
+  }
+
+  async function confirmarEliminacionTransaccion() {
+    if (!transaccionEliminando || guardandoEliminacion) return;
+
+    setGuardandoEliminacion(true);
+    setErrorEliminacion("");
+
+    try {
+      const respuesta = await eliminarTransaccion(transaccionEliminando.id, token);
+      const idEliminado = transaccionEliminando.id;
+
+      setTransacciones((actuales) =>
+        actuales.filter((transaccion) => transaccion.id !== idEliminado)
+      );
+      setIngresos((actuales) =>
+        actuales.filter((transaccion) => transaccion.id !== idEliminado)
+      );
+      setGastos((actuales) =>
+        actuales.filter((transaccion) => transaccion.id !== idEliminado)
+      );
+      setRecargaIngresos((anterior) => anterior + 1);
+      setRecargaGastos((anterior) => anterior + 1);
+      setMensajeEliminacion(
+        respuesta.mensaje || "Transacción eliminada correctamente."
+      );
+      setTransaccionEliminando(null);
+    } catch (error) {
+      setErrorEliminacion(
+        error.message || "No se pudo eliminar la transacción."
+      );
+    } finally {
+      setGuardandoEliminacion(false);
+    }
+  }
+
   function cerrarSesion() {
     sessionStorage.removeItem("finanzas-pestana");
     sessionStorage.removeItem("finanzas-vista-ingresos");
@@ -858,6 +921,11 @@ function FinancePanel({ usuario, token, onLogout }) {
 
         {pestanaActiva === "historial" && (
           <section className="admin-seccion historial-seccion">
+            {mensajeEliminacion && (
+              <p className="ingresos-mensaje-exito" role="status">
+                {mensajeEliminacion}
+              </p>
+            )}
 
             {cargandoTransacciones ? (
               <p role="status">Cargando transacciones...</p>
@@ -913,13 +981,22 @@ function FinancePanel({ usuario, token, onLogout }) {
                           }).format(Number(transaccion.monto))}
                         </td>
                         <td>
-                          <button
-                            type="button"
-                            className="categorias-crear-boton fintrack-editar-transaccion"
-                            onClick={() => abrirEdicionTransaccion(transaccion)}
-                          >
-                            Editar
-                          </button>
+                          <div className="fintrack-transaccion-acciones">
+                            <button
+                              type="button"
+                              className="categorias-crear-boton fintrack-editar-transaccion"
+                              onClick={() => abrirEdicionTransaccion(transaccion)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="fintrack-eliminar-transaccion"
+                              onClick={() => solicitarEliminacionTransaccion(transaccion)}
+                            >
+                              Eliminar
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -1080,6 +1157,54 @@ function FinancePanel({ usuario, token, onLogout }) {
             </section>
           </dialog>
         )}
+        {transaccionEliminando && (
+          <dialog
+            ref={referenciaDialogoEliminacion}
+            className="fintrack-modal-eliminacion"
+            aria-labelledby="fintrack-eliminacion-titulo"
+            aria-describedby="fintrack-eliminacion-descripcion"
+            onCancel={(evento) => {
+              evento.preventDefault();
+              cancelarEliminacionTransaccion();
+            }}
+          >
+            <section className="fintrack-confirmacion-eliminacion">
+              <h2 id="fintrack-eliminacion-titulo">Eliminar transacción</h2>
+              <p id="fintrack-eliminacion-descripcion">
+                ¿Deseas eliminar la transacción de{" "}
+                {new Intl.NumberFormat("es-DO", {
+                  style: "currency",
+                  currency: "DOP",
+                }).format(Number(transaccionEliminando.monto))}
+                ? Esta acción no se puede deshacer.
+              </p>
+              {errorEliminacion && (
+                <p className="fintrack-eliminacion-error" role="alert">
+                  {errorEliminacion}
+                </p>
+              )}
+              <div className="fintrack-eliminacion-acciones">
+                <button
+                  id="cancelar-eliminacion-transaccion"
+                  type="button"
+                  className="fintrack-cancelar-eliminacion"
+                  onClick={cancelarEliminacionTransaccion}
+                  disabled={guardandoEliminacion}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="fintrack-confirmar-eliminacion"
+                  onClick={confirmarEliminacionTransaccion}
+                  disabled={guardandoEliminacion}
+                >
+                  {guardandoEliminacion ? "Eliminando..." : "Eliminar"}
+                </button>
+              </div>
+            </section>
+          </dialog>
+        )}
         {/* HU004 / #64: Registro de ingresos. */}
         {pestanaActiva === "ingresos" && (
           <>
@@ -1110,6 +1235,11 @@ function FinancePanel({ usuario, token, onLogout }) {
                     role="status"
                   >
                     {mensajeIngreso}
+                  </p>
+                )}
+                {mensajeEliminacion && (
+                  <p className="ingresos-mensaje-exito" role="status">
+                    {mensajeEliminacion}
                   </p>
                 )}
 
@@ -1148,6 +1278,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                           <th>Categoría</th>
                           <th>Tipo</th>
                           <th>Monto</th>
+                          <th>Acciones</th>
                         </tr>
                       </thead>
 
@@ -1177,6 +1308,15 @@ function FinancePanel({ usuario, token, onLogout }) {
                                 style: "currency",
                                 currency: "DOP",
                               }).format(Number(ingreso.monto))}
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="fintrack-eliminar-transaccion"
+                                onClick={() => solicitarEliminacionTransaccion(ingreso)}
+                              >
+                                Eliminar
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -1302,6 +1442,11 @@ function FinancePanel({ usuario, token, onLogout }) {
                     {mensajeGasto}
                   </p>
                 )}
+                {mensajeEliminacion && (
+                  <p className="ingresos-mensaje-exito" role="status">
+                    {mensajeEliminacion}
+                  </p>
+                )}
                 {avisosPresupuesto.length > 0 && (
                   <div role="alert" aria-label="Alertas de presupuesto">
                     {avisosPresupuesto.map((alerta, indice) => (
@@ -1349,6 +1494,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                           <th>Categoría</th>
                           <th>Tipo</th>
                           <th>Monto</th>
+                          <th>Acciones</th>
                         </tr>
                       </thead>
 
@@ -1376,6 +1522,15 @@ function FinancePanel({ usuario, token, onLogout }) {
                                 style: "currency",
                                 currency: "DOP",
                               }).format(Number(gasto.monto))}
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="fintrack-eliminar-transaccion"
+                                onClick={() => solicitarEliminacionTransaccion(gasto)}
+                              >
+                                Eliminar
+                              </button>
                             </td>
                           </tr>
                         ))}

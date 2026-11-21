@@ -80,6 +80,19 @@ export async function buscarTransaccionPorId(id, usuarioId) {
   return transacciones[0] ?? null;
 }
 
+export async function buscarTransaccionPorIdGlobal(id) {
+  const [transacciones] = await pool.execute(
+    `SELECT id, usuario_id, categoria_id, tipo,
+            monto, fecha, descripcion, created_at
+     FROM transacciones
+     WHERE id = ?
+     LIMIT 1`,
+    [id]
+  );
+
+  return transacciones[0] ?? null;
+}
+
 export async function actualizarTransaccion({
   id,
   usuarioId,
@@ -108,4 +121,14 @@ export function puedeEditarTransaccion(transaccion, usuarioId) {
     Number.isInteger(usuarioId) &&
     Number(transaccion.usuario_id) === usuarioId
   );
+}
+
+export async function eliminarTransaccion(id, usuarioId) {
+  const [resultado] = await pool.execute(
+    `DELETE FROM transacciones
+     WHERE id = ? AND usuario_id = ?`,
+    [id, usuarioId]
+  );
+
+  return resultado.affectedRows === 1;
 }

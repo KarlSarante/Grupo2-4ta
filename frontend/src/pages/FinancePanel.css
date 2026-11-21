@@ -412,8 +412,18 @@
 /* Alcance exclusivo: Historial de transacciones. */
 
 .fintrack-usuario .fintrack-editar-transaccion {
-  min-width: 72px;
-  padding: 7px 12px;
+  box-sizing: border-box;
+  width: 110px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #386e5b;
+  border-radius: 9px;
+  background: #104d38;
+  color: #c9fa55;
+  line-height: 42px;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
 }
 
 .fintrack-usuario .fintrack-modal-transaccion {
@@ -490,6 +500,122 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 6px;
+}
+
+.fintrack-usuario .fintrack-transaccion-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fintrack-usuario .fintrack-eliminar-transaccion,
+.fintrack-usuario .fintrack-confirmar-eliminacion {
+  box-sizing: border-box;
+  width: 110px;
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #d87878;
+  border-radius: 9px;
+  background: #8f3b3b;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 42px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.fintrack-usuario .fintrack-eliminar-transaccion:hover,
+.fintrack-usuario .fintrack-confirmar-eliminacion:hover {
+  background: #7e3030;
+  color: #ffffff;
+}
+
+.fintrack-usuario .fintrack-eliminar-transaccion:focus-visible,
+.fintrack-usuario .fintrack-confirmar-eliminacion:focus-visible {
+  outline: 2px solid #ffaaaa;
+  outline-offset: 2px;
+}
+
+.fintrack-usuario .fintrack-modal-eliminacion {
+  position: fixed;
+  width: min(460px, calc(100vw - 32px));
+  margin: auto;
+  padding: 28px;
+  border: 1px solid #386e5b;
+  border-radius: 16px;
+  background: #123f34;
+  color: #ffffff;
+  box-shadow: 0 22px 80px rgba(0, 0, 0, .45);
+}
+
+.fintrack-usuario .fintrack-modal-eliminacion::backdrop {
+  background: rgba(0, 12, 9, .72);
+}
+
+.fintrack-usuario .fintrack-confirmacion-eliminacion h2 {
+  margin: 0 0 12px;
+}
+
+.fintrack-usuario .fintrack-confirmacion-eliminacion p {
+  margin: 0;
+  color: #d7e8e1;
+  line-height: 1.55;
+}
+
+.fintrack-usuario .fintrack-confirmacion-eliminacion .fintrack-eliminacion-error {
+  margin-top: 12px;
+  color: #ffd2d2;
+  font-weight: 700;
+}
+
+.fintrack-usuario .fintrack-eliminacion-acciones {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.fintrack-usuario .fintrack-eliminacion-acciones button {
+  box-sizing: border-box;
+  width: 110px;
+  height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 750;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fintrack-usuario .fintrack-cancelar-eliminacion {
+  border: 1px solid #7da895;
+  background: #f7fbf9;
+  color: #164a3a;
+}
+
+.fintrack-usuario .fintrack-cancelar-eliminacion:hover {
+  background: #e5f1ec;
+  border-color: #c9fa55;
+}
+
+.fintrack-usuario .fintrack-confirmar-eliminacion {
+  border: 1px solid #d87878;
+  background: #8f3b3b;
+  color: #ffffff;
+}
+
+.fintrack-usuario .fintrack-confirmar-eliminacion:hover {
+  background: #a74848;
+  border-color: #ffaaaa;
+}
+
+.fintrack-usuario .fintrack-eliminacion-acciones button:focus-visible {
+  outline: 2px solid #c9fa55;
+  outline-offset: 3px;
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion {
