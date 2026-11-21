@@ -71,7 +71,7 @@ const gastoFormSchema = z.object({
 
 // HU005 / #75: Formulario de registro de gastos.
 // Mantiene la estructura visual de los formularios del AdminPanel / IngresoForm.
-function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada }) {
+function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada, onEstadoGuardando }) {
     const [monto, setMonto] = useState("");
     const [categoria, setCategoria] = useState("");
     const [fecha, setFecha] = useState("");
@@ -81,6 +81,10 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada }) {
     const [cargandoCategorias, setCargandoCategorias] = useState(true);
     const [errorCategorias, setErrorCategorias] = useState("");
     const [guardandoGasto, setGuardandoGasto] = useState(false);
+
+    useEffect(() => {
+        onEstadoGuardando?.(guardandoGasto);
+    }, [guardandoGasto, onEstadoGuardando]);
     const [errorRegistro, setErrorRegistro] = useState("");
     const [confirmacion, setConfirmacion] = useState("");
 
@@ -258,7 +262,7 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada }) {
 
             // Notificar al padre para cerrar/actualizar si está conectado.
             if (typeof onGastoRegistrado === "function") {
-                onGastoRegistrado(mensajeExito);
+                onGastoRegistrado(mensajeExito, respuesta?.alertas ?? [], respuesta?.advertencia ?? "");
             }
         } catch (error) {
             if (error?.estado === 401) {
@@ -593,6 +597,7 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada }) {
                         <button
                             type="button"
                             className="ingreso-cancelar"
+                            disabled={guardandoGasto}
                             onClick={onVolver}
                         >
                             Cancelar

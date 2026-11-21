@@ -52,8 +52,8 @@ function App() {
     // la promesa devuelve el mensaje de confirmación del backend.
     const respuestaBackend = cerrarSesion();
 
-    setSesion(null);       // limpia el estado de autenticación de la app
-    setPantalla("login");  // vuelve al login, no a Inicio
+    setSesion(null);
+    setPantalla("inicio"); // vuelve a la pagina de inicio
 
     const mensaje = await respuestaBackend;
     // Si el backend no respondió, se usa un texto por defecto
@@ -72,7 +72,7 @@ function App() {
     const onStorage = (e) => {
       if (e.key === "sesion" && e.newValue === null) {
         setSesion(null);
-        setPantalla("login");
+        setPantalla("inicio");
       }
     };
     window.addEventListener("storage", onStorage);

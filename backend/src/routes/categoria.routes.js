@@ -9,7 +9,7 @@ import {
 const router = Router();
 
 // HU004 / #66: Permitir consultar categorías a usuarios y administradores.
-// La creación de categorías continúa reservada a administradores.
+// La creación de categorías personales está disponible para cada cuenta.
 router.get(
   "/",
   autenticarToken,
@@ -17,12 +17,12 @@ router.get(
   listarCategorias
 );
 
-// HU-016: Crear categorías generales.
-// Solo los administradores pueden registrar categorías.
+// HU-016: Crear una categoría PERSONAL del usuario autenticado.
+// Las categorías generales solo se crean mediante el seed controlado.
 router.post(
   "/",
   autenticarToken,
-  autorizarRoles("administrador"),
+  autorizarRoles("administrador", "usuario"),
   registrarCategoria
 );
 

@@ -1,53 +1,40 @@
 import pool from "../config/database.js";
 
-// Buscar una categoría por nombre y tipo.
-export async function buscarCategoriaPorNombreYTipo(nombre, tipo) {
+// La unicidad se aplica por ámbito: general (NULL) o usuario concreto.
+export async function buscarCategoriaPorNombreYTipo(nombre, tipo, usuarioId = null) {
+  const filtro = usuarioId === null ? "usuario_id IS NULL" : "usuario_id = ?";
+  const parametros = usuarioId === null ? [nombre, tipo] : [nombre, tipo, usuarioId];
   const [categorias] = await pool.execute(
-    `SELECT id, nombre, tipo
-     FROM categorias_generales
-     WHERE nombre = ? AND tipo = ?
-     LIMIT 1`,
-    [nombre, tipo]
+    `SELECT id, usuario_id, nombre, tipo FROM categorias_generales
+     WHERE nombre = ? AND tipo = ? AND ${filtro} LIMIT 1`,
+    parametros
   );
-
   return categorias[0] ?? null;
 }
 
-// Crear una categoría general.
-export async function crearCategoria(nombre, tipo) {
+export async function crearCategoria(nombre, tipo, usuarioId = null) {
   const [resultado] = await pool.execute(
-    `INSERT INTO categorias_generales (nombre, tipo)
-     VALUES (?, ?)`,
-    [nombre, tipo]
+    `INSERT INTO categorias_generales (usuario_id, nombre, tipo) VALUES (?, ?, ?)`,
+    [usuarioId, nombre, tipo]
   );
-
-  return {
-    id: resultado.insertId,
-    nombre,
-    tipo,
-  };
+  return { id: resultado.insertId, usuario_id: usuarioId, nombre, tipo };
 }
 
-// Consultar categorías generales.
-// Si se proporciona un tipo, filtrar por ingreso o gasto.
-export async function consultarCategorias(tipo = null) {
-  if (tipo !== null) {
-    const [categorias] = await pool.execute(
-      `SELECT id, nombre, tipo
-       FROM categorias_generales
-       WHERE tipo = ?
-       ORDER BY nombre ASC`,
-      [tipo]
-    );
-
-    return categorias;
+// Nunca devolver categorías privadas de otros usuarios, incluso a administradores.
+export async function consultarCategorias(tipo = null, usuarioId = null) {
+  const parametros = [];
+  const filtros = [];
+  if (tipo !== null) { filtros.push("tipo = ?"); parametros.push(tipo); }
+  if (usuarioId === null) {
+    filtros.push("usuario_id IS NULL");
+  } else {
+    filtros.push("(usuario_id IS NULL OR usuario_id = ?)");
+    parametros.push(usuarioId);
   }
-
   const [categorias] = await pool.execute(
-    `SELECT id, nombre, tipo
-     FROM categorias_generales
-     ORDER BY tipo ASC, nombre ASC`
+    `SELECT id, usuario_id, nombre, tipo FROM categorias_generales
+     WHERE ${filtros.join(" AND ")} ORDER BY tipo ASC, nombre ASC, id ASC`,
+    parametros
   );
-
   return categorias;
 }

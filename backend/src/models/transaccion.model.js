@@ -46,7 +46,7 @@ export async function consultarTransacciones(usuarioId, tipo = null) {
        c.nombre AS categoria_nombre,
        t.tipo,
        t.monto,
-       t.fecha,
+       DATE_FORMAT(t.fecha, '%Y-%m-%d') AS fecha,
        t.descripcion,
        t.created_at
      FROM transacciones AS t

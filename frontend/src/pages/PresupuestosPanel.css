@@ -1,0 +1,414 @@
+/*
+ * Fintrack - Presupuestos v12
+ * Estilos aislados. No modifica Dashboard, Ingresos ni Gastos.
+ */
+
+.fintrack-usuario .fintrack-presupuestos-v12 {
+  --fp-fondo: #10291f;
+  --fp-superficie: #17372b;
+  --fp-superficie-2: #1b4031;
+  --fp-borde: rgba(129, 190, 150, 0.22);
+  --fp-texto: #f3fff6;
+  --fp-secundario: #bbd3c2;
+  --fp-acento: #b5ed70;
+  --fp-verde: #51c78d;
+  --fp-advertencia: #e4ba59;
+  --fp-alto: #f09a5c;
+  --fp-peligro: #f47d79;
+  color: var(--fp-texto);
+  width: 100%;
+  min-width: 0;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 *,
+.fintrack-usuario .fintrack-presupuestos-v12 *::before,
+.fintrack-usuario .fintrack-presupuestos-v12 *::after {
+  box-sizing: border-box;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 h2,
+.fintrack-usuario .fintrack-presupuestos-v12 h3,
+.fintrack-usuario .fintrack-presupuestos-v12 h4 {
+  color: var(--fp-texto);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 h2 {
+  font-size: clamp(1.45rem, 2.3vw, 1.9rem);
+  font-weight: 750;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 h3 {
+  font-size: 1.12rem;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 h4 {
+  font-size: 1.05rem;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 p {
+  color: var(--fp-secundario);
+  margin: 7px 0 0;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-selector-mes {
+  display: grid;
+  gap: 6px;
+  color: var(--fp-secundario);
+  font-size: 0.83rem;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 input,
+.fintrack-usuario .fintrack-presupuestos-v12 select {
+  min-height: 42px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--fp-borde);
+  background: var(--fp-fondo);
+  color: var(--fp-texto);
+  color-scheme: dark;
+  font: inherit;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 input:focus-visible,
+.fintrack-usuario .fintrack-presupuestos-v12 select:focus-visible,
+.fintrack-usuario .fintrack-presupuestos-v12 button:focus-visible {
+  outline: 2px solid var(--fp-acento);
+  outline-offset: 3px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 input:disabled,
+.fintrack-usuario .fintrack-presupuestos-v12 select:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  min-height: 42px;
+  padding: 9px 15px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-primario {
+  background: var(--fp-acento);
+  color: #10251a;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-primario:hover:not(:disabled) {
+  background: #c8f59a;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-secundario {
+  background: var(--fp-superficie-2);
+  color: var(--fp-texto);
+  border-color: var(--fp-borde);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-secundario:hover:not(:disabled) {
+  background: #28523d;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-tarjeta,
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-listado,
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-panel {
+  border: 1px solid var(--fp-borde);
+  border-radius: 17px;
+  background: var(--fp-superficie);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-tarjeta {
+  padding: 19px;
+  display: grid;
+  gap: 10px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-tarjeta > span,
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-valores span {
+  color: var(--fp-secundario);
+  font-size: 0.85rem;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-tarjeta > strong {
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+  color: var(--fp-texto);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-listado {
+  padding: 20px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-listado-cabecera,
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-cabecera,
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-listado-cabecera {
+  margin-bottom: 18px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-consumo-total {
+  color: var(--fp-acento);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registros {
+  display: grid;
+  gap: 13px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro {
+  background: var(--fp-fondo);
+  border: 1px solid var(--fp-borde);
+  border-radius: 13px;
+  padding: 17px;
+  min-width: 0;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-cabecera {
+  align-items: flex-start;
+  margin-bottom: 17px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-estado-etiqueta {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(81, 199, 141, 0.13);
+  color: var(--fp-verde);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-estado-etiqueta.fp-medio {
+  color: var(--fp-advertencia);
+  background: rgba(228, 186, 89, 0.13);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-estado-etiqueta.fp-alto {
+  color: var(--fp-alto);
+  background: rgba(240, 154, 92, 0.13);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-estado-etiqueta.fp-excedido {
+  color: var(--fp-peligro);
+  background: rgba(244, 125, 121, 0.13);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-valores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-valores > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-valores strong {
+  color: var(--fp-texto);
+  font-size: 0.97rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-barra {
+  height: 9px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #315141;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-barra-relleno {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--fp-verde);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-barra-relleno.fp-medio {
+  background: var(--fp-advertencia);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-barra-relleno.fp-alto {
+  background: var(--fp-alto);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-barra-relleno.fp-excedido {
+  background: var(--fp-peligro);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-pie {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 9px;
+  color: var(--fp-secundario);
+  font-size: 0.78rem;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-vacio,
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-estado {
+  text-align: center;
+  padding: 34px 12px;
+  color: var(--fp-secundario);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-vacio strong {
+  color: var(--fp-texto);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-mensaje {
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin: 0 0 16px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-mensaje-exito {
+  background: rgba(81, 199, 141, 0.13);
+  border: 1px solid rgba(81, 199, 141, 0.35);
+  color: #b9f4d0;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-mensaje-error {
+  background: rgba(244, 125, 121, 0.1);
+  border: 1px solid rgba(244, 125, 121, 0.35);
+  color: #ffd0ce;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-mensaje-error p {
+  color: inherit;
+  margin: 0 0 10px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-panel {
+  margin-top: 20px;
+  padding: 20px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-cabecera {
+  margin-bottom: 18px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-cerrar {
+  background: transparent;
+  border: 0;
+  color: var(--fp-texto);
+  cursor: pointer;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-grid label {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  color: var(--fp-secundario);
+  font-size: 0.88rem;
+  min-width: 0;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-grid small {
+  color: #ffd0ce;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 [aria-invalid="true"] {
+  border-color: var(--fp-peligro);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-acciones {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@media (max-width: 760px) {
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-resumen {
+    grid-template-columns: 1fr;
+  }
+
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-cabecera,
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-listado-cabecera {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-acciones {
+    align-items: stretch;
+  }
+
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-valores {
+    grid-template-columns: 1fr;
+  }
+
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-listado,
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-panel {
+    padding: 14px;
+  }
+
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-acciones > * {
+    width: 100%;
+  }
+}

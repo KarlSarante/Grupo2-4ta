@@ -71,7 +71,7 @@ const ingresoFormSchema = z.object({
 
 // HU004 / #64: Formulario de registro de ingresos.
 // Mantiene la estructura visual de los formularios del AdminPanel.
-function IngresoForm({ onVolver, onIngresoRegistrado }) {
+function IngresoForm({ onVolver, onIngresoRegistrado, onEstadoGuardando }) {
     const [monto, setMonto] = useState("");
     const [categoria, setCategoria] = useState("");
     const [fecha, setFecha] = useState("");
@@ -82,6 +82,10 @@ function IngresoForm({ onVolver, onIngresoRegistrado }) {
     const [errorCategorias, setErrorCategorias] = useState("");
     const [guardandoIngreso, setGuardandoIngreso] = useState(false);
     const [errorRegistro, setErrorRegistro] = useState("");
+
+    useEffect(() => {
+        onEstadoGuardando?.(guardandoIngreso);
+    }, [guardandoIngreso, onEstadoGuardando]);
 
     // Referencia al campo para abrir el calendario.
     const referenciaFecha = useRef(null);
@@ -527,6 +531,7 @@ function IngresoForm({ onVolver, onIngresoRegistrado }) {
                         <button
                             type="button"
                             className="ingreso-cancelar"
+                            disabled={guardandoIngreso}
                             onClick={onVolver}
                         >
                             Cancelar

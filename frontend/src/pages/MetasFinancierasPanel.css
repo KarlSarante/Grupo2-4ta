@@ -1,0 +1,337 @@
+.fintrack-metas {
+  color: inherit;
+}
+
+.fintrack-metas-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.fintrack-metas-cabecera h2 {
+  margin: 0 0 .35rem;
+}
+
+.fintrack-metas-cabecera p {
+  margin: 0;
+  opacity: .8;
+}
+
+.fintrack-metas-cabecera button,
+.fintrack-meta-navegacion button,
+.fintrack-meta-aportar {
+  border: 1px solid #8abca2;
+  border-radius: 10px;
+  padding: .7rem 1rem;
+  background: #bdf64c;
+  color: #10392e;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fintrack-metas button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.fintrack-metas-error {
+  color: #f9a8a8;
+}
+
+.fintrack-metas-vacia,
+.fintrack-meta-tarjeta {
+  border: 1px solid #43816a;
+  background: #124a3c;
+  color: #f5fff8;
+  border-radius: 18px;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.fintrack-meta-tarjeta {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.fintrack-meta-titulo,
+.fintrack-meta-detalles {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.fintrack-meta-titulo h3 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.fintrack-meta-titulo span {
+  color: #c4f86a;
+  font-weight: 700;
+}
+
+.fintrack-meta-monto {
+  display: block;
+  margin-top: 1.4rem;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+}
+
+.fintrack-meta-barra {
+  height: 13px;
+  border-radius: 99px;
+  background: #386d59;
+  overflow: hidden;
+  margin: 1.2rem 0 .6rem;
+}
+
+.fintrack-meta-barra > div {
+  height: 100%;
+  background: #bdf64c;
+  border-radius: inherit;
+}
+
+.fintrack-meta-detalles {
+  margin-bottom: 1rem;
+}
+
+.fintrack-meta-navegacion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .7rem;
+  border-top: 1px solid #43816a;
+  padding-top: 1.2rem;
+  margin-top: 1.5rem;
+}
+
+.fintrack-meta-navegacion span {
+  font-size: .9rem;
+}
+
+.fintrack-meta-aportar {
+  display: block;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .fintrack-meta-navegacion button {
+    padding: .55rem .6rem;
+  }
+}
+
+/* FINTRACK K-M5-C3 - AJUSTES VISUALES */
+
+/* 1. Contraste de textos secundarios */
+.fintrack-metas-cabecera p {
+  color: #d2e8dc;
+  opacity: 1;
+}
+
+.fintrack-meta-tarjeta > p {
+  color: #d2e8dc;
+  opacity: 1;
+}
+
+.fintrack-meta-monto + p {
+  margin-top: .65rem;
+  margin-bottom: 1rem;
+  color: #d2e8dc;
+}
+
+/* 2. Separacion entre monto acumulado y objetivo */
+.fintrack-meta-monto {
+  margin-top: 1.5rem;
+  line-height: 1.15;
+}
+
+/* 3. Apariencia de botones deshabilitados */
+.fintrack-metas button:disabled {
+  background: #315e4d;
+  border-color: #527d69;
+  color: #c1d5c8;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.fintrack-meta-navegacion button:disabled {
+  background: #315e4d;
+  color: #c1d5c8;
+}
+
+.fintrack-metas-cabecera button:disabled {
+  background: #315e4d;
+  color: #c1d5c8;
+}
+
+.fintrack-meta-aportar:disabled {
+  background: #315e4d;
+  color: #c1d5c8;
+}
+
+/* FINTRACK K-M6-B1 - MODAL NUEVA META */
+.fintrack-usuario .fintrack-modal-meta {
+  box-sizing: border-box;
+  position: fixed;
+  width: min(760px, calc(100vw - 32px));
+  max-width: 760px;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 32px;
+  overflow-y: auto;
+  border: 1px solid #386e5b;
+  border-radius: 18px;
+  background: #0b4235;
+  color: #ffffff;
+  box-shadow: 0 24px 75px rgba(0, 16, 11, .55);
+}
+
+.fintrack-usuario .fintrack-modal-meta::backdrop {
+  background: rgba(0, 17, 13, .76);
+}
+
+.fintrack-modal-meta-cerrar {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #386e5b;
+  border-radius: 8px;
+  background: #155540;
+  color: #ffffff;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.fintrack-nueva-meta-form h2 {
+  margin: 0 48px 24px 0;
+  color: #ffffff;
+  font-size: 24px;
+}
+
+.fintrack-nueva-meta-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.fintrack-nueva-meta-campo label {
+  color: #e7f3ec;
+  font-weight: 600;
+}
+
+.fintrack-nueva-meta-campo input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  background: #092f27;
+  color: #ffffff;
+  font: inherit;
+}
+
+.fintrack-nueva-meta-campo input::placeholder {
+  color: #a9c7ba;
+  opacity: 1;
+}
+
+.fintrack-nueva-meta-campo input[type="date"] {
+  color-scheme: dark;
+}
+
+.fintrack-nueva-meta-campo input:focus-visible,
+.fintrack-modal-meta button:focus-visible {
+  outline: 2px solid #c5ff42;
+  outline-offset: 2px;
+}
+
+.fintrack-nueva-meta-error {
+  margin: 4px 0;
+  color: #ffb8b8;
+  font-size: .9rem;
+}
+
+.fintrack-nueva-meta-acciones {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.fintrack-nueva-meta-acciones button {
+  min-height: 48px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fintrack-nueva-meta-cancelar {
+  border: 1px solid #386e5b;
+  background: #092f27;
+  color: #ffffff;
+}
+
+.fintrack-nueva-meta-guardar {
+  border: 1px solid #c5ff42;
+  background: #c5ff42;
+  color: #062c24;
+}
+
+.fintrack-modal-meta button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .fintrack-usuario .fintrack-modal-meta {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 56px 16px 20px;
+  }
+
+  .fintrack-nueva-meta-acciones button {
+    flex: 1;
+  }
+}
+
+/* FINTRACK K-M7-B1 - APORTACIONES */
+.fintrack-usuario .fintrack-modal-aportacion
+  .fintrack-nueva-meta-campo input[readonly] {
+  background: #155540;
+  color: #e7f3ec;
+  cursor: default;
+}
+
+.fintrack-aportacion-aviso {
+  margin: 4px 0 20px;
+  color: #d2e8dc;
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
+.fintrack-aportacion-estado {
+  max-width: 900px;
+  margin: 14px auto;
+  color: #d8ff85;
+  font-weight: 600;
+}
+
+.fintrack-usuario .fintrack-modal-aportacion
+  .fintrack-nueva-meta-guardar:hover:not(:disabled) {
+  background: #d8ff85;
+}
+
+.fintrack-usuario .fintrack-modal-aportacion
+  .fintrack-nueva-meta-cancelar:hover:not(:disabled) {
+  background: #1b684d;
+}
