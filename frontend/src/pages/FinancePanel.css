@@ -564,6 +564,12 @@
   line-height: 1.55;
 }
 
+.fintrack-usuario .fintrack-confirmacion-eliminacion .fintrack-eliminacion-error {
+  margin-top: 12px;
+  color: #ffd2d2;
+  font-weight: 700;
+}
+
 .fintrack-usuario .fintrack-eliminacion-acciones {
   display: flex;
   justify-content: flex-end;
