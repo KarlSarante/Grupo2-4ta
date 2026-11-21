@@ -80,6 +80,19 @@ export async function buscarTransaccionPorId(id, usuarioId) {
   return transacciones[0] ?? null;
 }
 
+export async function buscarTransaccionPorIdGlobal(id) {
+  const [transacciones] = await pool.execute(
+    `SELECT id, usuario_id, categoria_id, tipo,
+            monto, fecha, descripcion, created_at
+     FROM transacciones
+     WHERE id = ?
+     LIMIT 1`,
+    [id]
+  );
+
+  return transacciones[0] ?? null;
+}
+
 export async function actualizarTransaccion({
   id,
   usuarioId,

@@ -3,6 +3,7 @@ import pool from "../config/database.js";
 import {
   consultarTransacciones,
   buscarTransaccionPorId,
+  buscarTransaccionPorIdGlobal,
   actualizarTransaccion,
   puedeEditarTransaccion,
   eliminarTransaccion,
@@ -211,6 +212,17 @@ export async function eliminarTransaccionController(req, res) {
   }
 
   try {
+    const transaccionExistente = await buscarTransaccionPorIdGlobal(id);
+    if (!transaccionExistente) {
+      return res.status(404).json({ mensaje: "La transacción no existe" });
+    }
+
+    if (Number(transaccionExistente.usuario_id) !== usuarioId) {
+      return res.status(403).json({
+        mensaje: "No tienes permiso para eliminar esta transacción",
+      });
+    }
+
     const transaccion = await buscarTransaccionPorId(id, usuarioId);
     if (!puedeEditarTransaccion(transaccion, usuarioId)) {
       return res.status(404).json({ mensaje: "La transacción no existe" });
