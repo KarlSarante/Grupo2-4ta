@@ -426,6 +426,21 @@
   text-align: center;
 }
 
+.fintrack-usuario .fintrack-contenido .historial-seccion .fintrack-transaccion-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fintrack-usuario .fintrack-contenido .historial-seccion .fintrack-editar-transaccion,
+.fintrack-usuario .fintrack-contenido .historial-seccion .fintrack-eliminar-transaccion {
+  width: 110px;
+  height: 44px;
+  box-sizing: border-box;
+  padding: 0 16px;
+  line-height: 42px;
+}
+
 .fintrack-usuario .fintrack-modal-transaccion {
   position: fixed;
   width: min(520px, calc(100vw - 32px));
