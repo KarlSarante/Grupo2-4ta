@@ -3,7 +3,7 @@ import { autenticarToken } from "../middlewares/auth.middleware.js";
 import { autorizarRoles } from "../middlewares/role.middleware.js";
 import { registrarIngreso, consultarIngresos } from "../controllers/ingreso.controller.js";
 import { registrarGasto } from "../controllers/gasto.controller.js";
-import { obtenerGastos, obtenerTransacciones } from "../controllers/transaccion.controller.js";
+import { editarTransaccion, obtenerGastos, obtenerTransacciones } from "../controllers/transaccion.controller.js";
 import {
   guardarMeta,
   listarMetas,
@@ -26,6 +26,7 @@ router.get("/", obtenerTransacciones);
 router.get("/transacciones", obtenerTransacciones);
 router.get("/historial", obtenerTransacciones);
 router.get("/gastos", obtenerGastos);
+router.put("/transacciones/:id", editarTransaccion);
 
 // HU004: Registro y consulta de ingresos.
 router.post("/ingresos", registrarIngreso);

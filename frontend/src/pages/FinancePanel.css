@@ -411,6 +411,87 @@
 /* HISTORIAL V12 */
 /* Alcance exclusivo: Historial de transacciones. */
 
+.fintrack-usuario .fintrack-editar-transaccion {
+  min-width: 72px;
+  padding: 7px 12px;
+}
+
+.fintrack-usuario .fintrack-modal-transaccion {
+  position: fixed;
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  border: 1px solid #386e5b;
+  border-radius: 16px;
+  background: #123f34;
+  color: #ffffff;
+  box-shadow: 0 22px 80px rgba(0, 0, 0, .45);
+}
+
+.fintrack-usuario .fintrack-modal-transaccion::backdrop {
+  background: rgba(0, 12, 9, .72);
+}
+
+.fintrack-usuario .fintrack-modal-transaccion-cerrar {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #386e5b;
+  border-radius: 8px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.fintrack-usuario .fintrack-edicion-transaccion h2 {
+  margin: 0 46px 20px 0;
+}
+
+.fintrack-usuario .fintrack-edicion-transaccion form {
+  display: grid;
+  gap: 14px;
+}
+
+.fintrack-usuario .fintrack-edicion-transaccion label {
+  display: grid;
+  gap: 7px;
+  font-weight: 700;
+}
+
+.fintrack-usuario .fintrack-edicion-transaccion input,
+.fintrack-usuario .fintrack-edicion-transaccion select,
+.fintrack-usuario .fintrack-edicion-transaccion textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #558171;
+  border-radius: 8px;
+  background: #0d3329;
+  color: #ffffff;
+  padding: 11px 12px;
+  font: inherit;
+}
+
+.fintrack-usuario .fintrack-edicion-transaccion textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.fintrack-usuario .fintrack-edicion-error {
+  margin: 0;
+  color: #ffd2d2;
+}
+
+.fintrack-usuario .fintrack-edicion-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
 .fintrack-usuario .fintrack-contenido .historial-seccion {
   min-width: 0;
   padding: 21px 23px;
