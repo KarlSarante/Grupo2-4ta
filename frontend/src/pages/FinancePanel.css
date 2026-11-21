@@ -492,6 +492,71 @@
   margin-top: 6px;
 }
 
+.fintrack-usuario .fintrack-transaccion-acciones {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fintrack-usuario .fintrack-eliminar-transaccion,
+.fintrack-usuario .fintrack-confirmar-eliminacion {
+  min-width: 72px;
+  min-height: 34px;
+  padding: 7px 12px;
+  border: 1px solid #d87878;
+  border-radius: 8px;
+  background: transparent;
+  color: #ffdada;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.fintrack-usuario .fintrack-eliminar-transaccion:hover,
+.fintrack-usuario .fintrack-confirmar-eliminacion:hover {
+  background: #7e3030;
+  color: #ffffff;
+}
+
+.fintrack-usuario .fintrack-eliminar-transaccion:focus-visible,
+.fintrack-usuario .fintrack-confirmar-eliminacion:focus-visible {
+  outline: 2px solid #ffaaaa;
+  outline-offset: 2px;
+}
+
+.fintrack-usuario .fintrack-modal-eliminacion {
+  position: fixed;
+  width: min(460px, calc(100vw - 32px));
+  margin: auto;
+  padding: 28px;
+  border: 1px solid #386e5b;
+  border-radius: 16px;
+  background: #123f34;
+  color: #ffffff;
+  box-shadow: 0 22px 80px rgba(0, 0, 0, .45);
+}
+
+.fintrack-usuario .fintrack-modal-eliminacion::backdrop {
+  background: rgba(0, 12, 9, .72);
+}
+
+.fintrack-usuario .fintrack-confirmacion-eliminacion h2 {
+  margin: 0 0 12px;
+}
+
+.fintrack-usuario .fintrack-confirmacion-eliminacion p {
+  margin: 0;
+  color: #d7e8e1;
+  line-height: 1.55;
+}
+
+.fintrack-usuario .fintrack-eliminacion-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
 .fintrack-usuario .fintrack-contenido .historial-seccion {
   min-width: 0;
   padding: 21px 23px;
