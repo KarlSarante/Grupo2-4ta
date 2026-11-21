@@ -1140,7 +1140,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                 <button
                   id="cancelar-eliminacion-transaccion"
                   type="button"
-                  className="paginacion-boton"
+                  className="fintrack-cancelar-eliminacion"
                   onClick={cancelarEliminacionTransaccion}
                 >
                   Cancelar
