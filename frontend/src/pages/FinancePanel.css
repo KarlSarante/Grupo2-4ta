@@ -413,7 +413,16 @@
 
 .fintrack-usuario .fintrack-editar-transaccion {
   min-width: 72px;
-  padding: 7px 12px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #386e5b;
+  border-radius: 8px;
+  background: #104d38;
+  color: #c9fa55;
+  line-height: 32px;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: center;
 }
 
 .fintrack-usuario .fintrack-modal-transaccion {
@@ -500,15 +509,19 @@
 
 .fintrack-usuario .fintrack-eliminar-transaccion,
 .fintrack-usuario .fintrack-confirmar-eliminacion {
+  box-sizing: border-box;
   min-width: 72px;
-  min-height: 34px;
-  padding: 7px 12px;
+  height: 34px;
+  padding: 0 12px;
   border: 1px solid #d87878;
   border-radius: 8px;
   background: transparent;
   color: #ffdada;
   font: inherit;
+  font-size: 13px;
   font-weight: 750;
+  line-height: 32px;
+  text-align: center;
   cursor: pointer;
 }
 
