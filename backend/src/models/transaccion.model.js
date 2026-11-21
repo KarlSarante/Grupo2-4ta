@@ -109,3 +109,13 @@ export function puedeEditarTransaccion(transaccion, usuarioId) {
     Number(transaccion.usuario_id) === usuarioId
   );
 }
+
+export async function eliminarTransaccion(id, usuarioId) {
+  const [resultado] = await pool.execute(
+    `DELETE FROM transacciones
+     WHERE id = ? AND usuario_id = ?`,
+    [id, usuarioId]
+  );
+
+  return resultado.affectedRows === 1;
+}

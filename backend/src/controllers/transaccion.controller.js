@@ -5,6 +5,7 @@ import {
   buscarTransaccionPorId,
   actualizarTransaccion,
   puedeEditarTransaccion,
+  eliminarTransaccion,
 } from "../models/transaccion.model.js";
 import { evaluarPresupuesto } from "../services/presupuesto.service.js";
 
@@ -193,6 +194,55 @@ export async function editarTransaccion(req, res) {
     console.error("Error al editar transacción:", error);
     return res.status(500).json({
       mensaje: "Error interno al editar la transacción",
+    });
+  }
+}
+
+export async function eliminarTransaccionController(req, res) {
+  const usuarioId = req.usuario?.id;
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(401).json({ mensaje: "Usuario autenticado no válido" });
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ mensaje: "El ID de la transacción no es válido" });
+  }
+
+  try {
+    const transaccion = await buscarTransaccionPorId(id, usuarioId);
+    if (!puedeEditarTransaccion(transaccion, usuarioId)) {
+      return res.status(404).json({ mensaje: "La transacción no existe" });
+    }
+
+    const eliminada = await eliminarTransaccion(id, usuarioId);
+    if (!eliminada) {
+      return res.status(404).json({ mensaje: "La transacción no existe" });
+    }
+
+    let advertencia = null;
+    if (transaccion.tipo === "gasto") {
+      try {
+        const fecha = transaccion.fecha instanceof Date
+          ? transaccion.fecha.toISOString().slice(0, 10)
+          : String(transaccion.fecha).slice(0, 10);
+        await evaluarPresupuesto(usuarioId, transaccion.categoria_id, fecha);
+      } catch (error) {
+        advertencia = "La transacción se eliminó, pero no fue posible actualizar las alertas del presupuesto.";
+        console.error("Error al actualizar alertas del presupuesto:", error);
+      }
+    }
+
+    return res.status(200).json({
+      mensaje: "Transacción eliminada correctamente",
+      id,
+      ...(advertencia ? { advertencia } : {}),
+    });
+  } catch (error) {
+    console.error("Error al eliminar transacción:", error);
+    return res.status(500).json({
+      mensaje: "Error interno al eliminar la transacción",
     });
   }
 }
