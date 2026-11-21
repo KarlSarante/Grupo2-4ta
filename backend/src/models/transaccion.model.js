@@ -79,3 +79,33 @@ export async function buscarTransaccionPorId(id, usuarioId) {
 
   return transacciones[0] ?? null;
 }
+
+export async function actualizarTransaccion({
+  id,
+  usuarioId,
+  categoriaId,
+  monto,
+  fecha,
+  descripcion,
+}) {
+  const [resultado] = await pool.execute(
+    `UPDATE transacciones
+     SET categoria_id = ?, monto = ?, fecha = ?, descripcion = ?
+     WHERE id = ? AND usuario_id = ?`,
+    [categoriaId, monto, fecha, descripcion, id, usuarioId]
+  );
+
+  if (resultado.affectedRows !== 1) {
+    return null;
+  }
+
+  return buscarTransaccionPorId(id, usuarioId);
+}
+
+export function puedeEditarTransaccion(transaccion, usuarioId) {
+  return Boolean(
+    transaccion &&
+    Number.isInteger(usuarioId) &&
+    Number(transaccion.usuario_id) === usuarioId
+  );
+}

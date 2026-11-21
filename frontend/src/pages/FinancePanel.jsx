@@ -7,7 +7,8 @@ import CategoriasPanel from "./CategoriasPanel.jsx";
 import Dashboard from "../components/dashboard/Dashboard.jsx";
 import "./FinancePanel.css";
 import { obtenerIngresos } from "../services/ingresoService.js";
-import { obtenerTransacciones } from "../services/financeService.js";
+import { editarTransaccion, obtenerTransacciones } from "../services/financeService.js";
+import { obtenerCategorias } from "../services/categoriaService.js";
 import {
   consultarLimiteGastos,
   actualizarLimiteGastos,
@@ -54,6 +55,17 @@ function FinancePanel({ usuario, token, onLogout }) {
   // HU006: Paginación del historial general de transacciones.
   const [paginaTransacciones, setPaginaTransacciones] = useState(1);
   const transaccionesPorPagina = 8;
+  const referenciaDialogoTransaccion = useRef(null);
+  const [transaccionEditando, setTransaccionEditando] = useState(null);
+  const [categoriasTransaccion, setCategoriasTransaccion] = useState([]);
+  const [formularioTransaccion, setFormularioTransaccion] = useState({
+    categoria_id: "",
+    monto: "",
+    fecha: "",
+    descripcion: "",
+  });
+  const [guardandoTransaccion, setGuardandoTransaccion] = useState(false);
+  const [errorEdicionTransaccion, setErrorEdicionTransaccion] = useState("");
   const [mesSeleccionado, setMesSeleccionado] = useState(() => {
     const hoy = new Date();
     return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
@@ -353,6 +365,118 @@ function FinancePanel({ usuario, token, onLogout }) {
   function cerrarModalIngreso() {
     if (guardandoModalIngreso) return;
     setVistaIngresos("listado");
+  }
+
+  useEffect(() => {
+    if (!transaccionEditando) return;
+
+    const dialogo = referenciaDialogoTransaccion.current;
+    if (dialogo && !dialogo.open) dialogo.showModal();
+    dialogo?.querySelector("#transaccion-monto")?.focus();
+
+    return () => {
+      if (dialogo?.open) dialogo.close();
+    };
+  }, [transaccionEditando]);
+
+  async function abrirEdicionTransaccion(transaccion) {
+    setErrorEdicionTransaccion("");
+    setTransaccionEditando(transaccion);
+    setFormularioTransaccion({
+      categoria_id: String(transaccion.categoria_id),
+      monto: String(transaccion.monto),
+      fecha: String(transaccion.fecha).slice(0, 10),
+      descripcion: transaccion.descripcion ?? "",
+    });
+
+    try {
+      const categorias = await obtenerCategorias(token, transaccion.tipo);
+      setCategoriasTransaccion(categorias);
+    } catch (error) {
+      setCategoriasTransaccion([]);
+      setErrorEdicionTransaccion(
+        error.message || "No se pudieron cargar las categorías."
+      );
+    }
+  }
+
+  function cerrarEdicionTransaccion() {
+    if (guardandoTransaccion) return;
+    setTransaccionEditando(null);
+    setCategoriasTransaccion([]);
+    setErrorEdicionTransaccion("");
+  }
+
+  function cambiarFormularioTransaccion(evento) {
+    const { name, value } = evento.target;
+    setFormularioTransaccion((actual) => ({ ...actual, [name]: value }));
+  }
+
+  async function guardarEdicionTransaccion(evento) {
+    evento.preventDefault();
+    if (!transaccionEditando || guardandoTransaccion) return;
+
+    setErrorEdicionTransaccion("");
+    const monto = Number(formularioTransaccion.monto);
+    if (!Number.isFinite(monto) || monto <= 0 || monto > 9999999999.99 ||
+        Math.abs(monto * 100 - Math.round(monto * 100)) >= 1e-6) {
+      setErrorEdicionTransaccion("Ingresa un monto válido mayor que cero con hasta dos decimales.");
+      return;
+    }
+    if (!formularioTransaccion.categoria_id) {
+      setErrorEdicionTransaccion("Selecciona una categoría.");
+      return;
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(formularioTransaccion.fecha)) {
+      setErrorEdicionTransaccion("Selecciona una fecha válida.");
+      return;
+    }
+
+    setGuardandoTransaccion(true);
+    try {
+      const actualizada = await editarTransaccion(
+        transaccionEditando.id,
+        {
+          categoria_id: Number(formularioTransaccion.categoria_id),
+          monto,
+          fecha: formularioTransaccion.fecha,
+          descripcion: formularioTransaccion.descripcion,
+        },
+        token
+      );
+
+      const categoria = categoriasTransaccion.find(
+        (item) => Number(item.id) === Number(actualizada.categoria_id)
+      );
+      setTransacciones((actuales) =>
+        actuales.map((item) =>
+          item.id === actualizada.id
+            ? {
+                ...item,
+                ...actualizada,
+                categoria: categoria?.nombre || item.categoria,
+                categoria_nombre: categoria?.nombre || item.categoria_nombre,
+              }
+            : item
+        )
+      );
+      setRecargaIngresos((anterior) => anterior + 1);
+      setRecargaGastos((anterior) => anterior + 1);
+      try {
+        const transaccionesActualizadas = await obtenerTransacciones(token);
+        setTransacciones(transaccionesActualizadas);
+      } catch {
+        // La actualización local conserva una vista usable si falla el refresco completo.
+      }
+      setTransaccionEditando(null);
+      setCategoriasTransaccion([]);
+    } catch (error) {
+      setErrorEdicionTransaccion(
+        error.message || "No se pudo actualizar la transacción."
+      );
+    } finally {
+      setGuardandoTransaccion(false);
+    }
   }
 
   function cerrarSesion() {
@@ -753,6 +877,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                       <th>Categoría</th>
                       <th>Tipo</th>
                       <th>Monto</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
 
@@ -786,6 +911,15 @@ function FinancePanel({ usuario, token, onLogout }) {
                             style: "currency",
                             currency: "DOP",
                           }).format(Number(transaccion.monto))}
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="categorias-crear-boton fintrack-editar-transaccion"
+                            onClick={() => abrirEdicionTransaccion(transaccion)}
+                          >
+                            Editar
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -842,6 +976,109 @@ function FinancePanel({ usuario, token, onLogout }) {
                 </nav>
               )}
           </section>
+        )}
+        {transaccionEditando && (
+          <dialog
+            ref={referenciaDialogoTransaccion}
+            className="fintrack-modal-transaccion"
+            aria-label="Editar transacción"
+            onCancel={(evento) => {
+              evento.preventDefault();
+              cerrarEdicionTransaccion();
+            }}
+          >
+            <button
+              type="button"
+              className="fintrack-modal-transaccion-cerrar"
+              aria-label="Cerrar edición de transacción"
+              onClick={cerrarEdicionTransaccion}
+              disabled={guardandoTransaccion}
+            >
+              ×
+            </button>
+            <section className="fintrack-edicion-transaccion">
+              <h2>Editar transacción</h2>
+              <form onSubmit={guardarEdicionTransaccion} noValidate>
+                {errorEdicionTransaccion && (
+                  <p role="alert" className="fintrack-edicion-error">
+                    {errorEdicionTransaccion}
+                  </p>
+                )}
+                <label htmlFor="transaccion-monto">
+                  Monto
+                  <input
+                    id="transaccion-monto"
+                    name="monto"
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    value={formularioTransaccion.monto}
+                    onChange={cambiarFormularioTransaccion}
+                    disabled={guardandoTransaccion}
+                    required
+                  />
+                </label>
+                <label htmlFor="transaccion-categoria">
+                  Categoría
+                  <select
+                    id="transaccion-categoria"
+                    name="categoria_id"
+                    value={formularioTransaccion.categoria_id}
+                    onChange={cambiarFormularioTransaccion}
+                    disabled={guardandoTransaccion}
+                    required
+                  >
+                    <option value="">Selecciona una categoría</option>
+                    {categoriasTransaccion.map((categoria) => (
+                      <option key={categoria.id} value={categoria.id}>
+                        {categoria.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label htmlFor="transaccion-fecha">
+                  Fecha
+                  <input
+                    id="transaccion-fecha"
+                    name="fecha"
+                    type="date"
+                    value={formularioTransaccion.fecha}
+                    onChange={cambiarFormularioTransaccion}
+                    disabled={guardandoTransaccion}
+                    required
+                  />
+                </label>
+                <label htmlFor="transaccion-descripcion">
+                  Descripción
+                  <textarea
+                    id="transaccion-descripcion"
+                    name="descripcion"
+                    maxLength="255"
+                    value={formularioTransaccion.descripcion}
+                    onChange={cambiarFormularioTransaccion}
+                    disabled={guardandoTransaccion}
+                  />
+                </label>
+                <div className="fintrack-edicion-acciones">
+                  <button
+                    type="button"
+                    className="paginacion-boton"
+                    onClick={cerrarEdicionTransaccion}
+                    disabled={guardandoTransaccion}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="categorias-crear-boton"
+                    disabled={guardandoTransaccion}
+                  >
+                    {guardandoTransaccion ? "Guardando..." : "Guardar cambios"}
+                  </button>
+                </div>
+              </form>
+            </section>
+          </dialog>
         )}
         {/* HU004 / #64: Registro de ingresos. */}
         {pestanaActiva === "ingresos" && (
