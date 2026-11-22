@@ -24,3 +24,42 @@ export async function obtenerUsuarios(token) {
 
   return datos.usuarios;
 }
+
+export async function desactivarUsuario(id, token) {
+  const respuesta = await fetch(
+    `${API_URL}/admin/${id}/desactivar`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  let datos = {};
+
+  try {
+    datos = await respuesta.json();
+  } catch {
+    datos = {};
+  }
+
+  if (!respuesta.ok) {
+    const mensajes = {
+      400: "El ID del usuario no es válido",
+      401: "Tu sesión no es válida o ha expirado",
+      403: "No tienes permisos para desactivar esta cuenta",
+      404: "El usuario no fue encontrado",
+      409: "La cuenta ya se encuentra desactivada",
+      500: "Error interno al desactivar la cuenta",
+    };
+
+    throw new Error(
+      datos.mensaje ||
+      mensajes[respuesta.status] ||
+      "No se pudo desactivar la cuenta"
+    );
+  }
+
+  return datos;
+}

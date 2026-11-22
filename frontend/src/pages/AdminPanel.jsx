@@ -1,5 +1,6 @@
 import "./AdminPanelV12.css";
-import { useEffect, useRef, useState } from "react"; import { obtenerUsuarios } from "../services/adminService.js";
+import { useEffect, useRef, useState } from "react";
+import { obtenerUsuarios, desactivarUsuario } from "../services/adminService.js";
 import { crearCategoria, desactivarCategoria, obtenerCategorias } from "../services/categoriaService.js";
 
 function AdminPanel({ usuario, token, onLogout }) {
@@ -33,6 +34,31 @@ function AdminPanel({ usuario, token, onLogout }) {
   const referenciaDialogoDesactivar = useRef(null);
   const referenciaBotonDesactivar = useRef(null);
   const bloqueoDesactivacion = useRef(false);
+
+  // HU-014: Estados independientes de usuarios.
+  const [usuarioPorDesactivar, setUsuarioPorDesactivar] = useState(null);
+  const [desactivandoUsuario, setDesactivandoUsuario] = useState(false);
+  const [errorDesactivacionUsuario, setErrorDesactivacionUsuario] = useState("");
+  const referenciaDialogoDesactivarUsuario = useRef(null);
+  const referenciaBotonDesactivarUsuario = useRef(null);
+  const bloqueoDesactivacionUsuario = useRef(false);
+
+  // HU-014: Control del diálogo y restauración del foco.
+  useEffect(() => {
+    if (!usuarioPorDesactivar) return;
+
+    const dialogo = referenciaDialogoDesactivarUsuario.current;
+    if (!dialogo) return;
+
+    if (!dialogo.open) dialogo.showModal();
+
+    dialogo.querySelector("button[type='button']")?.focus();
+
+    return () => {
+      if (dialogo.open) dialogo.close();
+      referenciaBotonDesactivarUsuario.current?.focus();
+    };
+  }, [usuarioPorDesactivar]);
   const [busqueda, setBusqueda] = useState("");
   const [filtroRol, setFiltroRol] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
@@ -301,6 +327,89 @@ function AdminPanel({ usuario, token, onLogout }) {
     setErrorDesactivacion("");
   }
 
+  // HU-014: Solicitar desactivación.
+  function solicitarDesactivacionUsuario(cuenta, evento) {
+    if (
+      bloqueoDesactivacionUsuario.current ||
+      cuenta.rol !== "usuario" ||
+      Number(cuenta.activo) !== 1
+    ) {
+      return;
+    }
+
+    referenciaBotonDesactivarUsuario.current = evento.currentTarget;
+    setErrorDesactivacionUsuario("");
+    setUsuarioPorDesactivar(cuenta);
+  }
+
+  // HU-014: Cancelar desactivación.
+  function cancelarDesactivacionUsuario() {
+    if (bloqueoDesactivacionUsuario.current) return;
+
+    setUsuarioPorDesactivar(null);
+    setErrorDesactivacionUsuario("");
+  }
+
+  // HU-014: Confirmar desactivación.
+  async function confirmarDesactivacionUsuario(evento) {
+    evento.preventDefault();
+
+    if (
+      !usuarioPorDesactivar ||
+      bloqueoDesactivacionUsuario.current
+    ) {
+      return;
+    }
+
+    const id = Number(usuarioPorDesactivar.id);
+
+    if (
+      !Number.isSafeInteger(id) ||
+      id <= 0 ||
+      usuarioPorDesactivar.rol !== "usuario" ||
+      Number(usuarioPorDesactivar.activo) !== 1
+    ) {
+      setErrorDesactivacionUsuario(
+        "La cuenta seleccionada no puede desactivarse"
+      );
+      return;
+    }
+
+    bloqueoDesactivacionUsuario.current = true;
+    setDesactivandoUsuario(true);
+    setErrorDesactivacionUsuario("");
+
+    try {
+      const resultado = await desactivarUsuario(id, token);
+
+      if (
+        Number(resultado.usuario?.id) !== id ||
+        resultado.usuario?.activo !== false
+      ) {
+        throw new Error(
+          "El servidor no confirmó la desactivación de la cuenta"
+        );
+      }
+
+      setUsuarios((anteriores) =>
+        anteriores.map((cuenta) =>
+          Number(cuenta.id) === id
+            ? { ...cuenta, activo: false }
+            : cuenta
+        )
+      );
+
+      setUsuarioPorDesactivar(null);
+
+    } catch (err) {
+      setErrorDesactivacionUsuario(
+        err.message || "No se pudo desactivar la cuenta"
+      );
+    } finally {
+      bloqueoDesactivacionUsuario.current = false;
+      setDesactivandoUsuario(false);
+    }
+  }
   async function confirmarDesactivacionCategoria(evento) {
     evento.preventDefault();
 
@@ -689,6 +798,7 @@ function AdminPanel({ usuario, token, onLogout }) {
                         <th>Correo electrónico</th>
                         <th>Rol</th>
                         <th>Estado</th>
+                        <th>Acción</th>
                       </tr>
                     </thead>
 
@@ -708,11 +818,95 @@ function AdminPanel({ usuario, token, onLogout }) {
                               {Number(cuenta.activo) === 1 ? "Activo" : "Inactivo"}
                             </span>
                           </td>
+                          <td>
+                            {cuenta.rol === "usuario" &&
+                              Number(cuenta.activo) === 1 &&
+                              Number(cuenta.id) !== Number(usuario?.id) && (
+                                <button
+                                  type="button"
+                                  className="usuario-desactivar-accion"
+                                  onClick={(evento) =>
+                                    solicitarDesactivacionUsuario(cuenta, evento)
+                                  }
+                                  aria-label={`Desactivar cuenta de ${cuenta.nombre}`}
+                                >
+                                  Desactivar
+                                </button>
+                              )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+              )}
+
+              {/* HU-014: Confirmación de desactivación de usuario. */}
+              {usuarioPorDesactivar && (
+                <dialog
+                  ref={referenciaDialogoDesactivarUsuario}
+                  className="fintrack-modal-usuario"
+                  aria-label="Confirmar desactivación de cuenta"
+                  onCancel={(evento) => {
+                    evento.preventDefault();
+                    cancelarDesactivacionUsuario();
+                  }}
+                >
+                  <form
+                    className="usuario-desactivar-formulario"
+                    onSubmit={confirmarDesactivacionUsuario}
+                  >
+                    <h3>Desactivar cuenta</h3>
+
+                    <p>
+                      ¿Deseas desactivar esta cuenta de usuario?
+                    </p>
+
+                    <div className="usuario-desactivar-detalle">
+                      <p>
+                        <strong>Nombre:</strong>{" "}
+                        {usuarioPorDesactivar.nombre}
+                      </p>
+                      <p>
+                        <strong>Correo electrónico:</strong>{" "}
+                        {usuarioPorDesactivar.email}
+                      </p>
+                    </div>
+
+                    <p>
+                      El usuario perderá el acceso a su cuenta y sus sesiones
+                      activas serán invalidadas. Sus datos y su historial
+                      financiero se conservarán.
+                    </p>
+
+                    {errorDesactivacionUsuario && (
+                      <p role="alert" aria-live="assertive">
+                        {errorDesactivacionUsuario}
+                      </p>
+                    )}
+
+                    <div className="usuario-desactivar-botones">
+                      <button
+                        type="button"
+                        className="usuario-desactivar-cancelar"
+                        disabled={desactivandoUsuario}
+                        onClick={cancelarDesactivacionUsuario}
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="submit"
+                        className="usuario-desactivar-confirmar"
+                        disabled={desactivandoUsuario}
+                      >
+                        {desactivandoUsuario
+                          ? "Desactivando..."
+                          : "Confirmar desactivación"}
+                      </button>
+                    </div>
+                  </form>
+                </dialog>
               )}
 
               {/* Navegación y resumen del listado de usuarios. */}
@@ -846,11 +1040,21 @@ function AdminPanel({ usuario, token, onLogout }) {
                                     {categoria.tipo === "gasto" ? "Gasto" : "Ingreso"}
                                   </td>
                                   <td>
-                                    {categoria.activo === false ||
-                                    categoria.activo === 0 ||
-                                    categoria.activo === "0"
-                                      ? "Inactiva"
-                                      : "Activa"}
+                                    <span
+                                      className={`estado-cuenta ${
+                                        categoria.activo === false ||
+                                        categoria.activo === 0 ||
+                                        categoria.activo === "0"
+                                          ? "estado-inactivo"
+                                          : "estado-activo"
+                                      }`}
+                                    >
+                                      {categoria.activo === false ||
+                                      categoria.activo === 0 ||
+                                      categoria.activo === "0"
+                                        ? "Inactiva"
+                                        : "Activa"}
+                                    </span>
                                   </td>
                                   <td>
                                     <button
