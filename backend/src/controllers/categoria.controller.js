@@ -50,8 +50,11 @@ export async function registrarCategoria(req, res) {
     const { nombre, tipo } = resultado.data;
 
     try {
-        // Las categorías creadas por un usuario son privadas, incluso si su rol es administrador.
-        const usuarioId = req.usuario.id;
+        // Administradores crean categorias generales; usuarios crean categorias personales.
+        const usuarioId =
+            req.usuario.rol === "administrador"
+                ? null
+                : req.usuario.id;
         const categoriaExistente = await buscarCategoriaPorNombreYTipo(
             nombre, tipo, usuarioId
         );
@@ -105,7 +108,12 @@ export async function listarCategorias(req, res) {
 
   try {
     // Reutilizar la consulta existente del modelo.
-    const categorias = await consultarCategorias(tipo ?? null, req.usuario.id);
+    const usuarioId =
+      req.usuario.rol === "administrador"
+        ? null
+        : req.usuario.id;
+
+    const categorias = await consultarCategorias(tipo ?? null, usuarioId);
 
     return res.status(200).json({
       mensaje: "Categorías consultadas correctamente",
