@@ -44,6 +44,7 @@ function App() {
   });
 
   const handleLogout = async () => {
+    sessionStorage.removeItem("fintrack-admin-pestana");
     sessionStorage.removeItem("finanzas-pestana");
     sessionStorage.removeItem("finanzas-vista-ingresos");
     sessionStorage.removeItem("finanzas-vista-gastos");
@@ -71,6 +72,10 @@ function App() {
   useEffect(() => {
     const onStorage = (e) => {
       if (e.key === "sesion" && e.newValue === null) {
+        sessionStorage.removeItem("fintrack-admin-pestana");
+        sessionStorage.removeItem("finanzas-pestana");
+        sessionStorage.removeItem("finanzas-vista-ingresos");
+        sessionStorage.removeItem("finanzas-vista-gastos");
         setSesion(null);
         setPantalla("inicio");
       }
@@ -88,6 +93,10 @@ function App() {
           onVolverInicio={() => setPantalla("inicio")}
           onRegistroExitoso={(nuevaSesion) => {
             setAvisoCierre(false);
+            sessionStorage.removeItem("fintrack-admin-pestana");
+            sessionStorage.removeItem("finanzas-pestana");
+            sessionStorage.removeItem("finanzas-vista-ingresos");
+            sessionStorage.removeItem("finanzas-vista-gastos");
             setSesion(nuevaSesion);
           }}
         />
@@ -114,6 +123,10 @@ function App() {
         <Login
           onLogin={(nuevaSesion) => {
             setAvisoCierre(false);
+            sessionStorage.removeItem("fintrack-admin-pestana");
+            sessionStorage.removeItem("finanzas-pestana");
+            sessionStorage.removeItem("finanzas-vista-ingresos");
+            sessionStorage.removeItem("finanzas-vista-gastos");
             setSesion(nuevaSesion);
           }}
           onRegister={() => setPantalla("registro")}
