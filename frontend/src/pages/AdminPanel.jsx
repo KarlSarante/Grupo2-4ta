@@ -1,4 +1,5 @@
 import "./AdminPanelV12.css";
+import AdminHome from "./AdminHome.jsx";
 import { useEffect, useRef, useState } from "react";
 import { obtenerUsuarios, desactivarUsuario } from "../services/adminService.js";
 import { crearCategoria, desactivarCategoria, obtenerCategorias } from "../services/categoriaService.js";
@@ -93,19 +94,32 @@ function AdminPanel({ usuario, token, onLogout }) {
     sessionStorage.setItem("fintrack-admin-pestana", pestanaActiva);
   }, [pestanaActiva]);
 
+  // Cargar usuarios al abrir Home o Usuarios.
+  // Al regresar a Home se refrescan las estadísticas.
   useEffect(() => {
+    if (pestanaActiva !== "panel" && pestanaActiva !== "usuarios") {
+      return;
+    }
+
     let activo = true;
 
     async function cargarUsuarios() {
+      setCargando(true);
+      setError("");
+
       try {
         const resultado = await obtenerUsuarios(token);
 
         if (activo) {
+          if (!Array.isArray(resultado)) {
+            throw new Error("La respuesta de usuarios no es válida");
+          }
+
           setUsuarios(resultado);
         }
       } catch (err) {
         if (activo) {
-          setError(err.message);
+          setError(err.message || "No se pudieron cargar los usuarios");
         }
       } finally {
         if (activo) {
@@ -119,7 +133,7 @@ function AdminPanel({ usuario, token, onLogout }) {
     return () => {
       activo = false;
     };
-  }, [token]);
+  }, [token, pestanaActiva]);
 
   // HU-016: Consultar categorías al abrir su pestaña.
   useEffect(() => {
@@ -685,13 +699,35 @@ function AdminPanel({ usuario, token, onLogout }) {
 
 
           {pestanaActiva === "panel" && (
-            <section
-              className="admin-seccion"
-              aria-label="Resumen administrativo"
-            >
-              <h2>Panel administrativo</h2>
+            <AdminHome
+              estadisticas={(() => {
+                const registrados = usuarios.length;
+                const administradores = usuarios.filter(
+                  (cuenta) => cuenta.rol === "administrador"
+                ).length;
+                const usuariosNormales = usuarios.filter(
+                  (cuenta) => cuenta.rol === "usuario"
+                ).length;
+                const activos = usuarios.filter(
+                  (cuenta) => cuenta.activo === true || cuenta.activo === 1
+                ).length;
+                const desactivados = usuarios.filter(
+                  (cuenta) => cuenta.activo === false || cuenta.activo === 0
+                ).length;
 
-            </section>
+                return {
+                  registrados,
+                  administradores,
+                  usuarios: usuariosNormales,
+                  activos,
+                  desactivados,
+                };
+              })()}
+              cargando={cargando}
+              error={error}
+              onGestionarUsuarios={() => setPestanaActiva("usuarios")}
+              onGestionarCategorias={() => setPestanaActiva("categorias")}
+            />
           )}
           {pestanaActiva === "usuarios" && (
             <section className="admin-seccion fintrack-admin-listado-v12" aria-label="Gestión de usuarios">
