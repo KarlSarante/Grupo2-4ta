@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { autenticarToken } from "../middlewares/auth.middleware.js";
 import { autorizarRoles } from "../middlewares/role.middleware.js";
-import { consultarUsuarios } from "../controllers/admin.controller.js";
+import { consultarUsuarios, desactivarUsuarioController } from "../controllers/admin.controller.js";
 
 const router = Router();
 
@@ -20,4 +20,6 @@ router.get("/", (req, res) => {
 // Solo devuelve datos administrativos permitidos.
 router.get("/usuarios", consultarUsuarios);
 
+// HU-014: Desactivar cuentas de usuarios.
+router.patch("/:id/desactivar", desactivarUsuarioController);
 export default router;

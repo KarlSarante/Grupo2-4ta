@@ -15,6 +15,7 @@ export function generarToken(usuario) {
     {
       id: usuario.id,
       rol: usuario.rol,
+      token_version: usuario.token_version,
     },
     JWT_SECRET,
     {

@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     rol ENUM('usuario', 'administrador') NOT NULL DEFAULT 'usuario',
-    activo BOOLEAN NOT NULL DEFAULT TRUE
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    token_version INT NOT NULL DEFAULT 1
 );
 
 

@@ -26,7 +26,7 @@ export async function iniciarSesion(req, res) {
 
   try {
     const [usuarios] = await pool.execute(
-      `SELECT id, nombre, email, password_hash, rol, activo
+      `SELECT id, nombre, email, password_hash, rol, activo, token_version
        FROM usuarios
        WHERE email = ?
        LIMIT 1`,
