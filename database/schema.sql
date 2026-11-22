@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS categorias_generales (
     nombre VARCHAR(100) NOT NULL,
     tipo ENUM('ingreso', 'gasto') NOT NULL,
     usuario_id INT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
     -- La columna generada solo participa en la unicidad de categorías generales.
     nombre_general VARCHAR(100)
         GENERATED ALWAYS AS (CASE WHEN usuario_id IS NULL THEN nombre ELSE NULL END) VIRTUAL,

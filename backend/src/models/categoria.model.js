@@ -30,11 +30,38 @@ export async function consultarCategorias(tipo = null, usuarioId = null) {
   } else {
     filtros.push("(usuario_id IS NULL OR usuario_id = ?)");
     parametros.push(usuarioId);
+    filtros.push("activo = TRUE");
   }
   const [categorias] = await pool.execute(
-    `SELECT id, usuario_id, nombre, tipo FROM categorias_generales
+    `SELECT id, usuario_id, nombre, tipo, activo FROM categorias_generales
      WHERE ${filtros.join(" AND ")} ORDER BY tipo ASC, nombre ASC, id ASC`,
     parametros
   );
   return categorias;
+}
+
+// HU-018: Desactivar exclusivamente una categoria general activa.
+export async function desactivarCategoriaGeneral(id) {
+    const [resultado] = await pool.execute(
+        `UPDATE categorias_generales
+         SET activo = FALSE
+         WHERE id = ?
+           AND usuario_id IS NULL
+           AND activo = TRUE`,
+        [id]
+    );
+
+    return resultado.affectedRows;
+}
+
+// HU-018: Consultar el estado y propietario de una categoria por ID.
+export async function consultarCategoriaPorId(id) {
+    const [categorias] = await pool.execute(
+        `SELECT id, usuario_id, activo
+         FROM categorias_generales
+         WHERE id = ?`,
+        [id]
+    );
+
+    return categorias[0] ?? null;
 }

@@ -4,6 +4,7 @@ import { autorizarRoles } from "../middlewares/role.middleware.js";
 import {
   registrarCategoria,
   listarCategorias,
+  desactivarCategoriaController,
 } from "../controllers/categoria.controller.js";
 
 const router = Router();
@@ -24,6 +25,14 @@ router.post(
   autenticarToken,
   autorizarRoles("administrador", "usuario"),
   registrarCategoria
+);
+
+// HU-018: Solo administradores pueden desactivar categorias generales.
+router.patch(
+  "/:id/desactivar",
+  autenticarToken,
+  autorizarRoles("administrador"),
+  desactivarCategoriaController
 );
 
 export default router;

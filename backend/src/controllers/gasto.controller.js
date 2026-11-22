@@ -111,13 +111,14 @@ export async function registrarGasto(req, res) {
        FROM categorias_generales
        WHERE id = ? AND tipo = 'gasto'
          AND (usuario_id IS NULL OR usuario_id = ?)
+          AND activo = TRUE
        LIMIT 1`,
       [categoria_id, usuarioId]
     );
 
     if (categorias.length === 0) {
       return res.status(400).json({
-        mensaje: "La categoría seleccionada no existe o no es de gasto",
+        mensaje: "La categoría seleccionada no existe, no es de gasto o está inactiva",
       });
     }
 
