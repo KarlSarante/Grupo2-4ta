@@ -1,6 +1,6 @@
 import "./AdminPanelV12.css";
 import { useEffect, useRef, useState } from "react"; import { obtenerUsuarios } from "../services/adminService.js";
-import { crearCategoria, obtenerCategorias } from "../services/categoriaService.js";
+import { crearCategoria, desactivarCategoria, obtenerCategorias } from "../services/categoriaService.js";
 
 function AdminPanel({ usuario, token, onLogout }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -16,6 +16,8 @@ function AdminPanel({ usuario, token, onLogout }) {
   const [errorTipoCategoria, setErrorTipoCategoria] = useState("");
   const [guardandoCategoria, setGuardandoCategoria] = useState(false);
   const [mensajeCategoria, setMensajeCategoria] = useState("");
+  // HU-018: Notificación temporal de desactivación.
+  const [notificacionDesactivacion, setNotificacionDesactivacion] = useState(null);
   const [errorCreacionCategoria, setErrorCreacionCategoria] = useState("");
   const [categorias, setCategorias] = useState([]);
   const CATEGORIAS_POR_PAGINA = 7;
@@ -25,6 +27,12 @@ function AdminPanel({ usuario, token, onLogout }) {
   const referenciaAbrirCategoria = useRef(null);
   const [cargandoCategorias, setCargandoCategorias] = useState(false);
   const [errorListadoCategorias, setErrorListadoCategorias] = useState("");
+  const [categoriaPorDesactivar, setCategoriaPorDesactivar] = useState(null);
+  const [desactivandoCategoria, setDesactivandoCategoria] = useState(false);
+  const [errorDesactivacion, setErrorDesactivacion] = useState("");
+  const referenciaDialogoDesactivar = useRef(null);
+  const referenciaBotonDesactivar = useRef(null);
+  const bloqueoDesactivacion = useRef(false);
   const [busqueda, setBusqueda] = useState("");
   const [filtroRol, setFiltroRol] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
@@ -228,7 +236,7 @@ function AdminPanel({ usuario, token, onLogout }) {
       // Incorporar la categoría creada al listado actual.
       setCategorias((anteriores) => [
         ...anteriores,
-        resultado.categoria,
+        { ...resultado.categoria, activo: true },
       ]);
 
       // Mostrar la confirmación en el listado.
@@ -250,6 +258,82 @@ function AdminPanel({ usuario, token, onLogout }) {
       );
     } finally {
       setGuardandoCategoria(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!notificacionDesactivacion) return;
+
+    const temporizador = setTimeout(() => {
+      setNotificacionDesactivacion(null);
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [notificacionDesactivacion]);
+  // HU-018: Confirmación independiente del formulario de creación.
+  useEffect(() => {
+    if (!categoriaPorDesactivar) return;
+
+    const dialogo = referenciaDialogoDesactivar.current;
+    if (!dialogo) return;
+
+    if (!dialogo.open) dialogo.showModal();
+
+    return () => {
+      if (dialogo.open) dialogo.close();
+      referenciaBotonDesactivar.current?.focus();
+    };
+  }, [categoriaPorDesactivar]);
+
+  function solicitarDesactivacionCategoria(categoria, evento) {
+    if (bloqueoDesactivacion.current || categoria.activo === false ||
+        categoria.activo === 0 || categoria.activo === "0") return;
+
+    referenciaBotonDesactivar.current = evento.currentTarget;
+    setErrorDesactivacion("");
+    setMensajeCategoria("");
+    setCategoriaPorDesactivar(categoria);
+  }
+
+  function cancelarDesactivacionCategoria() {
+    if (bloqueoDesactivacion.current) return;
+    setCategoriaPorDesactivar(null);
+    setErrorDesactivacion("");
+  }
+
+  async function confirmarDesactivacionCategoria(evento) {
+    evento.preventDefault();
+
+    if (!categoriaPorDesactivar || bloqueoDesactivacion.current) return;
+
+    const id = Number(categoriaPorDesactivar.id);
+    bloqueoDesactivacion.current = true;
+    setDesactivandoCategoria(true);
+    setErrorDesactivacion("");
+
+    try {
+      const resultado = await desactivarCategoria(id, token);
+
+      setCategorias((anteriores) =>
+        anteriores.map((categoria) =>
+          Number(categoria.id) === id
+            ? { ...categoria, activo: false }
+            : categoria
+        )
+      );
+
+      setNotificacionDesactivacion({
+        id: Date.now(),
+        nombre: categoriaPorDesactivar.nombre,
+      });
+      setCategoriaPorDesactivar(null);
+    } catch (err) {
+      setErrorDesactivacion(
+        err.message || "No se pudo desactivar la categoría"
+      );
+    } finally {
+      bloqueoDesactivacion.current = false;
+      setDesactivandoCategoria(false);
     }
   }
 
@@ -699,6 +783,25 @@ function AdminPanel({ usuario, token, onLogout }) {
                     </button>
                   </div>
 
+                  {notificacionDesactivacion && (
+                    <div
+                      className="categorias-notificacion-desactivacion"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <span aria-hidden="true" className="categorias-notificacion-icono">
+                        ✓
+                      </span>
+                      <div>
+                        <strong>Categoría desactivada</strong>
+                        <p>
+                          La categoría «{notificacionDesactivacion.nombre}»
+                          ya no está disponible para nuevas transacciones.
+                          Su historial se conserva.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                   {mensajeCategoria && (
                     <p className="categorias-exito" role="status">
                       {mensajeCategoria}
@@ -742,15 +845,39 @@ function AdminPanel({ usuario, token, onLogout }) {
                                   <td>
                                     {categoria.tipo === "gasto" ? "Gasto" : "Ingreso"}
                                   </td>
-                                  <td>No disponible</td>
+                                  <td>
+                                    {categoria.activo === false ||
+                                    categoria.activo === 0 ||
+                                    categoria.activo === "0"
+                                      ? "Inactiva"
+                                      : "Activa"}
+                                  </td>
                                   <td>
                                     <button
                                       type="button"
                                       className="categoria-estado-accion"
-                                      disabled
-                                      title="Disponible en una futura historia de usuario"
+                                      disabled={
+                                        categoria.activo === false ||
+                                        categoria.activo === 0 ||
+                                        categoria.activo === "0" ||
+                                        desactivandoCategoria
+                                      }
+                                      title={
+                                        categoria.activo === false ||
+                                        categoria.activo === 0 ||
+                                        categoria.activo === "0"
+                                          ? "Categoría inactiva; reactivación pendiente"
+                                          : "Desactivar categoría general"
+                                      }
+                                      onClick={(evento) =>
+                                        solicitarDesactivacionCategoria(categoria, evento)
+                                      }
                                     >
-                                      Desactivar
+                                      {desactivandoCategoria &&
+                                      Number(categoriaPorDesactivar?.id) ===
+                                        Number(categoria.id)
+                                        ? "Desactivando..."
+                                        : "Desactivar"}
                                     </button>
                                   </td>
                                 </tr>
@@ -810,6 +937,55 @@ function AdminPanel({ usuario, token, onLogout }) {
                   </div>
 
                 </>
+              )}
+
+              {categoriaPorDesactivar && (
+                <dialog
+                  ref={referenciaDialogoDesactivar}
+                  className="fintrack-modal-categoria"
+                  aria-label="Confirmar desactivación de categoría"
+                  onCancel={(evento) => {
+                    evento.preventDefault();
+                    cancelarDesactivacionCategoria();
+                  }}
+                >
+                  <form
+                    className="categorias-formulario"
+                    onSubmit={confirmarDesactivacionCategoria}
+                  >
+                    <h3>Desactivar categoría</h3>
+                    <p>
+                      ¿Deseas desactivar la categoría
+                      {" "}<strong>{categoriaPorDesactivar.nombre}</strong>?
+                    </p>
+                    <p>
+                      Dejará de estar disponible para nuevas transacciones.
+                      Los movimientos históricos no se eliminarán.
+                    </p>
+
+                    {errorDesactivacion && (
+                      <p className="categorias-error" role="alert">
+                        {errorDesactivacion}
+                      </p>
+                    )}
+
+                    <div className="fintrack-modal-categoria-acciones">
+                      <button
+                        type="button"
+                        className="categorias-volver"
+                        disabled={desactivandoCategoria}
+                        onClick={cancelarDesactivacionCategoria}
+                      >
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={desactivandoCategoria}>
+                        {desactivandoCategoria
+                          ? "Desactivando..."
+                          : "Confirmar desactivación"}
+                      </button>
+                    </div>
+                  </form>
+                </dialog>
               )}
 
               {vistaCategorias === "formulario" && (

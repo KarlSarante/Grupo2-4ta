@@ -95,3 +95,51 @@ export async function obtenerCategorias(token, tipo = null) {
 
   return datos.categorias;
 }
+
+/**
+ * HU-018: Desactivar una categoría general.
+ *
+ * PATCH /api/categorias/:id/desactivar
+ *
+ * @param {number} id - ID de la categoría general.
+ * @param {string} token - JWT del administrador.
+ * @returns {Promise<Object>} Respuesta de la API.
+ */
+export async function desactivarCategoria(id, token) {
+  if (!Number.isSafeInteger(id) || id < 1 || id > 2147483647) {
+    throw new Error("ID de categoría inválido");
+  }
+
+  let respuesta;
+
+  try {
+    respuesta = await fetch(
+      `${API_URL}/categorias/${id}/desactivar`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  } catch {
+    throw new Error(
+      "No se pudo conectar con el servidor. Inténtalo nuevamente."
+    );
+  }
+
+  const datos = await respuesta.json();
+
+  if (!respuesta.ok) {
+    const error = new Error(
+      datos.mensaje || "No se pudo desactivar la categoría"
+    );
+
+    error.estado = respuesta.status;
+    error.errores = datos.errores ?? [];
+
+    throw error;
+  }
+
+  return datos;
+}

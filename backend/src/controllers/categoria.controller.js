@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { crearCategoria, buscarCategoriaPorNombreYTipo, consultarCategorias } from "../models/categoria.model.js";
+import { crearCategoria, buscarCategoriaPorNombreYTipo, consultarCategorias, consultarCategoriaPorId, desactivarCategoriaGeneral } from "../models/categoria.model.js";
 
 const categoriaSchema = z.strictObject({
     nombre: z.string()
@@ -126,4 +126,75 @@ export async function listarCategorias(req, res) {
       mensaje: "Error interno al consultar las categorías",
     });
   }
+}
+
+/**
+ * HU-018: Desactivar una categoría general.
+ */
+export async function desactivarCategoriaController(req, res) {
+    if (req.usuario?.rol !== "administrador") {
+        return res.status(403).json({
+            mensaje: "No tienes permiso para desactivar categorías generales",
+        });
+    }
+
+    const idTexto = req.params.id;
+
+    if (typeof idTexto !== "string" || !/^[1-9]\d*$/.test(idTexto)) {
+        return res.status(400).json({
+            mensaje: "El ID de categoría debe ser un entero positivo",
+        });
+    }
+
+    const id = Number(idTexto);
+
+    if (!Number.isSafeInteger(id) || id > 2147483647) {
+        return res.status(400).json({
+            mensaje: "ID de categoría inválido",
+        });
+    }
+
+    try {
+        const categoria = await consultarCategoriaPorId(id);
+
+        if (!categoria) {
+            return res.status(404).json({
+                mensaje: "Categoría no encontrada",
+            });
+        }
+
+        if (categoria.usuario_id !== null) {
+            return res.status(403).json({
+                mensaje: "No se pueden desactivar categorías personales",
+            });
+        }
+
+        if (!categoria.activo) {
+            return res.status(409).json({
+                mensaje: "La categoría ya está desactivada",
+            });
+        }
+
+        const filasAfectadas = await desactivarCategoriaGeneral(id);
+
+        if (filasAfectadas !== 1) {
+            return res.status(409).json({
+                mensaje: "La categoría ya no está activa",
+            });
+        }
+
+        return res.status(200).json({
+            mensaje: "Categoría general desactivada correctamente",
+            categoria: {
+                id,
+                activo: false,
+            },
+        });
+    } catch (error) {
+        console.error("Error al desactivar categoría:", error);
+
+        return res.status(500).json({
+            mensaje: "Error interno al desactivar la categoría",
+        });
+    }
 }
