@@ -1,9 +1,15 @@
+import "./AdminPanelV12.css";
 import { useEffect, useRef, useState } from "react"; import { obtenerUsuarios } from "../services/adminService.js";
 import { crearCategoria, obtenerCategorias } from "../services/categoriaService.js";
 
 function AdminPanel({ usuario, token, onLogout }) {
   const [usuarios, setUsuarios] = useState([]);
-  const [pestanaActiva, setPestanaActiva] = useState("usuarios");
+  const [pestanaActiva, setPestanaActiva] = useState(() => {
+    const pestañaGuardada = sessionStorage.getItem("fintrack-admin-pestana");
+
+    return pestañaGuardada || "panel";
+  });
+
   const [nombreCategoria, setNombreCategoria] = useState("");
   const [tipoCategoria, setTipoCategoria] = useState("gasto");
   const [errorNombreCategoria, setErrorNombreCategoria] = useState("");
@@ -12,20 +18,46 @@ function AdminPanel({ usuario, token, onLogout }) {
   const [mensajeCategoria, setMensajeCategoria] = useState("");
   const [errorCreacionCategoria, setErrorCreacionCategoria] = useState("");
   const [categorias, setCategorias] = useState([]);
-  const CATEGORIAS_POR_PAGINA = 10;
+  const CATEGORIAS_POR_PAGINA = 7;
   const [paginaCategorias, setPaginaCategorias] = useState(1);
   const [vistaCategorias, setVistaCategorias] = useState("listado");
+  const referenciaDialogoCategoria = useRef(null);
+  const referenciaAbrirCategoria = useRef(null);
   const [cargandoCategorias, setCargandoCategorias] = useState(false);
   const [errorListadoCategorias, setErrorListadoCategorias] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [filtroRol, setFiltroRol] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
-  const USUARIOS_POR_PAGINA = 10;
+  const USUARIOS_POR_PAGINA = 6;
   const [paginaUsuarios, setPaginaUsuarios] = useState(1);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [menuPerfilAbierto, setMenuPerfilAbierto] = useState(false);
   const referenciaPerfil = useRef(null);
+
+
+  useEffect(() => {
+    if (pestanaActiva !== "categorias" || vistaCategorias !== "formulario") return;
+
+    const dialogo = referenciaDialogoCategoria.current;
+    if (!dialogo) return;
+
+    if (!dialogo.open) dialogo.showModal();
+    dialogo.querySelector("#nombre-categoria")?.focus();
+
+    return () => {
+      if (dialogo.open) dialogo.close();
+      referenciaAbrirCategoria.current?.focus();
+    };
+  }, [pestanaActiva, vistaCategorias]);
+
+  function cerrarModalCategoria() {
+    if (guardandoCategoria) return;
+    setVistaCategorias("listado");
+  }
+  useEffect(() => {
+    sessionStorage.setItem("fintrack-admin-pestana", pestanaActiva);
+  }, [pestanaActiva]);
 
   useEffect(() => {
     let activo = true;
@@ -295,31 +327,36 @@ function AdminPanel({ usuario, token, onLogout }) {
   );
 
   return (
-    <main className="role-panel">
-      <section className="role-card admin-card">
-        {/* Cabecera del panel administrativo. */}
-        <header className="admin-cabecera">
-          <div className="admin-cabecera-info">
-            <p className="role-label">Panel administrativo</p>
+    <main className="role-panel fintrack-admin-v12">
+      <aside className="fintrack-admin-sidebar" aria-label="Barra lateral administrativa">
+        <div className="fintrack-admin-marca">
+          <span className="fintrack-admin-marca-icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2"
+              strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="6" width="18" height="15" rx="2" />
+              <path d="M3 10h18M7 6V4a2 2 0 0 1 2-2h8" />
+              <path d="M16 15h2" />
+            </svg>
+          </span>
+          <strong>Fintrack</strong>
+        </div>
 
-            <h1>Bienvenido, {usuario.nombre}</h1>
-
-            <p>Gestiona usuarios y categorías de la plataforma.</p>
-          </div>
-
-          <div className="admin-perfil" ref={referenciaPerfil}>
+        <nav className="fintrack-admin-navegacion" aria-label="Secciones administrativas">
+          {[
+            { id: "panel", texto: "Home" },
+            { id: "usuarios", texto: "Usuarios" },
+            { id: "categorias", texto: "Categorías" },
+          ].map((opcion) => (
             <button
+              key={opcion.id}
               type="button"
-              className="admin-perfil-boton"
-              aria-label="Abrir menú de usuario"
-              aria-expanded={menuPerfilAbierto}
-              aria-controls="admin-menu-perfil"
-              onClick={() => setMenuPerfilAbierto((anterior) => !anterior)}
+              className={`fintrack-admin-nav-boton ${pestanaActiva === opcion.id ? "activo" : ""}`}
+              aria-current={pestanaActiva === opcion.id ? "page" : undefined}
+              onClick={() => setPestanaActiva(opcion.id)}
             >
               <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
+                className="fintrack-admin-nav-icono"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -328,462 +365,339 @@ function AdminPanel({ usuario, token, onLogout }) {
                 strokeLinejoin="round"
                 aria-hidden="true"
               >
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21a8 8 0 0 1 16 0" />
+                {opcion.id === "panel" && (
+                  <>
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                  </>
+                )}
+                {opcion.id === "usuarios" && (
+                  <>
+                    <circle cx="9" cy="8" r="3" />
+                    <path d="M3 20v-2a6 6 0 0 1 12 0v2" />
+                    <path d="M17 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 5v1" />
+                  </>
+                )}
+                {opcion.id === "categorias" && (
+                  <path d="m12 2 9 5-9 5-9-5 9-5zm-9 10 9 5 9-5M3 17l9 5 9-5" />
+                )}
               </svg>
+              {opcion.texto}
             </button>
-
-            {menuPerfilAbierto && (
-              <div
-                id="admin-menu-perfil"
-                className="admin-perfil-menu"
-              >
-                <div className="admin-perfil-info">
-                  <strong>{usuario.nombre}</strong>
-                  <span>Administrador</span>
-                </div>
-
-                <button
-                  type="button"
-                  className="admin-perfil-salir"
-                  onClick={onLogout}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <path d="m16 17 5-5-5-5" />
-                    <path d="M21 12H9" />
-                  </svg>
-
-                  Cerrar sesión
-                </button>
-              </div>
-            )}
-          </div>
-        </header>
-
-        <nav className="admin-tabs" aria-label="Secciones administrativas">
-          <button
-            type="button"
-            className={`admin-tab ${pestanaActiva === "usuarios" ? "admin-tab-activa" : ""}`}
-            aria-current={pestanaActiva === "usuarios" ? "page" : undefined}
-            onClick={() => setPestanaActiva("usuarios")}
-          >
-            Usuarios registrados
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab ${pestanaActiva === "categorias" ? "admin-tab-activa" : ""}`}
-            aria-current={pestanaActiva === "categorias" ? "page" : undefined}
-            onClick={() => setPestanaActiva("categorias")}
-          >
-            Categorías
-          </button>
+          ))}
         </nav>
 
-        {pestanaActiva === "usuarios" && (
-          <section className="admin-seccion" aria-label="Gestión de usuarios">
-
-            <h2>Usuarios registrados</h2>
-
-            <div className="usuarios-busqueda">
-              <label htmlFor="buscar-usuarios">
-                Buscar usuarios
-              </label>
-
-              <input
-                id="buscar-usuarios"
-                type="search"
-                placeholder="Buscar por nombre o correo..."
-                value={busqueda}
-                onChange={(evento) => {
-                  setBusqueda(evento.target.value);
-                  setPaginaUsuarios(1);
-                }}
-              />
+        <button
+          type="button"
+          className="fintrack-admin-salir"
+          onClick={onLogout}
+        >
+          <svg
+            className="fintrack-admin-nav-icono"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path d="m16 17 5-5-5-5" />
+            <path d="M21 12H9" />
+          </svg>
+          Cerrar sesión
+        </button>
+      </aside>
+      <div className="fintrack-admin-contenido">
+        <section className="role-card admin-card">
+          {/* Cabecera del panel administrativo. */}
+          <header className="admin-cabecera">
+            <div className="admin-cabecera-info">
+              <h1>
+                {pestanaActiva === "categorias"
+                  ? "Gestor de Categorías"
+                  : pestanaActiva === "usuarios"
+                    ? "Gestor de Usuarios"
+                    : `Bienvenido, ${usuario.nombre}`}
+              </h1>
             </div>
 
-
-            <div className="usuarios-filtros">
-              <div className="usuarios-filtro">
-                <label htmlFor="filtro-rol">Filtrar por rol</label>
-                <select
-                  id="filtro-rol"
-                  value={filtroRol}
-                  onChange={(evento) => {
-                    setFiltroRol(evento.target.value);
-                    setPaginaUsuarios(1);
-                  }}
-                >
-                  <option value="todos">Todos los roles</option>
-                  <option value="usuario">Usuario</option>
-                  <option value="administrador">Administrador</option>
-                </select>
-              </div>
-
-              <div className="usuarios-filtro">
-                <label htmlFor="filtro-estado">Filtrar por estado</label>
-                <select
-                  id="filtro-estado"
-                  value={filtroEstado}
-                  onChange={(evento) => {
-                    setFiltroEstado(evento.target.value);
-                    setPaginaUsuarios(1);
-                  }}
-                >
-                  <option value="todos">Todos los estados</option>
-                  <option value="activo">Activo</option>
-                  <option value="inactivo">Inactivo</option>
-                </select>
-              </div>
-
-              <div className="usuarios-acciones">
-                <button
-                  type="button"
-                  className="usuarios-limpiar"
-                  onClick={limpiarFiltros}
-                  disabled={
-                    busqueda === "" &&
-                    filtroRol === "todos" &&
-                    filtroEstado === "todos"
-                  }
-                >
-                  Limpiar filtros
-                </button>
-              </div>
-
-            </div>
-
-
-            {cargando && <p>Cargando usuarios...</p>}
-
-            {!cargando && error && (
-              <p role="alert">{error}</p>
-            )}
-
-            {!cargando && !error && usuarios.length === 0 && (
-              <p>No hay usuarios registrados.</p>
-            )}
-
-            {!cargando &&
-              !error &&
-              usuarios.length > 0 &&
-              usuariosFiltrados.length === 0 && (
-                <p role="status">
-                  No se encontraron usuarios con los criterios seleccionados.
-                </p>
-              )}
-
-            {!cargando && !error && usuarios.length > 0 && (
-              <div className="usuarios-tabla-contenedor">
-                <table className="usuarios-tabla">
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Correo electrónico</th>
-                      <th>Rol</th>
-                      <th>Estado</th>
-                    </tr>
-                  </thead>
-
-                  <tbody>
-                    {usuariosPaginados.map((cuenta) => (
-                      <tr key={cuenta.id}>
-                        <td>{cuenta.nombre}</td>
-                        <td>{cuenta.email}</td>
-                        <td>{cuenta.rol}</td>
-                        <td>
-                          <span
-                            className={`estado-cuenta ${Number(cuenta.activo) === 1
-                              ? "estado-activo"
-                              : "estado-inactivo"
-                              }`}
-                          >
-                            {Number(cuenta.activo) === 1 ? "Activo" : "Inactivo"}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Navegación y resumen del listado de usuarios. */}
-            {!cargando && !error && usuariosFiltrados.length > 0 && (
-              <nav
-                className="usuarios-paginacion"
-                aria-label="Paginación de usuarios"
+            <div className="admin-perfil" ref={referenciaPerfil}>
+              <button
+                type="button"
+                className="admin-perfil-boton"
+                aria-label="Abrir menú de usuario"
+                aria-expanded={menuPerfilAbierto}
+                aria-controls="admin-menu-perfil"
+                onClick={() => setMenuPerfilAbierto((anterior) => !anterior)}
               >
-                <span className="paginacion-resumen">
-                  Mostrando {indiceInicialUsuarios + 1}–
-                  {Math.min(
-                    indiceInicialUsuarios + USUARIOS_POR_PAGINA,
-                    usuariosFiltrados.length
-                  )} de {usuariosFiltrados.length} usuarios
-                </span>
-
-                <div className="paginacion-controles">
-                  <button
-                    type="button"
-                    className="paginacion-boton"
-                    disabled={paginaActualUsuarios === 1}
-                    onClick={() => setPaginaUsuarios(paginaActualUsuarios - 1)}
-                  >
-                    Anterior
-                  </button>
-
-                  <span className="paginacion-indicador" aria-live="polite">
-                    {paginaActualUsuarios} de {totalPaginasUsuarios}
-                  </span>
-
-                  <button
-                    type="button"
-                    className="paginacion-boton"
-                    disabled={paginaActualUsuarios === totalPaginasUsuarios}
-                    onClick={() => setPaginaUsuarios(paginaActualUsuarios + 1)}
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              </nav>
-            )}
-
-          </section>
-        )}
-
-        {pestanaActiva === "categorias" && (
-          <section className="admin-seccion" aria-label="Gestión de categorías">
-            {/* HU-016: Vista principal del listado de categorías. */}
-            {vistaCategorias === "listado" && (
-              <>
-                <div className="categorias-encabezado">
-                </div>
-
-                <button
-                  type="button"
-                  className="categorias-crear-boton"
-                  onClick={() => {
-                    setMensajeCategoria("");
-                    setErrorCreacionCategoria("");
-                    setErrorNombreCategoria("");
-                    setErrorTipoCategoria("");
-                    setNombreCategoria("");
-                    setTipoCategoria("gasto");
-                    setVistaCategorias("formulario");
-                  }}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
                 >
-                  + Crear categoría
-                </button>
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 21a8 8 0 0 1 16 0" />
+                </svg>
+              </button>
 
-                {mensajeCategoria && (
-                  <p className="categorias-exito" role="status">
-                    {mensajeCategoria}
-                  </p>
-                )}
-
-                {cargandoCategorias && <p>Cargando categorías...</p>}
-
-                {!cargandoCategorias && errorListadoCategorias && (
-                  <p className="categorias-error" role="alert">
-                    {errorListadoCategorias}
-                  </p>
-                )}
-
-                {!cargandoCategorias &&
-                  !errorListadoCategorias &&
-                  categorias.length === 0 && (
-                    <p>No hay categorías registradas.</p>
-                  )}
-
-                {!cargandoCategorias &&
-                  !errorListadoCategorias &&
-                  categorias.length > 0 && (
-                    <div className="usuarios-tabla-contenedor">
-                      <table className="usuarios-tabla">
-                        <thead>
-                          <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Tipo</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {categoriasPaginadas.map((categoria) => (
-                            <tr key={categoria.id}>
-                              <td>{categoria.id}</td>
-                              <td>{categoria.nombre}</td>
-                              <td>
-                                {categoria.tipo === "gasto" ? "Gasto" : "Ingreso"}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                {/* Navegación y resumen del listado de categorías. */}
-                {!cargandoCategorias &&
-                  !errorListadoCategorias &&
-                  categorias.length > 0 && (
-                    <nav
-                      className="usuarios-paginacion"
-                      aria-label="Paginación de categorías"
-                    >
-                      <span className="paginacion-resumen">
-                        Mostrando {indiceInicialCategorias + 1}–
-                        {Math.min(
-                          indiceInicialCategorias + CATEGORIAS_POR_PAGINA,
-                          categorias.length
-                        )} de {categorias.length} categorías
-                      </span>
-
-                      <div className="paginacion-controles">
-                        <button
-                          type="button"
-                          className="paginacion-boton"
-                          disabled={paginaActualCategorias === 1}
-                          onClick={() =>
-                            setPaginaCategorias(paginaActualCategorias - 1)
-                          }
-                        >
-                          Anterior
-                        </button>
-
-                        <span className="paginacion-indicador" aria-live="polite">
-                          {paginaActualCategorias} de {totalPaginasCategorias}
-                        </span>
-
-                        <button
-                          type="button"
-                          className="paginacion-boton"
-                          disabled={
-                            paginaActualCategorias === totalPaginasCategorias
-                          }
-                          onClick={() =>
-                            setPaginaCategorias(paginaActualCategorias + 1)
-                          }
-                        >
-                          Siguiente
-                        </button>
-                      </div>
-                    </nav>
-                  )}
-
-              </>
-            )}
-
-            {vistaCategorias === "formulario" && (
-              <>
-                <button
-                  type="button"
-                  className="categorias-volver"
-                  onClick={() => setVistaCategorias("listado")}
-                  disabled={guardandoCategoria}
+              {menuPerfilAbierto && (
+                <div
+                  id="admin-menu-perfil"
+                  className="admin-perfil-menu"
                 >
-                  ← Volver a categorías
-                </button>
-
-                <form
-                  className="categorias-formulario"
-                  onSubmit={manejarEnvioCategoria}
-                >
-                  <h3>Crear categoría</h3>
-
-                  <div className="categorias-campo">
-                    <label htmlFor="nombre-categoria">Nombre de categoría</label>
-                    <input
-                      id="nombre-categoria"
-                      type="text"
-                      placeholder={
-                        tipoCategoria === "gasto"
-                          ? "Ej. Alimentación"
-                          : "Ej. Salario"
-                      }
-                      value={nombreCategoria}
-                      onChange={(evento) => {
-                        const nuevoNombre = evento.target.value;
-
-                        setNombreCategoria(nuevoNombre);
-
-                        if (errorNombreCategoria) {
-                          setErrorNombreCategoria(validarNombreCategoria(nuevoNombre));
-                        }
-                      }}
-                      aria-invalid={Boolean(errorNombreCategoria)}
-                      aria-describedby={
-                        errorNombreCategoria ? "error-nombre-categoria" : undefined
-                      }
-                    />
-
-                    {errorNombreCategoria && (
-                      <p
-                        id="error-nombre-categoria"
-                        className="categorias-error"
-                        role="alert"
-                      >
-                        {errorNombreCategoria}
-                      </p>
-                    )}
+                  <div className="admin-perfil-info">
+                    <strong>{usuario.nombre}</strong>
+                    <span>Administrador</span>
                   </div>
 
-                  <fieldset className="categorias-tipo">
-                    <legend>Tipo de categoría</legend>
+                  <button
+                    type="button"
+                    className="admin-perfil-salir"
+                    onClick={onLogout}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <path d="m16 17 5-5-5-5" />
+                      <path d="M21 12H9" />
+                    </svg>
 
-                    <label>
-                      <input
-                        type="radio"
-                        name="tipoCategoria"
-                        value="gasto"
-                        checked={tipoCategoria === "gasto"}
-                        onChange={(evento) => {
-                          const nuevoTipo = evento.target.value;
-
-                          setTipoCategoria(nuevoTipo);
-                          setErrorTipoCategoria(validarTipoCategoria(nuevoTipo));
-                        }}
-                      />
-                      Gasto
-                    </label>
-
-                    <label>
-                      <input
-                        type="radio"
-                        name="tipoCategoria"
-                        value="ingreso"
-                        checked={tipoCategoria === "ingreso"}
-                        onChange={(evento) => {
-                          const nuevoTipo = evento.target.value;
-
-                          setTipoCategoria(nuevoTipo);
-                          setErrorTipoCategoria(validarTipoCategoria(nuevoTipo));
-                        }}
-                      />
-                      Ingreso
-                    </label>
-                  </fieldset>
-
-                  {errorTipoCategoria && (
-                    <p className="categorias-error" role="alert">
-                      {errorTipoCategoria}
-                    </p>
-                  )}
-
-                  <button type="submit" disabled={guardandoCategoria}>
-                    {guardandoCategoria ? "Creando categoría..." : "Crear categoría"}
+                    Cerrar sesión
                   </button>
+                </div>
+              )}
+            </div>
+          </header>
+
+
+          {pestanaActiva === "panel" && (
+            <section
+              className="admin-seccion"
+              aria-label="Resumen administrativo"
+            >
+              <h2>Panel administrativo</h2>
+
+            </section>
+          )}
+          {pestanaActiva === "usuarios" && (
+            <section className="admin-seccion fintrack-admin-listado-v12" aria-label="Gestión de usuarios">
+
+              <div className="usuarios-encabezado-v12">
+                <h2>Usuarios Registrados</h2>
+              </div>
+
+              <div className="usuarios-controles-compactos-v12">
+<div className="usuarios-busqueda">
+                <label htmlFor="buscar-usuarios">
+                  Buscar usuarios
+                </label>
+
+                <input
+                  id="buscar-usuarios"
+                  type="search"
+                  placeholder="Buscar por nombre o correo..."
+                  value={busqueda}
+                  onChange={(evento) => {
+                    setBusqueda(evento.target.value);
+                    setPaginaUsuarios(1);
+                  }}
+                />
+              </div>
+
+
+              <div className="usuarios-filtros">
+                <div className="usuarios-filtro">
+                  <label htmlFor="filtro-rol">Filtrar por rol</label>
+                  <select
+                    id="filtro-rol"
+                    value={filtroRol}
+                    onChange={(evento) => {
+                      setFiltroRol(evento.target.value);
+                      setPaginaUsuarios(1);
+                    }}
+                  >
+                    <option value="todos">Todos los roles</option>
+                    <option value="usuario">Usuario</option>
+                    <option value="administrador">Administrador</option>
+                  </select>
+                </div>
+
+                <div className="usuarios-filtro">
+                  <label htmlFor="filtro-estado">Filtrar por estado</label>
+                  <select
+                    id="filtro-estado"
+                    value={filtroEstado}
+                    onChange={(evento) => {
+                      setFiltroEstado(evento.target.value);
+                      setPaginaUsuarios(1);
+                    }}
+                  >
+                    <option value="todos">Todos los estados</option>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                  </select>
+                </div>
+
+                <div className="usuarios-acciones">
+                  <button
+                    type="button"
+                    className="usuarios-limpiar"
+                    onClick={limpiarFiltros}
+                    disabled={
+                      busqueda === "" &&
+                      filtroRol === "todos" &&
+                      filtroEstado === "todos"
+                    }
+                  >
+                    Limpiar filtros
+                  </button>
+                </div>
+
+              </div>
+              </div>
+
+              {cargando && <p>Cargando usuarios...</p>}
+
+              {!cargando && error && (
+                <p role="alert">{error}</p>
+              )}
+
+              {!cargando && !error && usuarios.length === 0 && (
+                <p>No hay usuarios registrados.</p>
+              )}
+
+              {!cargando &&
+                !error &&
+                usuarios.length > 0 &&
+                usuariosFiltrados.length === 0 && (
+                  <p role="status">
+                    No se encontraron usuarios con los criterios seleccionados.
+                  </p>
+                )}
+
+              {!cargando && !error && usuarios.length > 0 && (
+                <div className="usuarios-tabla-contenedor">
+                  <table className="usuarios-tabla">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Correo electrónico</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {usuariosPaginados.map((cuenta) => (
+                        <tr key={cuenta.id}>
+                          <td>{cuenta.nombre}</td>
+                          <td>{cuenta.email}</td>
+                          <td>{cuenta.rol}</td>
+                          <td>
+                            <span
+                              className={`estado-cuenta ${Number(cuenta.activo) === 1
+                                ? "estado-activo"
+                                : "estado-inactivo"
+                                }`}
+                            >
+                              {Number(cuenta.activo) === 1 ? "Activo" : "Inactivo"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Navegación y resumen del listado de usuarios. */}
+              {!cargando && !error && usuariosFiltrados.length > 0 && (
+                <nav
+                  className="usuarios-paginacion"
+                  aria-label="Paginación de usuarios"
+                >
+                  <span className="paginacion-resumen">
+                    Mostrando {indiceInicialUsuarios + 1}–
+                    {Math.min(
+                      indiceInicialUsuarios + USUARIOS_POR_PAGINA,
+                      usuariosFiltrados.length
+                    )} de {usuariosFiltrados.length} usuarios
+                  </span>
+
+                  <div className="paginacion-controles">
+                    <button
+                      type="button"
+                      className="paginacion-boton"
+                      disabled={paginaActualUsuarios === 1}
+                      onClick={() => setPaginaUsuarios(paginaActualUsuarios - 1)}
+                    >
+                      Anterior
+                    </button>
+
+                    <span className="paginacion-indicador" aria-live="polite">
+                      {paginaActualUsuarios} de {totalPaginasUsuarios}
+                    </span>
+
+                    <button
+                      type="button"
+                      className="paginacion-boton"
+                      disabled={paginaActualUsuarios === totalPaginasUsuarios}
+                      onClick={() => setPaginaUsuarios(paginaActualUsuarios + 1)}
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </nav>
+              )}
+
+            </section>
+          )}
+
+          {pestanaActiva === "categorias" && (
+            <section className="admin-seccion fintrack-admin-listado-v12" aria-label="Gestión de categorías">
+              {/* HU-016: Vista principal del listado de categorías. */}
+              {(
+                <>
+                  <div className="categorias-encabezado">
+                    <h2>Categorías Registradas</h2>
+                    <button
+                      type="button"
+                      className="categorias-crear-boton"
+                      ref={referenciaAbrirCategoria}
+                      onClick={() => {
+                        setMensajeCategoria("");
+                        setErrorCreacionCategoria("");
+                        setErrorNombreCategoria("");
+                        setErrorTipoCategoria("");
+                        setNombreCategoria("");
+                        setTipoCategoria("gasto");
+                        setVistaCategorias("formulario");
+                      }}
+                    >
+                      + Crear categoría
+                    </button>
+                  </div>
 
                   {mensajeCategoria && (
                     <p className="categorias-exito" role="status">
@@ -791,17 +705,260 @@ function AdminPanel({ usuario, token, onLogout }) {
                     </p>
                   )}
 
-                  {errorCreacionCategoria && (
+                  {cargandoCategorias && <p>Cargando categorías...</p>}
+
+                  {!cargandoCategorias && errorListadoCategorias && (
                     <p className="categorias-error" role="alert">
-                      {errorCreacionCategoria}
+                      {errorListadoCategorias}
                     </p>
                   )}
-                </form>
-              </>
-            )}
-          </section>
-        )}
-      </section>
+
+                  {!cargandoCategorias &&
+                    !errorListadoCategorias &&
+                    categorias.length === 0 && (
+                      <p>No hay categorías registradas.</p>
+                    )}
+
+                  <div className="fintrack-admin-tabla-panel">
+                    {!cargandoCategorias &&
+                      !errorListadoCategorias &&
+                      categorias.length > 0 && (
+                        <div className="usuarios-tabla-contenedor">
+                          <table className="usuarios-tabla">
+                            <thead>
+                              <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {categoriasPaginadas.map((categoria) => (
+                                <tr key={categoria.id}>
+                                  <td>{categoria.id}</td>
+                                  <td>{categoria.nombre}</td>
+                                  <td>
+                                    {categoria.tipo === "gasto" ? "Gasto" : "Ingreso"}
+                                  </td>
+                                  <td>No disponible</td>
+                                  <td>
+                                    <button
+                                      type="button"
+                                      className="categoria-estado-accion"
+                                      disabled
+                                      title="Disponible en una futura historia de usuario"
+                                    >
+                                      Desactivar
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                    {/* Navegación y resumen del listado de categorías. */}
+                    {!cargandoCategorias &&
+                      !errorListadoCategorias &&
+                      categorias.length > 0 && (
+                        <nav
+                          className="usuarios-paginacion"
+                          aria-label="Paginación de categorías"
+                        >
+                          <span className="paginacion-resumen">
+                            Mostrando {indiceInicialCategorias + 1}–
+                            {Math.min(
+                              indiceInicialCategorias + CATEGORIAS_POR_PAGINA,
+                              categorias.length
+                            )} de {categorias.length} categorías
+                          </span>
+
+                          <div className="paginacion-controles">
+                            <button
+                              type="button"
+                              className="paginacion-boton"
+                              disabled={paginaActualCategorias === 1}
+                              onClick={() =>
+                                setPaginaCategorias(paginaActualCategorias - 1)
+                              }
+                            >
+                              Anterior
+                            </button>
+
+                            <span className="paginacion-indicador" aria-live="polite">
+                              {paginaActualCategorias} de {totalPaginasCategorias}
+                            </span>
+
+                            <button
+                              type="button"
+                              className="paginacion-boton"
+                              disabled={
+                                paginaActualCategorias === totalPaginasCategorias
+                              }
+                              onClick={() =>
+                                setPaginaCategorias(paginaActualCategorias + 1)
+                              }
+                            >
+                              Siguiente
+                            </button>
+                          </div>
+                        </nav>
+                      )}
+                  </div>
+
+                </>
+              )}
+
+              {vistaCategorias === "formulario" && (
+                <dialog
+                  ref={referenciaDialogoCategoria}
+                  className="fintrack-modal-categoria"
+                  aria-label="Crear categoría"
+                  onCancel={(evento) => {
+                    evento.preventDefault();
+                    cerrarModalCategoria();
+                  }}
+                  onClick={(evento) => {
+                    if (evento.target !== evento.currentTarget) return;
+                    const rect = evento.currentTarget.getBoundingClientRect();
+                    const fuera =
+                      evento.clientX < rect.left ||
+                      evento.clientX > rect.right ||
+                      evento.clientY < rect.top ||
+                      evento.clientY > rect.bottom;
+                    if (fuera) cerrarModalCategoria();
+                  }}
+                >
+
+                  <form
+                    className="categorias-formulario"
+                    onSubmit={manejarEnvioCategoria}
+                  >
+                    <h3>Crear categoría</h3>
+                    <button
+                      type="button"
+                      className="fintrack-modal-categoria-cerrar"
+                      aria-label="Cerrar formulario"
+                      disabled={guardandoCategoria}
+                      onClick={cerrarModalCategoria}
+                    >
+                      ×
+                    </button>
+
+                    <div className="categorias-campo">
+                      <label htmlFor="nombre-categoria">Nombre de categoría</label>
+                      <input
+                        id="nombre-categoria"
+                        type="text"
+                        placeholder={
+                          tipoCategoria === "gasto"
+                            ? "Ej. Alimentación"
+                            : "Ej. Salario"
+                        }
+                        value={nombreCategoria}
+                        onChange={(evento) => {
+                          const nuevoNombre = evento.target.value;
+
+                          setNombreCategoria(nuevoNombre);
+
+                          if (errorNombreCategoria) {
+                            setErrorNombreCategoria(validarNombreCategoria(nuevoNombre));
+                          }
+                        }}
+                        aria-invalid={Boolean(errorNombreCategoria)}
+                        aria-describedby={
+                          errorNombreCategoria ? "error-nombre-categoria" : undefined
+                        }
+                      />
+
+                      {errorNombreCategoria && (
+                        <p
+                          id="error-nombre-categoria"
+                          className="categorias-error"
+                          role="alert"
+                        >
+                          {errorNombreCategoria}
+                        </p>
+                      )}
+                    </div>
+
+                    <fieldset className="categorias-tipo">
+                      <legend>Tipo de categoría</legend>
+
+                      <label>
+                        <input
+                          type="radio"
+                          name="tipoCategoria"
+                          value="gasto"
+                          checked={tipoCategoria === "gasto"}
+                          onChange={(evento) => {
+                            const nuevoTipo = evento.target.value;
+
+                            setTipoCategoria(nuevoTipo);
+                            setErrorTipoCategoria(validarTipoCategoria(nuevoTipo));
+                          }}
+                        />
+                        Gasto
+                      </label>
+
+                      <label>
+                        <input
+                          type="radio"
+                          name="tipoCategoria"
+                          value="ingreso"
+                          checked={tipoCategoria === "ingreso"}
+                          onChange={(evento) => {
+                            const nuevoTipo = evento.target.value;
+
+                            setTipoCategoria(nuevoTipo);
+                            setErrorTipoCategoria(validarTipoCategoria(nuevoTipo));
+                          }}
+                        />
+                        Ingreso
+                      </label>
+                    </fieldset>
+
+                    {errorTipoCategoria && (
+                      <p className="categorias-error" role="alert">
+                        {errorTipoCategoria}
+                      </p>
+                    )}
+
+                                        <div className="fintrack-modal-categoria-acciones">
+                      <button
+                        type="button"
+                        className="categorias-volver"
+                        onClick={cerrarModalCategoria}
+                        disabled={guardandoCategoria}
+                      >
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={guardandoCategoria}>
+                        {guardandoCategoria ? "Creando categoría..." : "Crear categoría"}
+                      </button>
+                    </div>
+
+                    {mensajeCategoria && (
+                      <p className="categorias-exito" role="status">
+                        {mensajeCategoria}
+                      </p>
+                    )}
+
+                    {errorCreacionCategoria && (
+                      <p className="categorias-error" role="alert">
+                        {errorCreacionCategoria}
+                      </p>
+                    )}
+                  </form>
+                </dialog>
+              )}
+            </section>
+          )}
+        </section>
+      </div>
     </main>
   );
 }
