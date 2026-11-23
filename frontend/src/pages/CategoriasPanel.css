@@ -1,4 +1,4 @@
-/* FINTRACK C3-B - CategoriasPanel v12 */
+/* CategoriasPanel */
 /* Estilos aislados: no afectan otros paneles. */
 
 .fintrack-categorias {
@@ -31,15 +31,15 @@
   margin-bottom: 24px;
 }
 
-.fintrack-categorias h2 {
-  margin: 0 0 8px;
+.fintrack-usuario .fintrack-contenido .fintrack-categorias .fintrack-categorias-cabecera h2 {
+  margin: 0 0 4px;
   color: var(--cat-texto);
   font-size: clamp(1.4rem, 2.5vw, 1.85rem);
   line-height: 1.25;
 }
 
 .fintrack-categorias-cabecera p {
-  margin: 0;
+  margin: 0 0 0;
   color: var(--cat-secundario);
   line-height: 1.5;
 }
@@ -374,5 +374,229 @@ dialog.fintrack-categorias-dialogo::backdrop {
 @media (prefers-reduced-motion: reduce) {
   .fintrack-categorias-primario {
     transition: none;
+  }
+}
+
+/* BOTONES ACCION LIMA */
+/* Exclusivo de Nueva categoria en la cabecera del usuario. */
+.fintrack-categorias .fintrack-categorias-cabecera button.fintrack-categorias-primario {
+  background: transparent;
+  color: #c9fa55;
+  border: 1px solid #c9fa55;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 750;
+  box-shadow: none;
+}
+
+.fintrack-categorias .fintrack-categorias-cabecera button.fintrack-categorias-primario:hover:not(:disabled) {
+  background: rgba(201, 250, 85, 0.10);
+  color: #c9fa55;
+  border-color: #c9fa55;
+}
+
+.fintrack-categorias .fintrack-categorias-cabecera button.fintrack-categorias-primario:focus-visible {
+  outline: 2px solid #c9fa55;
+  outline-offset: 3px;
+}
+
+.fintrack-categorias .fintrack-categorias-cabecera button.fintrack-categorias-primario:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* CONTROLES EN UNA FILA */
+/* Busqueda 40%, Tipo 30%, Origen 30%. */
+
+.fintrack-categorias-controles {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 4fr)
+    minmax(0, 3fr)
+    minmax(0, 3fr);
+  grid-template-areas:
+    "search-label type-label origin-label"
+    "search type origin";
+  gap: 10px 16px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.fintrack-categorias-busqueda {
+  grid-area: search-label;
+}
+
+.fintrack-categorias-tipo-etiqueta {
+  grid-area: type-label;
+}
+
+.fintrack-categorias-origen-etiqueta {
+  grid-area: origin-label;
+}
+
+.fintrack-categorias-busqueda,
+.fintrack-categorias-tipo-etiqueta,
+.fintrack-categorias-origen-etiqueta {
+  display: block;
+  margin: 0;
+  color: var(--cat-secundario);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.fintrack-categorias-controles input[type="search"] {
+  grid-area: search;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--cat-borde);
+  border-radius: 10px;
+  background: var(--cat-fondo);
+  color: var(--cat-texto);
+  font: inherit;
+}
+
+.fintrack-categorias-controles input[type="search"]::placeholder {
+  color: var(--cat-secundario);
+  opacity: 0.85;
+}
+
+.fintrack-categorias-controles select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--cat-borde);
+  border-radius: 10px;
+  background: var(--cat-fondo);
+  color: var(--cat-texto);
+  font: inherit;
+}
+
+.fintrack-categorias-controles #fintrack-categorias-tipo {
+  grid-area: type;
+}
+
+.fintrack-categorias-controles #fintrack-categorias-origen {
+  grid-area: origin;
+}
+
+.fintrack-categorias-controles input:focus-visible,
+.fintrack-categorias-controles select:focus-visible {
+  outline: 3px solid var(--cat-acento);
+  outline-offset: 3px;
+}
+
+.fintrack-categorias-contador {
+  margin: 0 0 10px;
+  color: var(--cat-secundario);
+  font-size: 0.85rem;
+}
+
+.fintrack-categorias .fintrack-categorias-lista li {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+@media (max-width: 700px) {
+  .fintrack-categorias-controles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "search-label search-label"
+      "search search"
+      "type-label origin-label"
+      "type origin";
+    gap: 10px 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .fintrack-categorias-controles {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "search-label"
+      "search"
+      "type-label"
+      "type"
+      "origin-label"
+      "origin";
+  }
+}
+
+/* PAGINACION CATEGORIAS */
+
+.fintrack-usuario .fintrack-contenido .fintrack-categorias .fintrack-categorias-cabecera p {
+  color: #bdd5cc;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-top: 16px;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion .paginacion-resumen {
+  margin: 0;
+  color: #bdd5cc;
+  font-size: 13px;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion .paginacion-controles {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion .paginacion-indicador {
+  color: #e7f3ec;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton {
+  background: #104d38;
+  color: #c9fa55;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  padding: 9px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:hover:not(:disabled) {
+  background: #176449;
+  color: #c9fa55;
+  border-color: #c9fa55;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:disabled {
+  background: #174535;
+  color: #829b89;
+  border-color: #38604e;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:focus-visible {
+  outline: 2px solid #c9fa55;
+  outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+  .fintrack-categorias .fintrack-categorias-paginacion {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fintrack-categorias .fintrack-categorias-paginacion .paginacion-controles {
+    justify-content: space-between;
   }
 }

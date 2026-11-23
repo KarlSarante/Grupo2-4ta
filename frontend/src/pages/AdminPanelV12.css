@@ -1,4 +1,4 @@
-/* Fintrack v12 - Sidebar administrativo */
+/* Sidebar administrativo */
 /* Estilos aislados del panel financiero. */
 
 .fintrack-admin-v12 {
@@ -174,7 +174,7 @@
   }
 }
 
-/* FINTRACK V12 - ESTRUCTURA ADMINISTRATIVA */
+/* ESTRUCTURA ADMINISTRATIVA */
 
 .fintrack-admin-v12.role-panel:has(.admin-card) {
   place-items: stretch;
@@ -197,7 +197,7 @@
   text-align: left;
 }
 
-/* FINTRACK V12 - CONTRASTE ADMINISTRATIVO */
+/* CONTRASTE ADMINISTRATIVO */
 
 .fintrack-admin-v12 .role-card.admin-card {
   color: #ffffff;
@@ -217,14 +217,14 @@
   color: #ffffff;
 }
 
-/* FINTRACK V12 - PAGINACION LEGIBLE */
+/* PAGINACION LEGIBLE */
 
 .fintrack-admin-v12 .role-card.admin-card .paginacion-resumen,
 .fintrack-admin-v12 .role-card.admin-card .paginacion-indicador {
   color: #bdd5cc;
 }
 
-/* FINTRACK V12 - TABLAS ADMINISTRATIVAS */
+/* TABLAS ADMINISTRATIVAS */
 
 .fintrack-admin-v12 .usuarios-tabla-contenedor,
 .fintrack-admin-v12 .categorias-tabla-contenedor {
@@ -287,7 +287,7 @@
   border-radius: 0 10px 10px 0;
 }
 
-/* FINTRACK V12 - BOTONES PAGINACION */
+/* BOTONES PAGINACION */
 
 .fintrack-admin-v12 .role-card.admin-card .usuarios-paginacion .paginacion-boton {
   background: #104d38;
@@ -332,7 +332,7 @@
   font-weight: 600;
 }
 
-/* FINTRACK V12 - HOVER TABLAS ADMIN */
+/* HOVER TABLAS ADMIN */
 
 .fintrack-admin-v12 .usuarios-tabla tbody td,
 .fintrack-admin-v12 .categorias-tabla tbody td {
@@ -352,7 +352,7 @@
   }
 }
 
-/* FINTRACK V12 - PANEL DE LISTADO ADMIN */
+/* PANEL DE LISTADO ADMIN */
 .fintrack-admin-v12 .fintrack-admin-tabla-panel {
   min-width: 0;
   padding: 21px 23px;
@@ -368,7 +368,7 @@
   }
 }
 
-/* FINTRACK V12 - AJUSTES VISUALES CATEGORIAS */
+/* AJUSTES VISUALES CATEGORIAS */
 .fintrack-admin-v12
 .admin-seccion[aria-label="Gestión de categorías"]
 .categorias-crear-boton {
@@ -389,12 +389,12 @@
   margin-top: 0;
 }
 
-/* FINTRACK V12 - PERFIL UNIFICADO EN TODAS LAS PESTANAS */
+/* PERFIL UNIFICADO EN TODAS LAS PESTANAS */
 .fintrack-admin-v12 .admin-card .admin-cabecera .admin-perfil {
   transform: translateY(-40px);
 }
 
-/* FINTRACK V12 - DESACTIVAR COMO ANTERIOR DISABLED */
+/* DESACTIVAR COMO ANTERIOR DISABLED */
 .fintrack-admin-v12 .role-card.admin-card
 .admin-seccion[aria-label="Gestión de categorías"]
 button.categoria-estado-accion:disabled {
@@ -417,7 +417,7 @@ button.categoria-estado-accion:disabled {
   box-shadow: none;
 }
 
-/* FINTRACK V12 - TIPOGRAFIA Y ACCION CATEGORIAS */
+/* TIPOGRAFIA Y ACCION CATEGORIAS */
 
 /* Solo encabezados de columnas */
 .fintrack-admin-v12
@@ -436,7 +436,7 @@ button.categoria-estado-accion:disabled {
   text-align: center;
 }
 
-/* FINTRACK V12 - ALINEACION VERTICAL ACCION CATEGORIAS */
+/* ALINEACION VERTICAL ACCION CATEGORIAS */
 
 /* Centrar verticalmente todas las celdas */
 .fintrack-admin-v12
@@ -464,7 +464,7 @@ button.categoria-estado-accion:disabled {
   margin-bottom: 0;
 }
 
-/* FINTRACK V12 - DISTRIBUCION COLUMNAS CATEGORIAS */
+/* DISTRIBUCION COLUMNAS CATEGORIAS */
 .fintrack-admin-v12
 .admin-seccion[aria-label="Gestión de categorías"]
 .usuarios-tabla {
@@ -506,7 +506,7 @@ button.categoria-estado-accion:disabled {
   text-align: center;
 }
 
-/* FINTRACK V12 - ENCABEZADO GESTOR DE CATEGORIAS */
+/* ENCABEZADO GESTOR DE CATEGORIAS */
 @media (min-width: 769px) {
   .fintrack-admin-v12 .admin-card:has(
     .admin-seccion[aria-label="Gestión de categorías"]
@@ -515,7 +515,7 @@ button.categoria-estado-accion:disabled {
   }
 }
 
-/* FINTRACK V12 - TITULO Y BOTON DEL LISTADO */
+/* TITULO Y BOTON DEL LISTADO */
 .fintrack-admin-v12
 .admin-seccion[aria-label="Gestión de categorías"]
 .categorias-encabezado {
@@ -542,7 +542,7 @@ button.categoria-estado-accion:disabled {
   margin: 0;
   flex-shrink: 0;
 }
-/* FINTRACK V12 - MODAL COMPACTO CREAR CATEGORIA */
+/* MODAL COMPACTO CREAR CATEGORIA */
 .fintrack-admin-v12 .fintrack-modal-categoria {
   box-sizing: border-box;
   position: fixed;
@@ -610,7 +610,7 @@ button.categoria-estado-accion:disabled {
     padding: 24px 16px;
   }
 }
-/* FINTRACK V12 - AJUSTE VISUAL MODAL CATEGORIA 520PX */
+/* AJUSTE VISUAL MODAL CATEGORIA 520PX */
 
 .fintrack-admin-v12 .fintrack-modal-categoria .categorias-formulario {
   display: flex;
@@ -798,7 +798,7 @@ button.categoria-estado-accion:disabled {
     padding: 24px 16px;
   }
 }
-/* FINTRACK V12 - USUARIOS FILTROS COMPACTOS A */
+/* USUARIOS FILTROS COMPACTOS A */
 
 .fintrack-admin-v12
 .admin-seccion[aria-label="Gestión de usuarios"]
@@ -1047,7 +1047,7 @@ button.categoria-estado-accion:focus-visible {
   font-size: 13px;
   line-height: 1.5;
 }
-/* FINTRACK V12 - HU-014 DIALOGO DESACTIVAR USUARIO */
+/* DIALOGO DESACTIVAR USUARIO */
 
 .fintrack-admin-v12 .fintrack-modal-usuario {
   box-sizing: border-box;
@@ -1199,7 +1199,7 @@ button.categoria-estado-accion:focus-visible {
   }
 }
 
-/* FINTRACK V12 - HU-014 BOTON DESACTIVAR USUARIO */
+/* BOTON DESACTIVAR USUARIO */
 
 .fintrack-admin-v12 button.usuario-desactivar-accion {
   display: inline-flex;

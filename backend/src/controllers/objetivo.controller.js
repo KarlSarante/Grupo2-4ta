@@ -3,6 +3,7 @@ import {
   crearObjetivo,
   consultarObjetivos,
   registrarAportacion,
+  actualizarObjetivo,
 } from "../models/objetivo.model.js";
 
 const objetivoSchema = z.strictObject({
@@ -195,6 +196,73 @@ export async function agregarAportacion(req, res) {
     console.error("Error al registrar aportación:", error);
     return res.status(500).json({
       mensaje: "Error interno al registrar la aportación",
+    });
+  }
+}
+const editarObjetivoSchema = z.strictObject({
+  nombre: z.string().trim().min(2).max(100),
+  monto_objetivo: z.number().finite().positive().max(9999999999.99)
+    .refine(
+      (monto) =>
+        Math.abs(monto * 100 - Math.round(monto * 100)) < 1e-6,
+      "El monto no puede tener más de dos decimales"
+    ),
+  fecha_limite: objetivoSchema.shape.fecha_limite.unwrap(),
+});
+
+export async function editarMetaFinanciera(req, res) {
+  const objetivoId = Number(req.params.id);
+
+  if (!Number.isSafeInteger(objetivoId) || objetivoId <= 0) {
+    return res.status(400).json({
+      mensaje: "Objetivo no válido",
+    });
+  }
+
+  const resultado = editarObjetivoSchema.safeParse(req.body ?? {});
+
+  if (!resultado.success) {
+    return res.status(400).json({
+      mensaje: "Revisa los datos de la meta financiera.",
+      errores: traducirErrores(resultado.error.issues),
+    });
+  }
+
+  try {
+    const objetivo = await actualizarObjetivo(
+      req.usuario.id,
+      objetivoId,
+      resultado.data
+    );
+
+    if (!objetivo) {
+      return res.status(404).json({
+        mensaje: "La meta financiera no existe",
+      });
+    }
+
+    return res.status(200).json({
+      mensaje: "Meta financiera actualizada correctamente",
+      objetivo,
+    });
+  } catch (error) {
+    if (error.code === "OBJETIVO_CANCELADO") {
+      return res.status(409).json({
+        mensaje: "No se puede editar una meta financiera cancelada",
+      });
+    }
+
+    if (error.code === "OBJETIVO_ESTADO_INVALIDO") {
+      return res.status(409).json({
+        mensaje: "La meta financiera tiene un estado no permitido",
+      });
+    }
+
+    console.error("Error al editar meta financiera:", error);
+
+    return res.status(500).json({
+      mensaje: "No se pudo confirmar la actualización. " +
+        "Consulta la meta antes de volver a intentarlo.",
     });
   }
 }

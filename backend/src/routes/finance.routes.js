@@ -9,6 +9,7 @@ import {
   listarMetas,
   listarNotificaciones,
 } from "../controllers/presupuesto.controller.js";
+import { editarMetaFinanciera } from "../controllers/objetivo.controller.js";
 import {
   crearMetaFinanciera,
   listarMetasFinancieras,
@@ -42,6 +43,7 @@ router.get("/notificaciones", listarNotificaciones);
 
 router.get("/objetivos", listarMetasFinancieras);
 router.post("/objetivos", crearMetaFinanciera);
+router.put("/objetivos/:id", editarMetaFinanciera);
 router.post("/objetivos/:id/aportaciones", agregarAportacion);
 
 export default router;

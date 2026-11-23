@@ -11,6 +11,9 @@ const filtros = [
 export default function CategoriasPanel({ token }) {
   const [categorias, setCategorias] = useState([]);
   const [filtro, setFiltro] = useState("todas");
+  const [busqueda, setBusqueda] = useState("");
+  const [origen, setOrigen] = useState("todas");
+  const [paginaCategorias, setPaginaCategorias] = useState(1);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState("");
   const [recarga, setRecarga] = useState(0);
@@ -88,6 +91,7 @@ export default function CategoriasPanel({ token }) {
 
       dialogo.current?.close();
       setMensaje("Categoría creada correctamente.");
+      setPaginaCategorias(1);
       setRecarga((valor) => valor + 1);
     } catch (error) {
       setErrorFormulario(
@@ -98,9 +102,47 @@ export default function CategoriasPanel({ token }) {
     }
   }
 
-  const visibles = categorias.filter(
-    (categoria) =>
-      filtro === "todas" || categoria.tipo === filtro
+  const normalizar = (valor) =>
+    String(valor ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("es")
+      .trim();
+
+  const busquedaNormalizada = normalizar(busqueda);
+
+  const visibles = categorias.filter((categoria) => {
+    const coincideTipo =
+      filtro === "todas" || categoria.tipo === filtro;
+
+    const esGeneral = categoria.usuario_id == null;
+    const coincideOrigen =
+      origen === "todas" ||
+      (origen === "general" && esGeneral) ||
+      (origen === "personal" && !esGeneral);
+
+    const coincideBusqueda = normalizar(
+      categoria.nombre
+    ).includes(busquedaNormalizada);
+
+    return coincideTipo && coincideOrigen && coincideBusqueda;
+  });
+
+  const categoriasPorPagina = 6;
+  const totalCategorias = visibles.length;
+  const totalPaginasCategorias = Math.max(
+    1,
+    Math.ceil(totalCategorias / categoriasPorPagina)
+  );
+  const paginaActualCategorias = Math.min(
+    Math.max(1, paginaCategorias),
+    totalPaginasCategorias
+  );
+  const indiceInicialCategorias =
+    (paginaActualCategorias - 1) * categoriasPorPagina;
+  const categoriasVisibles = visibles.slice(
+    indiceInicialCategorias,
+    indiceInicialCategorias + categoriasPorPagina
   );
 
   return (
@@ -110,7 +152,6 @@ export default function CategoriasPanel({ token }) {
     >
       <div className="fintrack-categorias-cabecera">
         <div>
-          <h2>Mis categorías</h2>
           <p>
             Organiza tus ingresos y gastos con categorías
             generales y personales.
@@ -132,26 +173,73 @@ export default function CategoriasPanel({ token }) {
         </p>
       )}
 
-      <div className="fintrack-categorias-tarjeta">
-        <div
-          className="fintrack-categorias-filtros"
-          role="group"
-          aria-label="Filtrar categorías"
+      <div className="fintrack-categorias-controles">
+        <label
+          className="fintrack-categorias-busqueda"
+          htmlFor="fintrack-categorias-buscar"
+        >
+          Buscar categorías
+        </label>
+        <input
+          id="fintrack-categorias-buscar"
+          type="search"
+          placeholder="Buscar categoría..."
+          value={busqueda}
+          onChange={(evento) => {
+            setBusqueda(evento.target.value);
+            setPaginaCategorias(1);
+          }}
+        />
+
+        <label
+          className="fintrack-categorias-tipo-etiqueta"
+          htmlFor="fintrack-categorias-tipo"
+        >
+          Tipo
+        </label>
+        <select
+          id="fintrack-categorias-tipo"
+          value={filtro}
+          onChange={(evento) => {
+            setFiltro(evento.target.value);
+            setPaginaCategorias(1);
+          }}
         >
           {filtros.map((opcion) => (
-            <button
-              key={opcion.id}
-              type="button"
-              aria-pressed={filtro === opcion.id}
-              className={
-                filtro === opcion.id ? "activo" : ""
-              }
-              onClick={() => setFiltro(opcion.id)}
-            >
+            <option key={opcion.id} value={opcion.id}>
               {opcion.texto}
-            </button>
+            </option>
           ))}
-        </div>
+        </select>
+
+        <label
+          className="fintrack-categorias-origen-etiqueta"
+          htmlFor="fintrack-categorias-origen"
+        >
+          Origen
+        </label>
+        <select
+          id="fintrack-categorias-origen"
+          value={origen}
+          onChange={(evento) => {
+            setOrigen(evento.target.value);
+            setPaginaCategorias(1);
+          }}
+        >
+          <option value="todas">General y personal</option>
+          <option value="general">General</option>
+          <option value="personal">Personal</option>
+        </select>
+      </div>
+
+      <div className="fintrack-categorias-tarjeta">
+        {!cargando && !errorCarga && (
+          <p className="fintrack-categorias-contador" role="status">
+            {visibles.length} {visibles.length === 1
+              ? "categoría encontrada"
+              : "categorías encontradas"}
+          </p>
+        )}
 
         {cargando ? (
           <p
@@ -181,7 +269,7 @@ export default function CategoriasPanel({ token }) {
           </p>
         ) : (
           <ul className="fintrack-categorias-lista">
-            {visibles.map((categoria) => (
+            {categoriasVisibles.map((categoria) => (
               <li key={categoria.id}>
                 <div className="fintrack-categorias-identidad">
                   <strong>{categoria.nombre}</strong>
@@ -206,6 +294,57 @@ export default function CategoriasPanel({ token }) {
             ))}
           </ul>
         )}
+        {!cargando &&
+          !errorCarga &&
+          totalCategorias > categoriasPorPagina && (
+            <nav
+              className="fintrack-categorias-paginacion"
+              aria-label="Paginación de categorías"
+            >
+              <p className="paginacion-resumen">
+                Mostrando {indiceInicialCategorias + 1}–
+                {Math.min(
+                  indiceInicialCategorias + categoriasPorPagina,
+                  totalCategorias
+                )} de {totalCategorias} categorías
+              </p>
+
+              <div className="paginacion-controles">
+                <button
+                  type="button"
+                  className="paginacion-boton"
+                  disabled={paginaActualCategorias === 1}
+                  onClick={() =>
+                    setPaginaCategorias(
+                      Math.max(1, paginaActualCategorias - 1)
+                    )
+                  }
+                >
+                  Anterior
+                </button>
+
+                <span className="paginacion-indicador">
+                  Página {paginaActualCategorias} de {totalPaginasCategorias}
+                </span>
+
+                <button
+                  type="button"
+                  className="paginacion-boton"
+                  disabled={paginaActualCategorias === totalPaginasCategorias}
+                  onClick={() =>
+                    setPaginaCategorias(
+                      Math.min(
+                        totalPaginasCategorias,
+                        paginaActualCategorias + 1
+                      )
+                    )
+                  }
+                >
+                  Siguiente
+                </button>
+              </div>
+            </nav>
+          )}
       </div>
 
       <dialog

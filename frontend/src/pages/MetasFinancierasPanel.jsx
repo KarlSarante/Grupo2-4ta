@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { obtenerObjetivos } from "../services/objetivoService.js";
 import NuevaMetaForm from "./NuevaMetaForm.jsx";
 import AportacionMetaForm from "./AportacionMetaForm.jsx";
+import EditarMetaForm from "./EditarMetaForm.jsx";
 import "./MetasFinancierasPanel.css";
 
 function formatoMoneda(valor) {
@@ -21,7 +22,9 @@ function extraerObjetivos(respuesta) {
 
 export default function MetasFinancierasPanel() {
   const [metas, setMetas] = useState([]);
-  const [indice, setIndice] = useState(0);
+  const [filtroEstado, setFiltroEstado] = useState("todas");
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [metaAportacionId, setMetaAportacionId] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -32,19 +35,207 @@ export default function MetasFinancierasPanel() {
   const [guardandoAportacion, setGuardandoAportacion] = useState(false);
   const dialogoAportacionRef = useRef(null);
   const botonAportarRef = useRef(null);
+  const botonAportarIdRef = useRef(null);
   const [avisoAportacion, setAvisoAportacion] = useState("");
+  const [metaEdicionId, setMetaEdicionId] = useState(null);
+  const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
+  const [guardandoEdicion, setGuardandoEdicion] = useState(false);
+  const [avisoEdicion, setAvisoEdicion] = useState("");
+  const dialogoEdicionRef = useRef(null);
+  const botonEditarRef = useRef(null);
+  const edicionPendienteRef = useRef(false);
+  const versionEdicionRef = useRef(0);
+  const ultimaEdicionConfirmadaRef = useRef(null);
+  const metasInciertasRef = useRef(new Set());
+  const [metasInciertas, setMetasInciertas] = useState([]);
 
-  function abrirAportacion() {
-    if (!meta || meta.estado !== "activo" || completada) return;
+  function marcarEdicionIncierta(id) {
+    const clave = String(id);
+    metasInciertasRef.current.add(clave);
+    setMetasInciertas(Array.from(metasInciertasRef.current));
+    setAvisoEdicion(
+      "No se pudo confirmar la edición. Recarga la página y comprueba " +
+      "los datos de la meta antes de intentar guardarla nuevamente."
+    );
+  }
+
+  function reconciliarLista(lista) {
+    const confirmada = ultimaEdicionConfirmadaRef.current;
+    if (!confirmada) return lista;
+    return lista.map((meta) =>
+      String(meta.id) === String(confirmada.id) &&
+      (meta.nombre !== confirmada.nombre ||
+        Math.round(Number(meta.monto_objetivo) * 100) !==
+          Math.round(Number(confirmada.monto_objetivo) * 100) ||
+        String(meta.fecha_limite ?? "").slice(0, 10) !==
+          String(confirmada.fecha_limite ?? "").slice(0, 10))
+        ? { ...meta, nombre: confirmada.nombre,
+            monto_objetivo: confirmada.monto_objetivo,
+            fecha_limite: confirmada.fecha_limite,
+            estado: confirmada.estado }
+
+        : meta
+    );
+  }
+
+  function coincideConEdicion(consultada, confirmada) {
+    return consultada.nombre === confirmada.nombre &&
+      Math.round(Number(consultada.monto_objetivo) * 100) ===
+        Math.round(Number(confirmada.monto_objetivo) * 100) &&
+      String(consultada.fecha_limite ?? "").slice(0, 10) ===
+        String(confirmada.fecha_limite ?? "").slice(0, 10) &&
+      consultada.estado === confirmada.estado &&
+      Math.round(Number(consultada.monto_actual) * 100) ===
+        Math.round(Number(confirmada.monto_actual) * 100);
+  }
+
+  function abrirEdicion(metaSeleccionada, boton) {
+    if (
+      modalEdicionAbierto ||
+      guardandoEdicion ||
+      edicionPendienteRef.current ||
+      metasInciertasRef.current.has(String(metaSeleccionada?.id)) ||
+      !metaSeleccionada ||
+      !["activo", "completado"].includes(metaSeleccionada.estado)
+    ) return;
+
+    botonEditarRef.current = boton;
+    setMetaEdicionId(metaSeleccionada.id);
+    setAvisoEdicion("");
+    setModalEdicionAbierto(true);
+  }
+
+  function restaurarFocoEdicion() {
+    const boton = botonEditarRef.current;
+    if (boton?.isConnected && !boton.disabled) {
+      boton.focus();
+    } else {
+      botonAbrirRef.current?.focus();
+    }
+  }
+
+  function cerrarEdicion() {
+    if (guardandoEdicion || edicionPendienteRef.current) return;
+    dialogoEdicionRef.current?.close();
+    setModalEdicionAbierto(false);
+    restaurarFocoEdicion();
+  }
+
+  useEffect(() => {
+    if (
+      modalEdicionAbierto &&
+      dialogoEdicionRef.current &&
+      !dialogoEdicionRef.current.open
+    ) {
+      dialogoEdicionRef.current.showModal();
+    }
+  }, [modalEdicionAbierto]);
+
+  async function metaEditada(actualizada) {
+    edicionPendienteRef.current = true;
+    versionEdicionRef.current += 1;
+    ultimaEdicionConfirmadaRef.current = actualizada;
+    setGuardandoEdicion(false);
+    dialogoEdicionRef.current?.close();
+    setModalEdicionAbierto(false);
+    restaurarFocoEdicion();
+
+    setMetas((anteriores) =>
+      anteriores.map((item) =>
+        String(item.id) === String(actualizada.id) ? actualizada : item
+      )
+    );
+
+    setAvisoEdicion("Meta financiera actualizada correctamente.");
+
+    const filtroSiguiente =
+      filtroEstado === "activas" && actualizada.estado !== "activo"
+        ? "todas"
+        : filtroEstado === "completadas" &&
+          actualizada.estado !== "completado"
+          ? "todas"
+          : filtroEstado;
+
+    setFiltroEstado(filtroSiguiente);
+
+    try {
+      const versionSolicitud = versionEdicionRef.current;
+      const respuesta = await obtenerObjetivos();
+      const lista = extraerObjetivos(respuesta);
+      if (versionSolicitud !== versionEdicionRef.current) {
+        throw new Error("Consulta anterior a otra edición.");
+      }
+      const confirmada = lista.find(
+        (item) => String(item.id) === String(actualizada.id)
+      );
+
+      if (!confirmada || !coincideConEdicion(confirmada, actualizada)) {
+        throw new Error("La consulta no coincide con la edición confirmada.");
+      }
+
+      setMetas(reconciliarLista(lista));
+
+      const filtradas = lista.filter((item) => {
+        if (filtroSiguiente === "todas") return true;
+        return filtroSiguiente === "activas"
+          ? item.estado === "activo"
+          : item.estado === "completado";
+      });
+
+      const posicion = filtradas.findIndex(
+        (item) => String(item.id) === String(actualizada.id)
+      );
+
+      if (posicion >= 0) {
+        setPaginaActual(Math.floor(posicion / 4) + 1);
+      }
+
+      setError("");
+    } catch {
+      setAvisoEdicion(
+        "La edición fue confirmada, pero no se pudo refrescar " +
+        "la lista. Se conserva el resultado confirmado."
+      );
+    } finally {
+      edicionPendienteRef.current = false;
+    }
+  }
+
+  function abrirAportacion(metaSeleccionada, boton) {
+    const actual = Number(metaSeleccionada?.monto_actual ?? 0);
+    const objetivo = Number(metaSeleccionada?.monto_objetivo ?? 0);
+    const completada =
+      metaSeleccionada?.estado === "completado" ||
+      (objetivo > 0 && actual >= objetivo);
+
+    if (
+      !metaSeleccionada ||
+      metaSeleccionada.estado !== "activo" ||
+      completada
+    ) return;
+
+    botonAportarRef.current = boton;
+    botonAportarIdRef.current = String(metaSeleccionada.id);
+    setMetaAportacionId(metaSeleccionada.id);
     setAvisoAportacion("");
     setModalAportacionAbierto(true);
+  }
+
+  function restaurarFocoAportacion() {
+    const boton = botonAportarRef.current;
+
+    if (boton?.isConnected && !boton.disabled) {
+      boton.focus();
+    } else {
+      botonAbrirRef.current?.focus();
+    }
   }
 
   function cerrarAportacion() {
     if (guardandoAportacion) return;
     dialogoAportacionRef.current?.close();
     setModalAportacionAbierto(false);
-    botonAportarRef.current?.focus();
+    restaurarFocoAportacion();
   }
 
   useEffect(() => {
@@ -60,25 +251,57 @@ export default function MetasFinancierasPanel() {
   async function aportacionRegistrada(actualizada) {
     dialogoAportacionRef.current?.close();
     setModalAportacionAbierto(false);
-    botonAportarRef.current?.focus();
+    restaurarFocoAportacion();
 
-    // Mostrar inmediatamente el resultado confirmado por el POST.
     setMetas((anteriores) =>
       anteriores.map((item) =>
         String(item.id) === String(actualizada.id) ? actualizada : item
       )
     );
+
     setAvisoAportacion("Aportación registrada correctamente.");
 
-    // Reconciliar con la lista del servidor, que puede reordenarse.
     try {
+      const versionSolicitud = versionEdicionRef.current;
       const respuesta = await obtenerObjetivos();
       const lista = extraerObjetivos(respuesta);
+      if (versionSolicitud !== versionEdicionRef.current) return;
+      setMetas(reconciliarLista(lista));
+
       const posicion = lista.findIndex(
         (item) => String(item.id) === String(actualizada.id)
       );
-      setMetas(lista);
-      if (posicion >= 0) setIndice(posicion);
+
+      if (posicion >= 0) {
+        const actual = Number(actualizada.monto_actual ?? 0);
+        const objetivo = Number(actualizada.monto_objetivo ?? 0);
+        const completada =
+          actualizada.estado === "completado" ||
+          (objetivo > 0 && actual >= objetivo);
+
+        const filtroSiguiente =
+          filtroEstado === "activas" && completada
+            ? "todas"
+            : filtroEstado;
+
+        const listaFiltrada = lista.filter((item) => {
+          if (filtroSiguiente === "todas") return true;
+          if (filtroSiguiente === "activas") {
+            return item.estado === "activo";
+          }
+          return item.estado === "completado";
+        });
+
+        const posicionFiltrada = listaFiltrada.findIndex(
+          (item) => String(item.id) === String(actualizada.id)
+        );
+
+        setFiltroEstado(filtroSiguiente);
+
+        if (posicionFiltrada >= 0) {
+          setPaginaActual(Math.floor(posicionFiltrada / 4) + 1);
+        }
+      }
     } catch {
       setAvisoAportacion(
         "Aportación registrada. No se pudo refrescar la lista, " +
@@ -111,15 +334,20 @@ export default function MetasFinancierasPanel() {
     botonAbrirRef.current?.focus();
 
     try {
+      const versionSolicitud = versionEdicionRef.current;
       const respuesta = await obtenerObjetivos();
       const actualizadas = extraerObjetivos(respuesta);
-      setMetas(actualizadas);
+      if (versionSolicitud !== versionEdicionRef.current) return;
+      setMetas(reconciliarLista(actualizadas));
 
       const posicion = actualizadas.findIndex(
         (meta) => String(meta.id) === String(objetivoCreado.id)
       );
 
-      setIndice(posicion >= 0 ? posicion : 0);
+      setFiltroEstado("todas");
+      setPaginaActual(
+        posicion >= 0 ? Math.floor(posicion / 4) + 1 : 1
+      );
       setError("");
     } catch (err) {
       setError(
@@ -137,10 +365,11 @@ export default function MetasFinancierasPanel() {
       setError("");
 
       try {
+        const versionSolicitud = versionEdicionRef.current;
         const respuesta = await obtenerObjetivos();
-        if (activo) {
-          setMetas(extraerObjetivos(respuesta));
-          setIndice(0);
+        if (activo && versionSolicitud === versionEdicionRef.current) {
+          setMetas(reconciliarLista(extraerObjetivos(respuesta)));
+          setPaginaActual(1);
         }
       } catch (err) {
         if (activo) {
@@ -155,12 +384,40 @@ export default function MetasFinancierasPanel() {
     return () => { activo = false; };
   }, []);
 
-  const meta = metas[indice];
-  const actual = Number(meta?.monto_actual ?? 0);
-  const objetivo = Number(meta?.monto_objetivo ?? 0);
-  const porcentaje = objetivo > 0 ? (actual / objetivo) * 100 : 0;
-  const progreso = Math.max(0, Math.min(100, porcentaje));
-  const completada = objetivo > 0 && actual >= objetivo;
+  const METAS_POR_PAGINA = 4;
+
+  const metasFiltradas = useMemo(() => {
+    if (filtroEstado === "todas") return metas;
+
+    return metas.filter((item) =>
+      filtroEstado === "activas"
+        ? item.estado === "activo"
+        : item.estado === "completado"
+    );
+  }, [metas, filtroEstado]);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(metasFiltradas.length / METAS_POR_PAGINA)
+  );
+
+  const paginaVisible = Math.min(
+    Math.max(1, paginaActual),
+    totalPaginas
+  );
+
+  const metasVisibles = metasFiltradas.slice(
+    (paginaVisible - 1) * METAS_POR_PAGINA,
+    paginaVisible * METAS_POR_PAGINA
+  );
+
+  const metaAportacion = metas.find(
+    (item) => String(item.id) === String(metaAportacionId)
+  );
+
+  const metaEdicion = metas.find(
+    (item) => String(item.id) === String(metaEdicionId)
+  );
 
   return (
     <section className="admin-seccion fintrack-metas" aria-label="Meta financiera">
@@ -190,85 +447,185 @@ export default function MetasFinancierasPanel() {
         </div>
       )}
 
-      {!cargando && !error && meta && (
-        <article className="fintrack-meta-tarjeta">
-          <div className="fintrack-meta-titulo">
-            <h3>{meta.nombre}</h3>
-            <span>{completada ? "Completada" : "Activa"}</span>
-          </div>
-
-          <strong className="fintrack-meta-monto">
-            {formatoMoneda(actual)}
-          </strong>
-
-          <p>de {formatoMoneda(objetivo)}</p>
-
+      {!cargando && !error && metas.length > 0 && (
+        <>
           <div
-            className="fintrack-meta-barra"
-            role="progressbar"
-            aria-label={`Progreso de ${meta.nombre}`}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progreso)}
+            className="fintrack-metas-filtros"
+            role="group"
+            aria-label="Filtrar metas financieras"
           >
-            <div style={{ width: `${progreso}%` }} />
+            {[
+              ["todas", "Todas"],
+              ["activas", "Activas"],
+              ["completadas", "Completadas"]
+            ].map(([valor, etiqueta]) => (
+              <button
+                key={valor}
+                type="button"
+                className={
+                  "fintrack-metas-filtro" +
+                  (filtroEstado === valor ? " activo" : "")
+                }
+                aria-pressed={filtroEstado === valor}
+                onClick={() => {
+                  setFiltroEstado(valor);
+                  setPaginaActual(1);
+                }}
+              >
+                {etiqueta}
+              </button>
+            ))}
           </div>
 
-          <div className="fintrack-meta-detalles">
-            <strong>
-              {porcentaje.toLocaleString("es-DO", {
-                maximumFractionDigits: 1
-              })}% alcanzado
-            </strong>
+          {metasFiltradas.length === 0 ? (
+            <div className="fintrack-metas-vacia">
+              No hay metas en el filtro seleccionado.
+            </div>
+          ) : (
+            <>
+              <div className="fintrack-metas-grid">
+                {metasVisibles.map((meta) => {
+                  const actual = Number(meta.monto_actual ?? 0);
+                  const objetivo = Number(meta.monto_objetivo ?? 0);
+                  const porcentaje =
+                    objetivo > 0 ? (actual / objetivo) * 100 : 0;
+                  const progreso = Math.max(
+                    0,
+                    Math.min(100, porcentaje)
+                  );
+                  const completada =
+                    meta.estado === "completado" ||
+                    (objetivo > 0 && actual >= objetivo);
 
-            <span>
-              {completada && actual > objetivo
-                ? `Excedente: ${formatoMoneda(actual - objetivo)}`
-                : `Restante: ${formatoMoneda(Math.max(0, objetivo - actual))}`}
-            </span>
-          </div>
+                  return (
+                    <article
+                      className="fintrack-meta-tarjeta"
+                      key={meta.id}
+                    >
+                      <div className="fintrack-meta-titulo">
+  <h3>{meta.nombre}</h3>
+  <div className="fintrack-meta-estado">
+    <span>
+      {completada ? "Completada" : "Activa"}
+    </span>
+    {meta.fecha_limite && (
+      <small className="fintrack-meta-fecha">
+        Fecha límite: {String(meta.fecha_limite).slice(0, 10)}
+      </small>
+    )}
+  </div>
+</div>
 
-          {meta.fecha_limite && (
-            <p>Fecha límite: {String(meta.fecha_limite).slice(0, 10)}</p>
+                      <strong className="fintrack-meta-monto">
+                        {formatoMoneda(actual)}
+                      </strong>
+
+                      <p>de {formatoMoneda(objetivo)}</p>
+
+                      <div
+                        className="fintrack-meta-barra"
+                        role="progressbar"
+                        aria-label={`Progreso de ${meta.nombre}`}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(progreso)}
+                      >
+                        <div style={{ width: `${progreso}%` }} />
+                      </div>
+
+                      <div className="fintrack-meta-detalles">
+                        <strong>
+                          {porcentaje.toLocaleString("es-DO", {
+                            maximumFractionDigits: 1
+                          })}% alcanzado
+                        </strong>
+
+                        <span>
+                          {completada && actual > objetivo
+                            ? `Excedente: ${formatoMoneda(actual - objetivo)}`
+                            : `Restante: ${formatoMoneda(
+                                Math.max(0, objetivo - actual)
+                              )}`}
+                        </span>
+                      </div>
+
+
+                      <div className="fintrack-meta-acciones">
+                        <button
+                          type="button"
+                          className="fintrack-meta-editar"
+                          disabled={
+                            !["activo", "completado"].includes(meta.estado) ||
+                            edicionPendienteRef.current ||
+                            metasInciertas.includes(String(meta.id))
+                          }
+                          onClick={(evento) =>
+                            abrirEdicion(meta, evento.currentTarget)
+                          }
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          className="fintrack-meta-aportar"
+                        disabled={
+                          completada || meta.estado !== "activo"
+                        }
+                        title={
+                          completada || meta.estado !== "activo"
+                            ? "Esta meta no admite nuevas aportaciones"
+                            : "Registrar aportación"
+                        }
+                        onClick={(evento) =>
+                          abrirAportacion(
+                            meta,
+                            evento.currentTarget
+                          )
+                        }
+                      >
+                        {completada ? "Meta completada" : "+ Aportar"}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+{totalPaginas > 1 && (
+                            <nav
+                className="fintrack-metas-paginacion"
+                aria-label="Paginación de metas financieras"
+              >
+                <button
+                  type="button"
+                  disabled={paginaVisible === 1}
+                  onClick={() =>
+                    setPaginaActual(Math.max(1, paginaVisible - 1))
+                  }
+                >
+                  Anterior
+                </button>
+
+                <span aria-live="polite">
+                  Página {paginaVisible} de {totalPaginas}
+                </span>
+
+                <button
+                  type="button"
+                  disabled={paginaVisible >= totalPaginas}
+                  onClick={() =>
+                    setPaginaActual(
+                      Math.min(totalPaginas, paginaVisible + 1)
+                    )
+                  }
+                >
+                  Siguiente
+                </button>
+              </nav>
+              )}
+            </>
           )}
-
-          <nav className="fintrack-meta-navegacion" aria-label="Navegación entre metas">
-            <button
-              type="button"
-              disabled={indice === 0}
-              onClick={() => setIndice(i => Math.max(0, i - 1))}
-            >
-              ← Anterior
-            </button>
-
-            <span aria-live="polite">
-              {indice + 1} de {metas.length}
-            </span>
-
-            <button
-              type="button"
-              disabled={indice >= metas.length - 1}
-              onClick={() => setIndice(i => Math.min(metas.length - 1, i + 1))}
-            >
-              Siguiente →
-            </button>
-          </nav>
-
-          <button
-            ref={botonAportarRef}
-            type="button"
-            className="fintrack-meta-aportar"
-            disabled={completada || meta.estado !== "activo"}
-            title={
-              completada || meta.estado !== "activo"
-                ? "Esta meta no admite nuevas aportaciones"
-                : "Registrar aportación"
-            }
-            onClick={abrirAportacion}
-          >
-            {completada ? "Meta completada" : "+ Aportar"}
-          </button>
-        </article>
+        </>
       )}
 
       {avisoAportacion && (
@@ -277,7 +634,47 @@ export default function MetasFinancierasPanel() {
         </p>
       )}
 
-      {modalAportacionAbierto && meta && (
+      {avisoEdicion && (
+        <p className="fintrack-aportacion-estado" role="status">
+          {avisoEdicion}
+        </p>
+      )}
+
+      {modalEdicionAbierto && metaEdicion && (
+        <dialog
+          ref={dialogoEdicionRef}
+          className="fintrack-modal-meta fintrack-modal-edicion"
+          aria-labelledby="fintrack-editar-meta-titulo"
+          onCancel={(evento) => {
+            evento.preventDefault();
+            cerrarEdicion();
+          }}
+          onClose={() => {
+            setModalEdicionAbierto(false);
+            restaurarFocoEdicion();
+          }}
+        >
+          <button
+            type="button"
+            className="fintrack-modal-meta-cerrar"
+            aria-label="Cerrar formulario de edici?n"
+            onClick={cerrarEdicion}
+            disabled={guardandoEdicion}
+          >
+            ?
+          </button>
+          <EditarMetaForm
+            key={metaEdicion.id}
+            meta={metaEdicion}
+            onCancelar={cerrarEdicion}
+            onActualizada={metaEditada}
+            onEstadoGuardando={setGuardandoEdicion}
+            onResultadoIncierto={marcarEdicionIncierta}
+          />
+        </dialog>
+      )}
+
+      {modalAportacionAbierto && metaAportacion && (
         <dialog
           ref={dialogoAportacionRef}
           className="fintrack-modal-meta fintrack-modal-aportacion"
@@ -288,7 +685,7 @@ export default function MetasFinancierasPanel() {
           }}
           onClose={() => {
             setModalAportacionAbierto(false);
-            botonAportarRef.current?.focus();
+            restaurarFocoAportacion();
           }}
         >
           <button
@@ -301,7 +698,7 @@ export default function MetasFinancierasPanel() {
             ×
           </button>
           <AportacionMetaForm
-            meta={meta}
+            meta={metaAportacion}
             onCancelar={cerrarAportacion}
             onRegistrada={aportacionRegistrada}
             onEstadoGuardando={setGuardandoAportacion}

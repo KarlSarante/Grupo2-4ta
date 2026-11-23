@@ -14,7 +14,11 @@ function obtenerToken() {
 
 async function solicitar(ruta, opciones = {}) {
   const token = obtenerToken();
-  if (!token) throw new Error("Tu sesión ha expirado.");
+  if (!token) {
+    const error = new Error("Tu sesión ha expirado.");
+    error.resultadoIncierto = false;
+    throw error;
+  }
 
   let respuesta;
   try {
@@ -27,14 +31,19 @@ async function solicitar(ruta, opciones = {}) {
       },
     });
   } catch {
-    throw new Error("No se pudo conectar con el servidor.");
+    const error = new Error("No se pudo conectar con el servidor.");
+    error.resultadoIncierto = true;
+    throw error;
   }
 
   let datos;
   try {
     datos = await respuesta.json();
   } catch {
-    throw new Error("El servidor devolvió una respuesta no válida.");
+    const error = new Error("El servidor devolvió una respuesta no válida.");
+    error.status = respuesta.status;
+    error.resultadoIncierto = respuesta.ok || respuesta.status >= 500;
+    throw error;
   }
 
   if (!respuesta.ok) {
@@ -43,6 +52,7 @@ async function solicitar(ruta, opciones = {}) {
     );
 
     error.status = respuesta.status;
+    error.resultadoIncierto = respuesta.status >= 500;
     error.errores = Array.isArray(datos?.errores)
       ? datos.errores
       : [];
@@ -68,5 +78,12 @@ export function agregarAportacion(objetivoId, monto) {
   return solicitar(`/finanzas/objetivos/${objetivoId}/aportaciones`, {
     method: "POST",
     body: JSON.stringify({ monto }),
+  });
+}
+
+export function actualizarObjetivo(objetivoId, datos) {
+  return solicitar(`/finanzas/objetivos/${objetivoId}`, {
+    method: "PUT",
+    body: JSON.stringify(datos),
   });
 }

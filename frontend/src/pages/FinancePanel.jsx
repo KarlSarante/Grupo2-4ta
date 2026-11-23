@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import IngresoForm from "./IngresoForm.jsx";
 import GastoForm from "./GastoForm.jsx";
 import PresupuestosPanel from "./PresupuestosPanel.jsx";
+import { obtenerNotificaciones } from "../services/presupuestoService.js";
 import MetasFinancierasPanel from "./MetasFinancierasPanel.jsx";
 import CategoriasPanel from "./CategoriasPanel.jsx";
 import Dashboard from "../components/dashboard/Dashboard.jsx";
@@ -36,6 +37,11 @@ function FinancePanel({ usuario, token, onLogout }) {
       : "listado";
   });
   const [menuPerfilAbierto, setMenuPerfilAbierto] = useState(false);
+  const [menuAlertasAbierto, setMenuAlertasAbierto] = useState(false);
+  const [notificaciones, setNotificaciones] = useState([]);
+  const [cargandoNotificaciones, setCargandoNotificaciones] = useState(false);
+  const [errorNotificaciones, setErrorNotificaciones] = useState("");
+  const referenciaAlertas = useRef(null);
   const [guardandoModalIngreso, setGuardandoModalIngreso] = useState(false);
   const referenciaDialogoIngreso = useRef(null);
   const [guardandoModalGasto, setGuardandoModalGasto] = useState(false);
@@ -54,7 +60,7 @@ function FinancePanel({ usuario, token, onLogout }) {
   const [errorLimite, setErrorLimite] = useState("");
   // HU006: Paginación del historial general de transacciones.
   const [paginaTransacciones, setPaginaTransacciones] = useState(1);
-  const transaccionesPorPagina = 8;
+  const transaccionesPorPagina = 6;
   const referenciaDialogoTransaccion = useRef(null);
   const [transaccionEditando, setTransaccionEditando] = useState(null);
   const [categoriasTransaccion, setCategoriasTransaccion] = useState([]);
@@ -184,7 +190,7 @@ function FinancePanel({ usuario, token, onLogout }) {
 
   // HU005: Paginación del historial de gastos.
   const [paginaGastos, setPaginaGastos] = useState(1);
-  const gastosPorPagina = 8;
+  const gastosPorPagina = 6;
 
   // HU004 / #66: Historial de ingresos del usuario autenticado.
   const [ingresos, setIngresos] = useState([]);
@@ -194,7 +200,7 @@ function FinancePanel({ usuario, token, onLogout }) {
 
   // HU004 / #66: Paginación del historial de ingresos.
   const [paginaIngresos, setPaginaIngresos] = useState(1);
-  const ingresosPorPagina = 8;
+  const ingresosPorPagina = 6;
 
   // Conservar la pestaña activa al actualizar la página.
   useEffect(() => {
@@ -300,6 +306,72 @@ function FinancePanel({ usuario, token, onLogout }) {
     };
   }, [pestanaActiva, vistaGastos, recargaGastos]);
 
+  // Consultar el historial al abrir la campana.
+  useEffect(() => {
+    if (!menuAlertasAbierto) return;
+
+    let activo = true;
+
+    setNotificaciones([]);
+    setErrorNotificaciones("");
+    setCargandoNotificaciones(true);
+
+    async function consultarAlertas() {
+      try {
+        const respuesta = await obtenerNotificaciones();
+
+        if (!activo) return;
+
+        if (!respuesta || !Array.isArray(respuesta.notificaciones)) {
+          throw new Error("La respuesta de notificaciones no es válida.");
+        }
+
+        setNotificaciones(respuesta.notificaciones);
+      } catch (error) {
+        if (activo) {
+          setErrorNotificaciones(
+            error.message || "No se pudieron consultar las notificaciones."
+          );
+        }
+      } finally {
+        if (activo) setCargandoNotificaciones(false);
+      }
+    }
+
+    consultarAlertas();
+
+    return () => {
+      activo = false;
+    };
+  }, [menuAlertasAbierto, token]);
+
+  // Cerrar alertas al pulsar fuera o Escape.
+  useEffect(() => {
+    if (!menuAlertasAbierto) return;
+
+    function manejarClickExterior(evento) {
+      if (
+        referenciaAlertas.current &&
+        !referenciaAlertas.current.contains(evento.target)
+      ) {
+        setMenuAlertasAbierto(false);
+      }
+    }
+
+    function manejarTecla(evento) {
+      if (evento.key === "Escape") {
+        setMenuAlertasAbierto(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", manejarClickExterior);
+    document.addEventListener("keydown", manejarTecla);
+
+    return () => {
+      document.removeEventListener("pointerdown", manejarClickExterior);
+      document.removeEventListener("keydown", manejarTecla);
+    };
+  }, [menuAlertasAbierto]);
   // Cerrar el menú al hacer clic fuera o presionar Escape.
   useEffect(() => {
     if (!menuPerfilAbierto) {
@@ -762,7 +834,8 @@ function FinancePanel({ usuario, token, onLogout }) {
         <header className="admin-cabecera fintrack-cabecera-v12">
           <div className="admin-cabecera-info">
             <p className="role-label">Resumen financiero</p>
-            <h1>{pestanaActiva === "historial" ? "Historial de transacciones" : pestanaActiva === "ingresos" ? "Ingresos" : pestanaActiva === "gastos" ? "Gastos" : pestanaActiva === "presupuestos" ? "Presupuestos" : pestanaActiva === "metas" ? "Meta financiera" : pestanaActiva === "categorias" ? "Categorías" : "Dashboard"}</h1>
+            {/* SALUDO HOME */}
+<h1>{pestanaActiva === "historial" ? "Historial de transacciones" : pestanaActiva === "ingresos" ? "Ingresos" : pestanaActiva === "gastos" ? "Gastos" : pestanaActiva === "presupuestos" ? "Presupuestos" : pestanaActiva === "metas" ? "Meta financiera" : pestanaActiva === "categorias" ? "Categorías" : typeof usuario?.nombre === "string" && usuario.nombre.trim() ? `Bienvenido, ${usuario.nombre.trim()}` : "Bienvenido"}</h1>
             <p>{pestanaActiva === "historial" ? "Consulta todos tus movimientos" : pestanaActiva === "ingresos" ? "Consulta tus ingresos registrados" : pestanaActiva === "gastos" ? "Consulta tus gastos registrados" : pestanaActiva === "presupuestos" ? "Administra tus presupuestos mensuales por categoría" : pestanaActiva === "metas" ? "Consulta tus objetivos de ahorro y aportaciones" : pestanaActiva === "categorias" ? "Administra tus categorías de ingresos y gastos" : "Control de tus finanzas personales"}</p>
           </div>
           {pestanaActiva === "resumen" && (
@@ -831,6 +904,87 @@ function FinancePanel({ usuario, token, onLogout }) {
           </div>
           )}
 
+          {/* Historial global de alertas presupuestarias. */}
+          <div className="admin-perfil fintrack-alertas" ref={referenciaAlertas}>
+            <button
+              type="button"
+              className="admin-perfil-boton"
+              aria-label="Historial de alertas"
+              aria-expanded={menuAlertasAbierto}
+              aria-controls="finanzas-menu-alertas"
+              onClick={() => {
+                setMenuPerfilAbierto(false);
+                setMenuAlertasAbierto((anterior) => !anterior);
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                <path d="M10 21h4" />
+              </svg>
+            </button>
+
+            {menuAlertasAbierto && (
+              <section
+                id="finanzas-menu-alertas"
+                className="admin-perfil-menu fintrack-alertas-menu"
+                aria-label="Historial de alertas"
+              >
+                <h3>Historial de alertas</h3>
+
+                {cargandoNotificaciones && (
+                  <p role="status">Cargando alertas...</p>
+                )}
+
+                {!cargandoNotificaciones && errorNotificaciones && (
+                  <p role="alert" className="fintrack-alertas-error">
+                    {errorNotificaciones}
+                  </p>
+                )}
+
+                {!cargandoNotificaciones &&
+                  !errorNotificaciones &&
+                  notificaciones.length === 0 && (
+                    <p>No hay alertas registradas.</p>
+                  )}
+
+                {!cargandoNotificaciones &&
+                  !errorNotificaciones &&
+                  notificaciones.length > 0 && (
+                    <div className="fintrack-alertas-lista">
+                      {notificaciones.map((alerta) => (
+                        <article
+                          className="fintrack-alertas-item"
+                          key={alerta.id}
+                        >
+                          <h4>{alerta.categoria}</h4>
+                          <p>{`Umbral ${alerta.nivel}% · ${alerta.mes}`}</p>
+                          <p>
+                            {`${new Intl.NumberFormat("es-DO", {
+                              style: "currency",
+                              currency: "DOP",
+                            }).format(Number(alerta.gastado) || 0)} de ${new Intl.NumberFormat("es-DO", {
+                              style: "currency",
+                              currency: "DOP",
+                            }).format(Number(alerta.monto_limite) || 0)}`}
+                          </p>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+              </section>
+            )}
+          </div>
           {/* Menú de perfil y cierre de sesión. */}
           <div className="admin-perfil" ref={referenciaPerfil}>
             <button
@@ -839,9 +993,10 @@ function FinancePanel({ usuario, token, onLogout }) {
               aria-label="Abrir menú de usuario"
               aria-expanded={menuPerfilAbierto}
               aria-controls="finanzas-menu-perfil"
-              onClick={() =>
-                setMenuPerfilAbierto((anterior) => !anterior)
-              }
+              onClick={() => {
+                setMenuAlertasAbierto(false);
+                setMenuPerfilAbierto((anterior) => !anterior);
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -1054,11 +1209,26 @@ function FinancePanel({ usuario, token, onLogout }) {
               )}
           </section>
         )}
-        {transaccionEditando && (
+        {(pestanaActiva === "historial" || pestanaActiva === "ingresos" || pestanaActiva === "gastos") &&
+          transaccionEditando && (
           <dialog
             ref={referenciaDialogoTransaccion}
             className="fintrack-modal-transaccion"
             aria-label="Editar transacción"
+            onClick={(evento) => {
+              if (guardandoTransaccion) return;
+              if (evento.target !== evento.currentTarget) return;
+
+              const rect = evento.currentTarget.getBoundingClientRect();
+
+              const fuera =
+                evento.clientX < rect.left ||
+                evento.clientX > rect.right ||
+                evento.clientY < rect.top ||
+                evento.clientY > rect.bottom;
+
+              if (fuera) cerrarEdicionTransaccion();
+            }}
             onCancel={(evento) => {
               evento.preventDefault();
               cerrarEdicionTransaccion();
@@ -1074,14 +1244,14 @@ function FinancePanel({ usuario, token, onLogout }) {
               ×
             </button>
             <section className="fintrack-edicion-transaccion">
-              <h2>Editar transacción</h2>
+              <h2>{transaccionEditando.tipo === "ingreso" ? "Editar ingreso" : "Editar gasto"}</h2>
               <form onSubmit={guardarEdicionTransaccion} noValidate>
                 {errorEdicionTransaccion && (
                   <p role="alert" className="fintrack-edicion-error">
                     {errorEdicionTransaccion}
                   </p>
                 )}
-                <label htmlFor="transaccion-monto">
+                <label className="fintrack-edicion-campo-monto" htmlFor="transaccion-monto">
                   Monto
                   <input
                     id="transaccion-monto"
@@ -1095,7 +1265,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                     required
                   />
                 </label>
-                <label htmlFor="transaccion-categoria">
+                <label className="fintrack-edicion-campo-categoria" htmlFor="transaccion-categoria">
                   Categoría
                   <select
                     id="transaccion-categoria"
@@ -1113,7 +1283,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                     ))}
                   </select>
                 </label>
-                <label htmlFor="transaccion-fecha">
+                <label className="fintrack-edicion-campo-fecha" htmlFor="transaccion-fecha">
                   Fecha
                   <input
                     id="transaccion-fecha"
@@ -1125,7 +1295,7 @@ function FinancePanel({ usuario, token, onLogout }) {
                     required
                   />
                 </label>
-                <label htmlFor="transaccion-descripcion">
+                <label className="fintrack-edicion-campo-descripcion" htmlFor="transaccion-descripcion">
                   Descripción
                   <textarea
                     id="transaccion-descripcion"
@@ -1157,6 +1327,7 @@ function FinancePanel({ usuario, token, onLogout }) {
             </section>
           </dialog>
         )}
+        {/* DIALOGO COMPARTIDO */}
         {transaccionEliminando && (
           <dialog
             ref={referenciaDialogoEliminacion}
@@ -1165,24 +1336,77 @@ function FinancePanel({ usuario, token, onLogout }) {
             aria-describedby="fintrack-eliminacion-descripcion"
             onCancel={(evento) => {
               evento.preventDefault();
-              cancelarEliminacionTransaccion();
+              if (!guardandoEliminacion) {
+                cancelarEliminacionTransaccion();
+              }
+            }}
+            onClick={(evento) => {
+              if (guardandoEliminacion) return;
+              if (evento.target !== evento.currentTarget) return;
+
+              const rect = evento.currentTarget.getBoundingClientRect();
+              const fuera =
+                evento.clientX < rect.left ||
+                evento.clientX > rect.right ||
+                evento.clientY < rect.top ||
+                evento.clientY > rect.bottom;
+
+              if (fuera) cancelarEliminacionTransaccion();
             }}
           >
             <section className="fintrack-confirmacion-eliminacion">
-              <h2 id="fintrack-eliminacion-titulo">Eliminar transacción</h2>
+              {/* CIERRE DEL DIALOGO */}
+              <button
+                type="button"
+                className="fintrack-eliminacion-cerrar"
+                aria-label="Cerrar diálogo"
+                onClick={cancelarEliminacionTransaccion}
+                disabled={guardandoEliminacion}
+              >
+                ×
+              </button>
+              <h2 id="fintrack-eliminacion-titulo">
+                {transaccionEliminando.tipo === "ingreso"
+                  ? "Eliminar ingreso"
+                  : "Eliminar gasto"}
+              </h2>
+
               <p id="fintrack-eliminacion-descripcion">
-                ¿Deseas eliminar la transacción de{" "}
-                {new Intl.NumberFormat("es-DO", {
-                  style: "currency",
-                  currency: "DOP",
-                }).format(Number(transaccionEliminando.monto))}
-                ? Esta acción no se puede deshacer.
+                ¿Deseas eliminar este{" "}
+                {transaccionEliminando.tipo === "ingreso"
+                  ? "ingreso"
+                  : "gasto"}?
               </p>
+
+              <div className="fintrack-eliminacion-detalle">
+                <p>
+                  <strong>Descripción:</strong>{" "}
+                  {transaccionEliminando.descripcion?.trim() ||
+                    "Sin descripción"}
+                </p>
+                <p>
+                  <strong>Monto:</strong>{" "}
+                  {new Intl.NumberFormat("es-DO", {
+                    style: "currency",
+                    currency: "DOP",
+                  }).format(Number(transaccionEliminando.monto))}
+                </p>
+              </div>
+
+              <p>
+                Esta acción eliminará permanentemente el{" "}
+                {transaccionEliminando.tipo === "ingreso"
+                  ? "ingreso"
+                  : "gasto"}{" "}
+                seleccionado y no se puede deshacer.
+              </p>
+
               {errorEliminacion && (
                 <p className="fintrack-eliminacion-error" role="alert">
                   {errorEliminacion}
                 </p>
               )}
+
               <div className="fintrack-eliminacion-acciones">
                 <button
                   id="cancelar-eliminacion-transaccion"
@@ -1199,7 +1423,9 @@ function FinancePanel({ usuario, token, onLogout }) {
                   onClick={confirmarEliminacionTransaccion}
                   disabled={guardandoEliminacion}
                 >
-                  {guardandoEliminacion ? "Eliminando..." : "Eliminar"}
+                  {guardandoEliminacion
+                    ? "Eliminando..."
+                    : "Confirmar eliminación"}
                 </button>
               </div>
             </section>
@@ -1310,13 +1536,22 @@ function FinancePanel({ usuario, token, onLogout }) {
                               }).format(Number(ingreso.monto))}
                             </td>
                             <td>
-                              <button
-                                type="button"
-                                className="fintrack-eliminar-transaccion"
-                                onClick={() => solicitarEliminacionTransaccion(ingreso)}
-                              >
-                                Eliminar
-                              </button>
+                              <div className="fintrack-transaccion-acciones">
+                                <button
+                                  type="button"
+                                  className="categorias-crear-boton fintrack-editar-transaccion"
+                                  onClick={() => abrirEdicionTransaccion({ ...ingreso, tipo: "ingreso" })}
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  className="fintrack-eliminar-transaccion"
+                                  onClick={() => solicitarEliminacionTransaccion(ingreso)}
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -1524,13 +1759,22 @@ function FinancePanel({ usuario, token, onLogout }) {
                               }).format(Number(gasto.monto))}
                             </td>
                             <td>
-                              <button
-                                type="button"
-                                className="fintrack-eliminar-transaccion"
-                                onClick={() => solicitarEliminacionTransaccion(gasto)}
-                              >
-                                Eliminar
-                              </button>
+                              <div className="fintrack-transaccion-acciones">
+                                <button
+                                  type="button"
+                                  className="categorias-crear-boton fintrack-editar-transaccion"
+                                  onClick={() => abrirEdicionTransaccion({ ...gasto, tipo: "gasto" })}
+                                >
+                                  Editar
+                                </button>
+                                <button
+                                  type="button"
+                                  className="fintrack-eliminar-transaccion"
+                                  onClick={() => solicitarEliminacionTransaccion(gasto)}
+                                >
+                                  Eliminar
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}

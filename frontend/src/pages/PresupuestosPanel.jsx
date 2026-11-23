@@ -3,7 +3,6 @@ import { obtenerCategorias } from "../services/categoriaService.js";
 import {
   obtenerPresupuestos,
   guardarPresupuesto,
-  obtenerNotificaciones,
 } from "../services/presupuestoService.js";
 import "./PresupuestosPanel.css";
 
@@ -93,8 +92,6 @@ function validarFormulario(formulario) {
 export default function PresupuestosPanel({ token }) {
   const [mes, setMes] = useState(mesLocal);
   const [presupuestos, setPresupuestos] = useState([]);
-  const [notificaciones, setNotificaciones] = useState([]);
-  const [errorNotificaciones, setErrorNotificaciones] = useState("");
   const [categorias, setCategorias] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [cargandoCategorias, setCargandoCategorias] = useState(true);
@@ -109,6 +106,7 @@ export default function PresupuestosPanel({ token }) {
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
   const [recarga, setRecarga] = useState(0);
+  const dialogoPresupuestoRef = useRef(null);
   const consultaActual = useRef(0);
   const categoriasActual = useRef(0);
   const guardadoActual = useRef(0);
@@ -202,38 +200,7 @@ export default function PresupuestosPanel({ token }) {
     };
   }, [token]);
 
-  useEffect(() => {
-    let activo = true;
-
-    setNotificaciones([]);
-    setErrorNotificaciones("");
-
-    async function consultarAlertas() {
-      try {
-        const respuesta = await obtenerNotificaciones();
-        if (!activo) return;
-
-        if (!respuesta || !Array.isArray(respuesta.notificaciones)) {
-          throw new Error("La respuesta de notificaciones no es válida.");
-        }
-
-        setNotificaciones(respuesta.notificaciones);
-      } catch (error) {
-        if (activo) {
-          setErrorNotificaciones(
-            error.message || "No se pudieron consultar las notificaciones."
-          );
-        }
-      }
-    }
-
-    consultarAlertas();
-
-    return () => {
-      activo = false;
-    };
-  }, [token, recarga]);
-  const registros = useMemo(
+const registros = useMemo(
     () => presupuestos.map((p) => {
       const limite = Number(p.monto_limite) || 0;
       const gastado = Number(p.gastado) || 0;
@@ -311,6 +278,20 @@ export default function PresupuestosPanel({ token }) {
     setEditando(false);
   }
 
+  useEffect(() => {
+    const dialogo = dialogoPresupuestoRef.current;
+    if (!dialogo || !formularioVisible) return;
+
+    if (!dialogo.open) {
+      dialogo.showModal();
+    }
+
+    return () => {
+      if (dialogo.open) {
+        dialogo.close();
+      }
+    };
+  }, [formularioVisible]);
   function cambiarCampo(evento) {
     const { name, value } = evento.target;
 
@@ -391,13 +372,11 @@ export default function PresupuestosPanel({ token }) {
     <section className="fintrack-presupuestos-v12" aria-label="Presupuestos">
       <header className="fp-cabecera">
         <div>
-          <h2>Presupuestos</h2>
           <p>Controla tus límites mensuales por categoría.</p>
         </div>
 
         <div className="fp-acciones">
           <label className="fp-selector-mes">
-            <span>Mes</span>
             <input
               type="month"
               value={mes}
@@ -578,34 +557,16 @@ export default function PresupuestosPanel({ token }) {
         ) : null}
       </section>
 
-      <section className="fp-formulario-panel" aria-label="Historial de alertas">
-        <h3>Historial de alertas</h3>
-        {errorNotificaciones && (
-          <p className="fp-mensaje fp-mensaje-error" role="alert">
-            {errorNotificaciones}
-          </p>
-        )}
-        {!errorNotificaciones && notificaciones.length === 0 && (
-          <p className="fp-estado">No hay alertas registradas.</p>
-        )}
-        {!errorNotificaciones && notificaciones.length > 0 && (
-          <div className="fp-registros">
-            {notificaciones.map((alerta) => (
-              <article className="fp-registro" key={alerta.id}>
-                <h4>{alerta.categoria}</h4>
-                <p>
-                  {`Umbral ${alerta.nivel}% · ${alerta.mes}`}
-                </p>
-                <p>
-                  {`${formatoDinero(alerta.gastado)} de ${formatoDinero(alerta.monto_limite)}`}
-                </p>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-      {formularioVisible && (
-        <section className="fp-formulario-panel" aria-label="Formulario de presupuesto">
+{formularioVisible && (
+        <dialog
+          ref={dialogoPresupuestoRef}
+          className="fp-formulario-panel"
+          aria-label={editando ? "Editar presupuesto" : "Nuevo presupuesto"}
+          onCancel={(evento) => {
+            evento.preventDefault();
+            if (!guardando) cancelar();
+          }}
+        >
           <div className="fp-formulario-cabecera">
             <h3>
               {editando ? "Editar presupuesto" : "Nuevo presupuesto"}
@@ -750,7 +711,7 @@ export default function PresupuestosPanel({ token }) {
               </button>
             </div>
           </form>
-        </section>
+        </dialog>
       )}
     </section>
   );

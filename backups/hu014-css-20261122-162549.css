@@ -1,0 +1,1049 @@
+/* Fintrack v12 - Sidebar administrativo */
+/* Estilos aislados del panel financiero. */
+
+.fintrack-admin-v12 {
+  --fintrack-fondo: #062c24;
+  --fintrack-superficie: #0b4235;
+  --fintrack-tarjeta: #155540;
+  --fintrack-borde: #386e5b;
+  --fintrack-acento: #c9fa55;
+  --fintrack-texto: #ffffff;
+  --fintrack-texto-secundario: #bdd5cc;
+}
+
+.fintrack-admin-v12,
+.fintrack-admin-v12 * {
+  box-sizing: border-box;
+}
+
+.fintrack-admin-v12.role-panel {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: stretch;
+  place-items: initial;
+  width: 100%;
+  min-height: 100vh;
+  padding: 0;
+  background: radial-gradient(
+    ellipse at 60% 5%,
+    #105441 0%,
+    #073c30 50%,
+    #052d25 100%
+  );
+}
+
+.fintrack-admin-v12 .fintrack-admin-sidebar {
+  min-height: 100vh;
+  padding: 28px 14px;
+  background: linear-gradient(165deg, #05352b, #063c30);
+  border-right: 1px solid #2c6754;
+}
+
+.fintrack-admin-v12 .fintrack-admin-marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+  padding: 4px 6px 20px;
+  border-bottom: 1px solid var(--fintrack-borde);
+  color: var(--fintrack-texto);
+}
+
+.fintrack-admin-v12 .fintrack-admin-marca strong {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.fintrack-admin-v12 .fintrack-admin-marca-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--fintrack-acento);
+  color: var(--fintrack-fondo);
+}
+
+.fintrack-admin-v12 .fintrack-admin-marca-icono svg {
+  width: 24px;
+  height: 24px;
+}
+
+.fintrack-admin-v12 .fintrack-admin-navegacion {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.fintrack-admin-v12 .fintrack-admin-nav-boton {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  padding: 13px 15px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #ffffff;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 550;
+  cursor: pointer;
+}
+
+.fintrack-admin-v12 .fintrack-admin-nav-boton:hover:not(.activo) {
+  background: #165544;
+}
+
+.fintrack-admin-v12 .fintrack-admin-nav-boton.activo {
+  background: var(--fintrack-acento);
+  color: #073c30;
+  font-weight: 800;
+}
+
+.fintrack-admin-v12 .fintrack-admin-nav-boton:focus-visible {
+  outline: 2px solid var(--fintrack-acento);
+  outline-offset: 2px;
+}
+
+.fintrack-admin-v12 .fintrack-admin-nav-icono {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+}
+
+.fintrack-admin-v12 .fintrack-admin-salir {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: 18px;
+  padding: 25px 15px 13px;
+  border: 0;
+  border-top: 1px solid #457966;
+  background: transparent;
+  color: #ffffff;
+  text-align: left;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.fintrack-admin-v12 .fintrack-admin-salir:hover {
+  background: #165544;
+}
+
+.fintrack-admin-v12 .fintrack-admin-salir:focus-visible {
+  outline: 2px solid var(--fintrack-acento);
+  outline-offset: 2px;
+}
+
+.fintrack-admin-v12 .fintrack-admin-contenido {
+  min-width: 0;
+  padding: 24px 34px 42px;
+}
+
+@media (min-width: 769px) {
+  .fintrack-admin-v12 .fintrack-admin-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+@media (max-width: 768px) {
+  .fintrack-admin-v12.role-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fintrack-admin-v12 .fintrack-admin-sidebar {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .fintrack-admin-v12 .fintrack-admin-contenido {
+    padding: 20px 16px;
+  }
+}
+
+/* FINTRACK V12 - ESTRUCTURA ADMINISTRATIVA */
+
+.fintrack-admin-v12.role-panel:has(.admin-card) {
+  place-items: stretch;
+}
+
+.fintrack-admin-v12 .fintrack-admin-contenido {
+  width: 100%;
+  min-width: 0;
+}
+
+.fintrack-admin-v12 .role-card.admin-card {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 24px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+}
+
+/* FINTRACK V12 - CONTRASTE ADMINISTRATIVO */
+
+.fintrack-admin-v12 .role-card.admin-card {
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .role-card.admin-card h1,
+.fintrack-admin-v12 .role-card.admin-card h2,
+.fintrack-admin-v12 .role-card.admin-card p,
+.fintrack-admin-v12 .role-card.admin-card .role-label,
+.fintrack-admin-v12 .usuarios-busqueda label,
+.fintrack-admin-v12 .usuarios-filtro label {
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .usuarios-tabla tbody td,
+.fintrack-admin-v12 .categorias-tabla tbody td {
+  color: #ffffff;
+}
+
+/* FINTRACK V12 - PAGINACION LEGIBLE */
+
+.fintrack-admin-v12 .role-card.admin-card .paginacion-resumen,
+.fintrack-admin-v12 .role-card.admin-card .paginacion-indicador {
+  color: #bdd5cc;
+}
+
+/* FINTRACK V12 - TABLAS ADMINISTRATIVAS */
+
+.fintrack-admin-v12 .usuarios-tabla-contenedor,
+.fintrack-admin-v12 .categorias-tabla-contenedor {
+  width: 100%;
+  overflow-x: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.fintrack-admin-v12 .usuarios-tabla,
+.fintrack-admin-v12 .categorias-tabla {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 5px;
+  text-align: left;
+}
+
+.fintrack-admin-v12 .usuarios-tabla thead,
+.fintrack-admin-v12 .categorias-tabla thead,
+.fintrack-admin-v12 .usuarios-tabla thead tr,
+.fintrack-admin-v12 .categorias-tabla thead tr {
+  background: transparent;
+}
+
+.fintrack-admin-v12 .usuarios-tabla th,
+.fintrack-admin-v12 .categorias-tabla th {
+  padding: 11px 13px 15px;
+  background: transparent;
+  border: 0;
+  color: #bdd5cc;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fintrack-admin-v12 .usuarios-tabla tbody tr,
+.fintrack-admin-v12 .categorias-tabla tbody tr {
+  background: transparent;
+}
+
+.fintrack-admin-v12 .usuarios-tabla tbody td,
+.fintrack-admin-v12 .categorias-tabla tbody td,
+.fintrack-admin-v12 .usuarios-tabla tbody tr:hover td,
+.fintrack-admin-v12 .categorias-tabla tbody tr:hover td {
+  padding: 11px 13px;
+  background: #135541;
+  border: 0;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.fintrack-admin-v12 .usuarios-tabla tbody td:first-child,
+.fintrack-admin-v12 .categorias-tabla tbody td:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.fintrack-admin-v12 .usuarios-tabla tbody td:last-child,
+.fintrack-admin-v12 .categorias-tabla tbody td:last-child {
+  border-radius: 0 10px 10px 0;
+}
+
+/* FINTRACK V12 - BOTONES PAGINACION */
+
+.fintrack-admin-v12 .role-card.admin-card .usuarios-paginacion .paginacion-boton {
+  background: #104d38;
+  color: #c9fa55;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  padding: 9px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .usuarios-paginacion .paginacion-boton:hover:not(:disabled) {
+  background: #176449;
+  color: #c9fa55;
+  border-color: #c9fa55;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .usuarios-paginacion .paginacion-boton:disabled {
+  background: #174535;
+  color: #829b89;
+  border-color: #38604e;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .usuarios-paginacion .paginacion-boton:focus-visible {
+  outline: 2px solid #c9fa55;
+  outline-offset: 3px;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .usuarios-paginacion .paginacion-resumen {
+  color: #bdd5cc;
+  font-size: 13px;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .usuarios-paginacion .paginacion-indicador {
+  color: #e7f3ec;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* FINTRACK V12 - HOVER TABLAS ADMIN */
+
+.fintrack-admin-v12 .usuarios-tabla tbody td,
+.fintrack-admin-v12 .categorias-tabla tbody td {
+  transition: background-color 150ms ease;
+}
+
+.fintrack-admin-v12 .usuarios-tabla tbody tr:hover td,
+.fintrack-admin-v12 .categorias-tabla tbody tr:hover td {
+  background-color: #216347;
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintrack-admin-v12 .usuarios-tabla tbody td,
+  .fintrack-admin-v12 .categorias-tabla tbody td {
+    transition: none;
+  }
+}
+
+/* FINTRACK V12 - PANEL DE LISTADO ADMIN */
+.fintrack-admin-v12 .fintrack-admin-tabla-panel {
+  min-width: 0;
+  padding: 21px 23px;
+  background: linear-gradient(145deg, #155540, #0b4235);
+  border: 1px solid #386e5b;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px #00241b35;
+}
+
+@media (max-width: 680px) {
+  .fintrack-admin-v12 .fintrack-admin-tabla-panel {
+    padding: 16px;
+  }
+}
+
+/* FINTRACK V12 - AJUSTES VISUALES CATEGORIAS */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.categorias-crear-boton {
+  display: block;
+  width: fit-content;
+  margin: 0 0 12px auto;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.fintrack-admin-tabla-panel {
+  padding-top: 12px;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.fintrack-admin-tabla-panel .usuarios-tabla {
+  margin-top: 0;
+}
+
+/* FINTRACK V12 - PERFIL UNIFICADO EN TODAS LAS PESTANAS */
+.fintrack-admin-v12 .admin-card .admin-cabecera .admin-perfil {
+  transform: translateY(-40px);
+}
+
+/* FINTRACK V12 - DESACTIVAR COMO ANTERIOR DISABLED */
+.fintrack-admin-v12 .role-card.admin-card
+.admin-seccion[aria-label="Gestión de categorías"]
+button.categoria-estado-accion:disabled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 9px 15px;
+  border: 1px solid #38604e;
+  border-radius: 10px;
+  background: #174535;
+  color: #829b89;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: normal;
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* FINTRACK V12 - TIPOGRAFIA Y ACCION CATEGORIAS */
+
+/* Solo encabezados de columnas */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla thead th {
+  font-size: 14px;
+}
+
+/* Centrar Acción */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:last-child,
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla td:last-child {
+  text-align: center;
+}
+
+/* FINTRACK V12 - ALINEACION VERTICAL ACCION CATEGORIAS */
+
+/* Centrar verticalmente todas las celdas */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla tbody td {
+  vertical-align: middle;
+}
+
+/* Restaurar alineación horizontal original de Acción */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:last-child,
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla td:last-child {
+  text-align: right;
+}
+
+/* Evitar desplazamientos verticales del botón */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+button.categoria-estado-accion:disabled {
+  vertical-align: middle;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* FINTRACK V12 - DISTRIBUCION COLUMNAS CATEGORIAS */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:nth-child(1) {
+  width: 12%;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:nth-child(2) {
+  width: 28%;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:nth-child(3),
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:nth-child(4),
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:nth-child(5) {
+  width: 20%;
+}
+
+/* Acción centrada dentro de su columna */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla th:nth-child(5),
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.usuarios-tabla td:nth-child(5) {
+  text-align: center;
+}
+
+/* FINTRACK V12 - ENCABEZADO GESTOR DE CATEGORIAS */
+@media (min-width: 769px) {
+  .fintrack-admin-v12 .admin-card:has(
+    .admin-seccion[aria-label="Gestión de categorías"]
+  ) .admin-cabecera-info h1 {
+    transform: translateY(-40px);
+  }
+}
+
+/* FINTRACK V12 - TITULO Y BOTON DEL LISTADO */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.categorias-encabezado {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin-bottom: 12px;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.categorias-encabezado h2 {
+  margin: 0;
+  line-height: 1.2;
+  transform: translateY(-30px);
+
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.categorias-encabezado .categorias-crear-boton {
+  margin: 0;
+  flex-shrink: 0;
+}
+/* FINTRACK V12 - MODAL COMPACTO CREAR CATEGORIA */
+.fintrack-admin-v12 .fintrack-modal-categoria {
+  box-sizing: border-box;
+  position: fixed;
+  width: min(520px, calc(100vw - 32px));
+  max-width: 520px;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 32px;
+  overflow-y: auto;
+  border: 1px solid #386e5b;
+  border-radius: 18px;
+  background: #0b4235;
+  color: #ffffff;
+  box-shadow: 0 24px 75px rgba(0, 16, 11, 0.55);
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria::backdrop {
+  background: rgba(0, 17, 13, 0.76);
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-formulario {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria h3 {
+  margin: 0 48px 24px 0;
+  color: #ffffff;
+  font-size: 24px;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria-cerrar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria input[type="text"] {
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  background: #092f27;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria input:focus-visible,
+.fintrack-admin-v12 .fintrack-modal-categoria button:focus-visible {
+  outline: 2px solid #c5ff42;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .fintrack-admin-v12 .fintrack-modal-categoria {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 24px 16px;
+  }
+}
+/* FINTRACK V12 - AJUSTE VISUAL MODAL CATEGORIA 520PX */
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-formulario {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 20px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  position: static;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria {
+  position: fixed;
+  padding: 32px;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .fintrack-modal-categoria-cerrar {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #ffffff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .fintrack-modal-categoria-cerrar:hover:not(:disabled) {
+  background: #155540;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-formulario h3 {
+  margin: 0 48px 4px 0;
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-campo label,
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo legend {
+  color: #e7f3ec;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-campo input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  background: #092f27;
+  color: #ffffff;
+  font: inherit;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-campo input::placeholder {
+  color: #a9c7ba;
+  opacity: 1;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo legend {
+  margin-bottom: 12px;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  flex: 1 1 160px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  background: #092f27;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo label:has(input:checked) {
+  border-color: #c5ff42;
+  background: #155540;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo label:hover,
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo label:has(input:checked):hover {
+  border-color: #c5ff42;
+  background: #155540;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo input {
+  accent-color: #c5ff42;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .fintrack-modal-categoria-acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .fintrack-modal-categoria-acciones button {
+  min-height: 42px;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .fintrack-modal-categoria-acciones .categorias-volver {
+  border: 1px solid #386e5b;
+  background: #092f27;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .fintrack-modal-categoria-acciones .categorias-volver:hover:not(:disabled) {
+  background: #155540;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .fintrack-modal-categoria-acciones button[type="submit"] {
+  border: 1px solid #c5ff42;
+  background: #c5ff42;
+  color: #092f27;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .fintrack-modal-categoria-acciones button[type="submit"]:hover:not(:disabled) {
+  background: #d8ff80;
+  color: #092f27;
+}
+
+.fintrack-admin-v12 .role-card.admin-card .fintrack-modal-categoria-acciones button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-error {
+  color: #ffb4ad;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-exito {
+  color: #c5ff42;
+}
+
+.fintrack-admin-v12 .fintrack-modal-categoria input:focus-visible,
+.fintrack-admin-v12 .fintrack-modal-categoria button:focus-visible,
+.fintrack-admin-v12 .fintrack-modal-categoria .categorias-tipo label:focus-within {
+  outline: 2px solid #c5ff42;
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .fintrack-admin-v12 .fintrack-modal-categoria {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 24px 16px;
+  }
+}
+/* FINTRACK V12 - USUARIOS FILTROS COMPACTOS A */
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de usuarios"]
+.usuarios-encabezado-v12 {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de usuarios"]
+.usuarios-encabezado-v12 h2 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de usuarios"]
+.usuarios-controles-compactos-v12 {
+  display: grid;
+  grid-template-columns:
+    minmax(240px, 1.7fr)
+    minmax(150px, 1fr)
+    minmax(150px, 1fr)
+    auto;
+  align-items: end;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 .usuarios-busqueda {
+  margin: 0;
+  min-width: 0;
+}
+
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 .usuarios-filtros {
+  display: contents;
+}
+
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 .usuarios-filtro {
+  min-width: 0;
+}
+
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 .usuarios-acciones {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: auto;
+  margin: 0;
+}
+
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 .usuarios-busqueda input,
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 .usuarios-filtro select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  background: #092f27;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 .usuarios-busqueda input::placeholder {
+  color: #a9c7ba;
+  opacity: 1;
+}
+
+.fintrack-admin-v12
+.role-card.admin-card
+.usuarios-controles-compactos-v12 .usuarios-limpiar {
+  min-height: 44px;
+  white-space: nowrap;
+  padding: 10px 16px;
+  border: 1px solid #4b9875;
+  border-radius: 10px;
+  background: #0b4235;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12
+.role-card.admin-card
+.usuarios-controles-compactos-v12 .usuarios-limpiar:hover:not(:disabled) {
+  background: #155540;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12
+.role-card.admin-card
+.usuarios-controles-compactos-v12 .usuarios-limpiar:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 input:focus-visible,
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 select:focus-visible,
+.fintrack-admin-v12
+.usuarios-controles-compactos-v12 button:focus-visible {
+  outline: 2px solid #c5ff42;
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  .fintrack-admin-v12
+  .admin-seccion[aria-label="Gestión de usuarios"]
+  .usuarios-controles-compactos-v12 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .fintrack-admin-v12
+  .admin-seccion[aria-label="Gestión de usuarios"]
+  .usuarios-controles-compactos-v12 {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .fintrack-admin-v12
+  .usuarios-controles-compactos-v12 .usuarios-acciones {
+    justify-content: flex-start;
+  }
+}
+
+/* HU-018 - ESTILOS DE DESACTIVACION */
+
+/* Botón habilitado para categorías activas. */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+button.categoria-estado-accion:not(:disabled) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 9px 15px;
+  border: 1px solid #c5ff42;
+  border-radius: 10px;
+  background: #c5ff42;
+  color: #092f27;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: normal;
+  vertical-align: middle;
+  opacity: 1;
+  cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+/* Interacción con ratón. */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+button.categoria-estado-accion:not(:disabled):hover {
+  background: #d8ff80;
+  border-color: #d8ff80;
+}
+
+/* Navegación mediante teclado. */
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+button.categoria-estado-accion:focus-visible {
+  outline: 2px solid #c5ff42;
+  outline-offset: 3px;
+}
+
+/* Confirmación: separación y legibilidad del contenido. */
+.fintrack-admin-v12
+.fintrack-modal-categoria[aria-label="Confirmar desactivación de categoría"]
+.categorias-formulario > p {
+  margin: 0 0 16px;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.fintrack-admin-v12
+.fintrack-modal-categoria[aria-label="Confirmar desactivación de categoría"]
+.categorias-formulario > p strong {
+  color: #c5ff42;
+  font-weight: 700;
+}
+
+/* Conservar los controles accesibles con movimiento reducido. */
+@media (prefers-reduced-motion: reduce) {
+  .fintrack-admin-v12
+  .admin-seccion[aria-label="Gestión de categorías"]
+  button.categoria-estado-accion:not(:disabled) {
+    transition: none;
+  }
+}
+
+/* HU-018 - Notificación de desactivación (4 segundos). */
+.fintrack-admin-v12 .categorias-notificacion-desactivacion {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 0 20px;
+  padding: 15px 18px;
+  border: 1px solid rgba(197, 255, 66, 0.35);
+  border-radius: 12px;
+  background: #0c382e;
+  color: #ffffff;
+}
+
+.fintrack-admin-v12 .categorias-notificacion-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #c5ff42;
+  color: #092f27;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.fintrack-admin-v12 .categorias-notificacion-desactivacion strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #c5ff42;
+  font-size: 14px;
+}
+
+.fintrack-admin-v12 .categorias-notificacion-desactivacion p {
+  margin: 0;
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 1.5;
+}

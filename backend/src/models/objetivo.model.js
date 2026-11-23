@@ -145,3 +145,105 @@ export async function registrarAportacion(usuarioId, objetivoId, monto) {
     connection.release();
   }
 }
+
+export async function actualizarObjetivo(usuarioId, objetivoId, datos) {
+  const connection = await pool.getConnection();
+  let commitIntentado = false;
+  let rollbackIntentado = false;
+
+  try {
+    await connection.beginTransaction();
+
+    const [filas] = await connection.execute(
+      `SELECT id, monto_actual, estado
+       FROM objetivos_financieros
+       WHERE id = ? AND usuario_id = ?
+       LIMIT 1 FOR UPDATE`,
+      [objetivoId, usuarioId]
+    );
+
+    if (filas.length === 0) {
+      rollbackIntentado = true;
+      await connection.rollback();
+      return null;
+    }
+
+    const meta = filas[0];
+
+    if (meta.estado === "cancelado") {
+      const error = new Error(
+        "La meta financiera cancelada no puede editarse"
+      );
+      error.code = "OBJETIVO_CANCELADO";
+      throw error;
+    }
+
+    if (meta.estado !== "activo" && meta.estado !== "completado") {
+      const error = new Error(
+        "La meta financiera tiene un estado no permitido"
+      );
+      error.code = "OBJETIVO_ESTADO_INVALIDO";
+      throw error;
+    }
+
+    const acumuladoCentavos = Math.round(
+      Number(meta.monto_actual) * 100
+    );
+    const objetivoCentavos = Math.round(
+      Number(datos.monto_objetivo) * 100
+    );
+
+    const estado = acumuladoCentavos >= objetivoCentavos
+      ? "completado"
+      : "activo";
+
+    await connection.execute(
+      `UPDATE objetivos_financieros
+       SET nombre = ?, monto_objetivo = ?,
+           fecha_limite = ?, estado = ?
+       WHERE id = ? AND usuario_id = ?`,
+      [
+        datos.nombre,
+        datos.monto_objetivo,
+        datos.fecha_limite,
+        estado,
+        objetivoId,
+        usuarioId
+      ]
+    );
+
+    const [actualizadas] = await connection.execute(
+      `SELECT id, nombre, monto_objetivo, monto_actual,
+              fecha_limite, estado, created_at
+       FROM objetivos_financieros
+       WHERE id = ? AND usuario_id = ?
+       LIMIT 1`,
+      [objetivoId, usuarioId]
+    );
+
+    if (actualizadas.length !== 1) {
+      throw new Error("No se pudo recuperar la meta actualizada");
+    }
+
+    commitIntentado = true;
+    await connection.commit();
+
+    return actualizadas[0];
+  } catch (error) {
+    if (!commitIntentado && !rollbackIntentado) {
+      rollbackIntentado = true;
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error(
+          "Error al revertir la edicion de meta:",
+          rollbackError
+        );
+      }
+    }
+
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
