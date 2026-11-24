@@ -22,7 +22,9 @@
 
 /* Contenedor principal */
 .fintrack-usuario.role-panel {
-  display: block;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: stretch;
   min-height: 100vh;
   width: 100%;
   padding: 0;
@@ -86,16 +88,17 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  gap: 16px;
   width: 100%;
   min-height: 44px;
   margin: 0;
-  padding: 12px 16px;
-  border: 1px solid transparent;
-  border-radius: 10px;
+  padding: 13px 15px;
+  border: 0;
+  border-radius: 12px;
   background: transparent;
-  color: var(--fintrack-texto-secundario);
+  color: #ffffff;
   text-align: left;
-  font-weight: 600;
+  font-weight: 550;
   cursor: pointer;
 }
 
@@ -105,9 +108,10 @@
 }
 
 .fintrack-usuario .fintrack-sidebar .fintrack-navegacion .admin-tab.admin-tab-activa {
-  background: var(--fintrack-tarjeta);
-  border-color: var(--fintrack-borde);
-  color: var(--fintrack-acento);
+  background: #c9fa55;
+  border-color: transparent;
+  color: #073c30;
+  font-weight: 800;
 }
 
 .fintrack-usuario .fintrack-sidebar .fintrack-navegacion .admin-tab:focus-visible {
@@ -429,9 +433,7 @@
 .fintrack-usuario .fintrack-modal-transaccion {
   position: fixed;
   width: min(520px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
   margin: auto;
-  padding: 28px;
   border: 1px solid #386e5b;
   border-radius: 16px;
   background: #123f34;
@@ -445,7 +447,6 @@
 
 .fintrack-usuario .fintrack-modal-transaccion-cerrar {
   position: absolute;
-  top: 12px;
   right: 14px;
   width: 36px;
   height: 36px;
@@ -462,20 +463,15 @@
 }
 
 .fintrack-usuario .fintrack-edicion-transaccion form {
-  display: grid;
-  gap: 14px;
 }
 
 .fintrack-usuario .fintrack-edicion-transaccion label {
-  display: grid;
-  gap: 7px;
   font-weight: 700;
 }
 
 .fintrack-usuario .fintrack-edicion-transaccion input,
 .fintrack-usuario .fintrack-edicion-transaccion select,
 .fintrack-usuario .fintrack-edicion-transaccion textarea {
-  width: 100%;
   box-sizing: border-box;
   border: 1px solid #558171;
   border-radius: 8px;
@@ -486,8 +482,6 @@
 }
 
 .fintrack-usuario .fintrack-edicion-transaccion textarea {
-  min-height: 86px;
-  resize: vertical;
 }
 
 .fintrack-usuario .fintrack-edicion-error {
@@ -495,12 +489,7 @@
   color: #ffd2d2;
 }
 
-.fintrack-usuario .fintrack-edicion-acciones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 6px;
-}
+
 
 .fintrack-usuario .fintrack-transaccion-acciones {
   display: flex;
@@ -663,47 +652,28 @@
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla {
-  width: 100%;
-  min-width: 610px;
-  border-collapse: separate;
-  border-spacing: 0 5px;
   text-align: left;
   font-size: 14px;
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla th {
   padding: 11px 13px;
-  color: #bdd5cc;
-  font-size: 12px;
-  font-weight: 600;
-  border: 0;
-  background: transparent;
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla td {
-  padding: 11px 13px;
-  color: #ffffff;
-  background: #135541;
-  border: 0;
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla tbody td:first-child {
-  border-radius: 10px 0 0 10px;
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla tbody td:last-child {
-  border-radius: 0 10px 10px 0;
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla th:last-child,
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla td:last-child {
-  text-align: right;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
 }
 
 .fintrack-usuario .fintrack-contenido .historial-seccion .historial-tabla tbody tr:hover td {
-  background: #135541;
 }
 
 @media (max-width: 680px) {
@@ -1041,22 +1011,11 @@
 
 .fintrack-usuario .fintrack-modal-ingreso {
   position: fixed;
-  width: min(720px, calc(100vw - 32px));
-  max-width: 720px;
-  max-height: calc(100dvh - 32px);
   margin: auto;
-  padding: 28px;
   overflow-y: auto;
-  border: 1px solid var(--fintrack-borde);
-  border-radius: 16px;
-  background: var(--fintrack-superficie);
-  color: var(--fintrack-texto);
-  box-shadow: 0 22px 80px rgba(0, 0, 0, .45);
 }
 
-.fintrack-usuario .fintrack-modal-ingreso::backdrop {
-  background: rgba(0, 12, 9, .72);
-}
+
 
 .fintrack-usuario .fintrack-modal-ingreso-cerrar {
   position: absolute;
@@ -1417,19 +1376,42 @@
 /* PAGINACION GASTOS */
 /* Exclusivo del listado de Gastos. */
 
-.fintrack-usuario .fintrack-contenido .fintrack-gastos-v12 .fintrack-gastos-paginacion {
-  margin-top: 16px;
+.fintrack-usuario .fintrack-contenido .fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton {
+  background: #104d38;
+  color: #c9fa55;
+  border: 1px solid #386e5b;
+  border-radius: 10px;
+  padding: 9px 15px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+  cursor: pointer;
 }
 
-.fintrack-usuario .fintrack-contenido .fintrack-gastos-v12 .fintrack-gastos-paginacion .paginacion-resumen {
-  color: #bdd5cc;
-  font-size: 13px;
+.fintrack-usuario .fintrack-contenido .fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:hover:not(:disabled) {
+  background: #176449;
+  color: #c9fa55;
+  border-color: #c9fa55;
 }
 
-.fintrack-usuario .fintrack-contenido .fintrack-gastos-v12 .fintrack-gastos-paginacion .paginacion-indicador {
-  color: #e7f3ec;
-  font-size: 13px;
-  font-weight: 600;
+.fintrack-usuario .fintrack-contenido .fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:disabled {
+  background: #174535;
+  color: #829b89;
+  border-color: #38604e;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.fintrack-usuario .fintrack-contenido .fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:focus-visible {
+  outline: 2px solid #c9fa55;
+  outline-offset: 3px;
+}
+
+.fintrack-usuario .fintrack-contenido .fintrack-gastos-v12 .fintrack-gastos-paginacion .paginacion-boton:hover:not(:disabled) {
+  background: #176449;
+  color: #c9fa55;
+  border-color: #c9fa55;
 }
 
 .fintrack-usuario .fintrack-contenido .fintrack-gastos-v12 .fintrack-gastos-paginacion .paginacion-boton {
@@ -1442,12 +1424,6 @@
   font-weight: 700;
   box-shadow: none;
   cursor: pointer;
-}
-
-.fintrack-usuario .fintrack-contenido .fintrack-gastos-v12 .fintrack-gastos-paginacion .paginacion-boton:hover:not(:disabled) {
-  background: #176449;
-  color: #c9fa55;
-  border-color: #c9fa55;
 }
 
 .fintrack-usuario .fintrack-contenido .fintrack-gastos-v12 .fintrack-gastos-paginacion .paginacion-boton:disabled {
@@ -1468,22 +1444,10 @@
 
 .fintrack-usuario .fintrack-modal-gasto {
   position: fixed;
-  width: min(720px, calc(100vw - 32px));
-  max-width: 720px;
-  max-height: calc(100dvh - 32px);
   margin: auto;
-  padding: 28px;
   overflow-y: auto;
-  border: 1px solid var(--fintrack-borde);
-  border-radius: 16px;
-  background: var(--fintrack-superficie);
-  color: var(--fintrack-texto);
-  box-shadow: 0 22px 80px rgba(0, 0, 0, .45);
 }
 
-.fintrack-usuario .fintrack-modal-gasto::backdrop {
-  background: rgba(0, 12, 9, .72);
-}
 
 .fintrack-usuario .fintrack-modal-gasto-cerrar {
   position: absolute;
@@ -2100,12 +2064,10 @@ button.fintrack-eliminar-transaccion {
 
 .fintrack-usuario .fintrack-modal-transaccion {
   box-sizing: border-box;
-  width: min(520px, calc(100vw - 32px));
   min-width: 0;
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 32px);
   max-height: calc(100dvh - 32px);
-  margin: auto;
   padding: clamp(16px, 4vw, 28px);
   overflow-x: clip;
   overflow-y: auto;
@@ -2160,20 +2122,9 @@ button.fintrack-eliminar-transaccion {
 }
 
 .fintrack-usuario .fintrack-edicion-acciones {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-width: 0;
 }
 
 .fintrack-usuario .fintrack-edicion-acciones button {
-  flex: 0 1 auto;
-  min-width: 0;
-  max-width: 100%;
-  white-space: normal;
   overflow-wrap: anywhere;
 }
 
@@ -2189,14 +2140,7 @@ button.fintrack-eliminar-transaccion {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .fintrack-usuario .fintrack-edicion-acciones {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 
-  .fintrack-usuario .fintrack-edicion-acciones button {
-    width: 100%;
-  }
 }
 
 @media (max-width: 360px) {
@@ -2206,9 +2150,7 @@ button.fintrack-eliminar-transaccion {
     padding: 16px 12px;
   }
 
-  .fintrack-usuario .fintrack-edicion-acciones {
-    grid-template-columns: minmax(0, 1fr);
-  }
+
 }
 
 /* Correccion visual del dialogo de edicion */

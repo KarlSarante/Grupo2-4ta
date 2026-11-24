@@ -112,23 +112,30 @@
   transition: background 150ms ease, border-color 150ms ease;
 }
 
+
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-primario {
-  background: var(--fp-acento);
-  color: #10251a;
+  background: transparent;
+  color: #c9fa55;
+  border-color: #c9fa55;
 }
 
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-primario:hover:not(:disabled) {
-  background: #c8f59a;
+  background: rgba(201, 250, 85, 0.10);
+  color: #c9fa55;
+  border-color: #c9fa55;
 }
 
+
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-secundario {
-  background: var(--fp-superficie-2);
-  color: var(--fp-texto);
-  border-color: var(--fp-borde);
+  background: transparent;
+  color: #c9fa55;
+  border-color: #c9fa55;
 }
 
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-secundario:hover:not(:disabled) {
-  background: #28523d;
+   background: rgba(201, 250, 85, 0.10);
+  color: #c9fa55;
+  border-color: #c9fa55;
 }
 
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-boton:disabled {
