@@ -194,15 +194,22 @@
 
 .fintrack-modal-meta-cerrar {
   position: absolute;
-  top: 12px;
+  top: 2px;
   right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
+  padding: 0;
   border: 1px solid #386e5b;
   border-radius: 8px;
   background: #155540;
   color: #ffffff;
+  font-family: Arial, sans-serif;
   font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
   cursor: pointer;
 }
 

@@ -237,24 +237,31 @@ dialog.fintrack-categorias-dialogo::backdrop {
   margin-bottom: 4px;
 }
 
+.fintrack-categorias-formulario
 .fintrack-categorias-modal-cabecera h2 {
   margin: 0;
   color: #ffffff;
   font-size: 1.4rem;
 }
 
+.fintrack-categorias-formulario
 .fintrack-categorias-modal-cabecera button {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
   padding: 0;
   border: 1px solid #386e5b;
   border-radius: 9px;
   background: #155540;
   color: #ffffff;
-  font-size: 1.6rem;
+  font-family: Arial, sans-serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
   cursor: pointer;
+  transform: translateY(-30px);
 }
 
 .fintrack-categorias-formulario > label {
@@ -309,6 +316,12 @@ dialog.fintrack-categorias-dialogo::backdrop {
 .fintrack-categorias-formulario button {
   font: inherit;
   cursor: pointer;
+}
+
+.fintrack-categorias-formulario
+.fintrack-categorias-modal-cabecera button {
+  font-size: 1.6rem;
+  line-height: 1;
 }
 
 .fintrack-categorias-acciones {
@@ -386,6 +399,8 @@ dialog.fintrack-categorias-dialogo::backdrop {
   border-radius: 10px;
   font-size: 13px;
   font-weight: 750;
+  padding: 1px 10px;
+  line-height: 1.2;
   box-shadow: none;
 }
 
@@ -526,57 +541,65 @@ dialog.fintrack-categorias-dialogo::backdrop {
 
 /* PAGINACION CATEGORIAS */
 
-.fintrack-usuario .fintrack-contenido .fintrack-categorias .fintrack-categorias-cabecera p {
-  color: #bdd5cc;
-}
 
-.fintrack-categorias .fintrack-categorias-paginacion {
+/* =========================================
+   CATEGORÍAS — PAGINACIÓN
+   ========================================= */
+
+/* Contenedor principal */
+.fintrack-usuario .fintrack-categorias nav.fintrack-categorias-paginacion {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px 20px;
+  width: 100%;
   margin-top: 16px;
 }
 
-.fintrack-categorias .fintrack-categorias-paginacion .paginacion-resumen {
-  margin: 0;
-  color: #bdd5cc;
-  font-size: 13px;
-}
-
-.fintrack-categorias .fintrack-categorias-paginacion .paginacion-controles {
+/* Controles alineados a la derecha */
+.fintrack-usuario .fintrack-categorias .fintrack-categorias-paginacion .paginacion-controles {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 10px;
+  width: auto;
+  margin-left: auto;
 }
 
+/* Indicador de página */
 .fintrack-categorias .fintrack-categorias-paginacion .paginacion-indicador {
   color: #e7f3ec;
   font-size: 13px;
   font-weight: 600;
 }
 
-.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton {
-  background: #104d38;
-  color: #c9fa55;
+/* Botones */
+.fintrack-usuario .fintrack-categorias .fintrack-categorias-paginacion button.paginacion-boton {
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 9px 15px;
   border: 1px solid #386e5b;
   border-radius: 10px;
-  padding: 9px 15px;
+  background: #104d38;
+  color: #c9fa55;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.2;
   box-shadow: none;
   cursor: pointer;
 }
 
-.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:hover:not(:disabled) {
+/* Hover */
+.fintrack-usuario .fintrack-categorias .fintrack-categorias-paginacion button.paginacion-boton:hover:not(:disabled) {
   background: #176449;
   color: #c9fa55;
   border-color: #c9fa55;
 }
 
-.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:disabled {
+/* Deshabilitado */
+.fintrack-usuario .fintrack-categorias .fintrack-categorias-paginacion button.paginacion-boton:disabled {
   background: #174535;
   color: #829b89;
   border-color: #38604e;
@@ -585,18 +608,22 @@ dialog.fintrack-categorias-dialogo::backdrop {
   opacity: 0.7;
 }
 
-.fintrack-categorias .fintrack-categorias-paginacion .paginacion-boton:focus-visible {
+/* Foco de teclado */
+.fintrack-usuario .fintrack-categorias .fintrack-categorias-paginacion button.paginacion-boton:focus-visible {
   outline: 2px solid #c9fa55;
   outline-offset: 3px;
 }
 
+/* Adaptación móvil */
 @media (max-width: 600px) {
-  .fintrack-categorias .fintrack-categorias-paginacion {
+  .fintrack-usuario .fintrack-categorias nav.fintrack-categorias-paginacion {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .fintrack-categorias .fintrack-categorias-paginacion .paginacion-controles {
+  .fintrack-usuario .fintrack-categorias .fintrack-categorias-paginacion .paginacion-controles {
     justify-content: space-between;
+    width: 100%;
+    margin-left: 0;
   }
 }
