@@ -25,6 +25,7 @@ export default function MetasFinancierasPanel() {
   const [filtroEstado, setFiltroEstado] = useState("todas");
   const [paginaActual, setPaginaActual] = useState(1);
   const [metaAportacionId, setMetaAportacionId] = useState(null);
+  const [metaEliminacionId, setMetaEliminacionId] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -419,6 +420,10 @@ export default function MetasFinancierasPanel() {
     (item) => String(item.id) === String(metaEdicionId)
   );
 
+  const metaEliminacion = metas.find(
+    (item) => String(item.id) === String(metaEliminacionId)
+  );
+
   return (
     <section className="admin-seccion fintrack-metas" aria-label="Meta financiera">
       <header className="fintrack-metas-cabecera">
@@ -567,6 +572,17 @@ export default function MetasFinancierasPanel() {
                         </button>
                         <button
                           type="button"
+                          className="fintrack-meta-eliminar"
+                          aria-label={`Eliminar meta ${meta.nombre}`}
+                          aria-pressed={
+                            String(meta.id) === String(metaEliminacionId)
+                          }
+                          onClick={() => setMetaEliminacionId(meta.id)}
+                        >
+                          Eliminar
+                        </button>
+                        <button
+                          type="button"
                           className="fintrack-meta-aportar"
                         disabled={
                           completada || meta.estado !== "activo"
@@ -637,6 +653,12 @@ export default function MetasFinancierasPanel() {
       {avisoEdicion && (
         <p className="fintrack-aportacion-estado" role="status">
           {avisoEdicion}
+        </p>
+      )}
+
+      {metaEliminacion && (
+        <p className="fintrack-aportacion-estado" role="status">
+          Meta «{metaEliminacion.nombre}» seleccionada para eliminar.
         </p>
       )}
 
