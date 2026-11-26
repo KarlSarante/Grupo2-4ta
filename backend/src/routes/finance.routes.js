@@ -8,6 +8,7 @@ import {
   guardarMeta,
   listarMetas,
   listarNotificaciones,
+  eliminarPresupuestoController,
 } from "../controllers/presupuesto.controller.js";
 import { editarMetaFinanciera } from "../controllers/objetivo.controller.js";
 import {
@@ -39,6 +40,7 @@ router.post("/gastos", registrarGasto);
 
 router.get("/presupuestos", listarMetas);
 router.post("/presupuestos", guardarMeta);
+router.delete("/presupuestos/:id", eliminarPresupuestoController);
 router.get("/notificaciones", listarNotificaciones);
 
 router.get("/objetivos", listarMetasFinancieras);
