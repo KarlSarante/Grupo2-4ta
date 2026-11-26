@@ -743,6 +743,11 @@
   line-height: 1.55;
 }
 
+.fintrack-modal-eliminacion .fintrack-meta-eliminacion-error {
+  margin-top: 12px;
+  color: #ffb8b3;
+}
+
 .fintrack-meta-eliminacion-acciones {
   display: flex;
   justify-content: flex-end;
