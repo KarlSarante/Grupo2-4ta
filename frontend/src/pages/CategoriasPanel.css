@@ -146,10 +146,24 @@
   color: var(--cat-acento);
 }
 
+.fintrack-categorias-desactivar {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid #9e5550;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--cat-peligro);
+}
+
 .fintrack-categorias-editar:hover,
 .fintrack-categorias-activar:hover {
   border-color: var(--cat-acento);
   background: var(--cat-tarjeta);
+}
+
+.fintrack-categorias-desactivar:hover {
+  border-color: var(--cat-peligro);
+  background: #542d2c;
 }
 
 .fintrack-categorias-acciones-lista {
