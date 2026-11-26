@@ -28,6 +28,16 @@ export async function buscarObjetivoPorId(objetivoId, usuarioId) {
   return filas[0] ?? null;
 }
 
+export async function eliminarObjetivo(usuarioId, objetivoId) {
+  const [resultado] = await pool.execute(
+    `DELETE FROM objetivos_financieros
+     WHERE id = ? AND usuario_id = ?`,
+    [objetivoId, usuarioId]
+  );
+
+  return resultado.affectedRows === 1;
+}
+
 export async function consultarObjetivos(usuarioId) {
   const [filas] = await pool.execute(
     `SELECT id, nombre, monto_objetivo, monto_actual,
