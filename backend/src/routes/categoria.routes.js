@@ -6,6 +6,7 @@ import {
   listarCategorias,
   desactivarCategoriaController,
   actualizarCategoriaPersonalController,
+  reactivarCategoriaPersonalController,
 } from "../controllers/categoria.controller.js";
 
 const router = Router();
@@ -33,6 +34,13 @@ router.put(
   autenticarToken,
   autorizarRoles("administrador", "usuario"),
   actualizarCategoriaPersonalController
+);
+
+router.patch(
+  "/:id/reactivar",
+  autenticarToken,
+  autorizarRoles("administrador", "usuario"),
+  reactivarCategoriaPersonalController
 );
 
 // HU-018: Solo administradores pueden desactivar categorias generales.

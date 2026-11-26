@@ -114,6 +114,68 @@ export async function actualizarCategoriaPersonal(id, usuarioId, nombre, tipo) {
   }
 }
 
+export async function reactivarCategoriaPersonal(id, usuarioId) {
+  const conexion = await pool.getConnection();
+
+  try {
+    await conexion.beginTransaction();
+
+    const [categorias] = await conexion.execute(
+      `SELECT id, usuario_id, nombre, tipo, activo
+       FROM categorias_generales
+       WHERE id = ?
+       FOR UPDATE`,
+      [id]
+    );
+    const categoria = categorias[0];
+
+    if (!categoria) {
+      await conexion.rollback();
+      return { estado: "no_encontrada" };
+    }
+
+    if (
+      categoria.usuario_id === null ||
+      Number(categoria.usuario_id) !== Number(usuarioId)
+    ) {
+      await conexion.rollback();
+      return { estado: "sin_permiso" };
+    }
+
+    if (categoria.activo) {
+      await conexion.rollback();
+      return { estado: "ya_activa" };
+    }
+
+    const [resultado] = await conexion.execute(
+      `UPDATE categorias_generales
+       SET activo = TRUE
+       WHERE id = ? AND usuario_id = ? AND activo = FALSE`,
+      [id, usuarioId]
+    );
+
+    if (resultado.affectedRows !== 1) {
+      await conexion.rollback();
+      return { estado: "no_encontrada" };
+    }
+
+    await conexion.commit();
+
+    return {
+      estado: "reactivada",
+      categoria: {
+        ...categoria,
+        activo: true,
+      },
+    };
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
+}
+
 // Nunca devolver categorías privadas de otros usuarios, incluso a administradores.
 export async function consultarCategorias(tipo = null, usuarioId = null) {
   const parametros = [];
