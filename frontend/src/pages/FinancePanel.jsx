@@ -41,6 +41,7 @@ function FinancePanel({ usuario, token, onLogout }) {
   const [notificaciones, setNotificaciones] = useState([]);
   const [cargandoNotificaciones, setCargandoNotificaciones] = useState(false);
   const [errorNotificaciones, setErrorNotificaciones] = useState("");
+  const [recargaNotificaciones, setRecargaNotificaciones] = useState(0);
   const referenciaAlertas = useRef(null);
   const [guardandoModalIngreso, setGuardandoModalIngreso] = useState(false);
   const referenciaDialogoIngreso = useRef(null);
@@ -343,7 +344,7 @@ function FinancePanel({ usuario, token, onLogout }) {
     return () => {
       activo = false;
     };
-  }, [menuAlertasAbierto, token]);
+  }, [menuAlertasAbierto, recargaNotificaciones, token]);
 
   // Cerrar alertas al pulsar fuera o Escape.
   useEffect(() => {
@@ -1882,7 +1883,12 @@ function FinancePanel({ usuario, token, onLogout }) {
           <CategoriasPanel token={token} />
         )}
         {pestanaActiva === "presupuestos" && (
-          <PresupuestosPanel token={token} />
+          <PresupuestosPanel
+            token={token}
+            onPresupuestoEliminado={() =>
+              setRecargaNotificaciones((anterior) => anterior + 1)
+            }
+          />
         )}
 
         {pestanaActiva === "metas" && (

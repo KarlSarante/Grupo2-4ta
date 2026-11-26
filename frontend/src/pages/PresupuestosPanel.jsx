@@ -101,7 +101,7 @@ function validarFormulario(formulario) {
   return errores;
 }
 
-export default function PresupuestosPanel({ token }) {
+export default function PresupuestosPanel({ token, onPresupuestoEliminado }) {
   const [mes, setMes] = useState(mesLocal);
   const [presupuestos, setPresupuestos] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -351,6 +351,7 @@ const registros = useMemo(
 
     try {
       await eliminarPresupuesto(presupuesto.id);
+      onPresupuestoEliminado?.();
 
       if (!montado.current || id !== eliminacionActual.current) return;
 
