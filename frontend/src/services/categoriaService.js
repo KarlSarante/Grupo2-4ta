@@ -201,12 +201,12 @@ export async function reactivarCategoriaPersonal(id, token) {
 }
 
 /**
- * HU-018: Desactivar una categoría general.
+ * Desactiva una categoría según los permisos del usuario autenticado.
  *
  * PATCH /api/categorias/:id/desactivar
  *
- * @param {number} id - ID de la categoría general.
- * @param {string} token - JWT del administrador.
+ * @param {number} id - ID de la categoría.
+ * @param {string} token - Token JWT del usuario.
  * @returns {Promise<Object>} Respuesta de la API.
  */
 export async function desactivarCategoria(id, token) {

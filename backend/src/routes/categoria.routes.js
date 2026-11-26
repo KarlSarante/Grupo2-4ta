@@ -5,6 +5,7 @@ import {
   registrarCategoria,
   listarCategorias,
   desactivarCategoriaController,
+  desactivarCategoriaPersonalController,
   actualizarCategoriaPersonalController,
   reactivarCategoriaPersonalController,
 } from "../controllers/categoria.controller.js";
@@ -43,12 +44,18 @@ router.patch(
   reactivarCategoriaPersonalController
 );
 
-// HU-018: Solo administradores pueden desactivar categorias generales.
+// HU-018 / HU-021: Administradores desactivan generales; usuarios, sus personales.
 router.patch(
   "/:id/desactivar",
   autenticarToken,
-  autorizarRoles("administrador"),
-  desactivarCategoriaController
+  autorizarRoles("administrador", "usuario"),
+  (req, res, next) => {
+    const controlador = req.usuario.rol === "administrador"
+      ? desactivarCategoriaController
+      : desactivarCategoriaPersonalController;
+
+    return controlador(req, res, next);
+  }
 );
 
 export default router;

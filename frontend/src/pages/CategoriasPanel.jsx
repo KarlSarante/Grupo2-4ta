@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   actualizarCategoriaPersonal,
   crearCategoria,
+  desactivarCategoria,
   obtenerCategorias,
   reactivarCategoriaPersonal,
 } from "../services/categoriaService.js";
@@ -47,9 +48,14 @@ export default function CategoriasPanel({ token }) {
   const [categoriaPorReactivar, setCategoriaPorReactivar] = useState(null);
   const [reactivando, setReactivando] = useState(false);
   const [errorReactivacion, setErrorReactivacion] = useState("");
+  const [categoriaPorDesactivar, setCategoriaPorDesactivar] = useState(null);
+  const [desactivando, setDesactivando] = useState(false);
+  const [errorDesactivacion, setErrorDesactivacion] = useState("");
   const dialogo = useRef(null);
   const dialogoReactivacion = useRef(null);
   const botonReactivacion = useRef(null);
+  const dialogoDesactivacion = useRef(null);
+  const botonDesactivacion = useRef(null);
 
   useEffect(() => {
     let vigente = true;
@@ -212,6 +218,41 @@ export default function CategoriasPanel({ token }) {
       );
     } finally {
       setReactivando(false);
+    }
+  }
+
+  function confirmarAperturaDesactivacion(categoria, boton) {
+    setCategoriaPorDesactivar(categoria);
+    setErrorDesactivacion("");
+    botonDesactivacion.current = boton;
+    dialogoDesactivacion.current?.showModal();
+  }
+
+  async function desactivarCategoriaSeleccionada(evento) {
+    evento.preventDefault();
+    if (!categoriaPorDesactivar || desactivando) return;
+
+    setDesactivando(true);
+    setErrorDesactivacion("");
+
+    try {
+      await desactivarCategoria(categoriaPorDesactivar.id, token);
+
+      setCategorias((actuales) =>
+        actuales.map((categoria) =>
+          categoria.id === categoriaPorDesactivar.id
+            ? { ...categoria, activo: false }
+            : categoria
+        )
+      );
+      setMensaje("Categoría desactivada correctamente.");
+      dialogoDesactivacion.current?.close();
+    } catch (error) {
+      setErrorDesactivacion(
+        error.message || "No se pudo desactivar la categoría."
+      );
+    } finally {
+      setDesactivando(false);
     }
   }
 
@@ -426,6 +467,20 @@ export default function CategoriasPanel({ token }) {
                         }
                       >
                         Activar
+                      </button>
+                    )}
+                    {!categoriaInactiva(categoria) && (
+                      <button
+                        type="button"
+                        className="fintrack-categorias-desactivar"
+                        onClick={(evento) =>
+                          confirmarAperturaDesactivacion(
+                            categoria,
+                            evento.currentTarget
+                          )
+                        }
+                      >
+                        Desactivar
                       </button>
                     )}
                     <button
@@ -720,6 +775,70 @@ export default function CategoriasPanel({ token }) {
               disabled={reactivando}
             >
               {reactivando ? "Activando..." : "Confirmar"}
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog
+        ref={dialogoDesactivacion}
+        className="fintrack-categorias-dialogo"
+        aria-labelledby="fintrack-categorias-desactivar-titulo"
+        onCancel={(evento) => {
+          if (desactivando) evento.preventDefault();
+        }}
+        onClose={() => {
+          setCategoriaPorDesactivar(null);
+          setErrorDesactivacion("");
+          botonDesactivacion.current?.focus();
+        }}
+      >
+        <form
+          onSubmit={desactivarCategoriaSeleccionada}
+          className="fintrack-categorias-formulario"
+        >
+          <div className="fintrack-categorias-modal-cabecera">
+            <h2 id="fintrack-categorias-desactivar-titulo">
+              Desactivar categoría
+            </h2>
+            <button
+              type="button"
+              aria-label="Cerrar confirmación"
+              onClick={() => dialogoDesactivacion.current?.close()}
+              disabled={desactivando}
+            >
+              ×
+            </button>
+          </div>
+
+          <p>
+            ¿Deseas desactivar la categoría{" "}
+            <strong>{categoriaPorDesactivar?.nombre}</strong>? Dejará de estar
+            disponible para nuevas transacciones, pero sus ingresos y gastos
+            históricos se conservarán.
+          </p>
+
+          {errorDesactivacion && (
+            <p className="fintrack-categorias-error" role="alert">
+              {errorDesactivacion}
+            </p>
+          )}
+
+          <div className="fintrack-categorias-acciones">
+            <button
+              type="button"
+              className="fintrack-categorias-secundario"
+              disabled={desactivando}
+              onClick={() => dialogoDesactivacion.current?.close()}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="fintrack-categorias-primario"
+              disabled={desactivando}
+            >
+              {desactivando ? "Desactivando..." : "Confirmar"}
             </button>
           </div>
         </form>

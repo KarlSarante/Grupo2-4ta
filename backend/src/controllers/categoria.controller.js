@@ -7,6 +7,7 @@ import {
     consultarCategoriaPorId,
     desactivarCategoriaGeneral,
     reactivarCategoriaPersonal,
+    desactivarCategoriaPersonal,
 } from "../models/categoria.model.js";
 
 const categoriaSchema = z.strictObject({
@@ -351,6 +352,57 @@ export async function desactivarCategoriaController(req, res) {
         });
     } catch (error) {
         console.error("Error al desactivar categoría:", error);
+
+        return res.status(500).json({
+            mensaje: "Error interno al desactivar la categoría",
+        });
+    }
+}
+
+export async function desactivarCategoriaPersonalController(req, res) {
+    const idTexto = req.params.id;
+
+    if (typeof idTexto !== "string" || !/^[1-9]\d*$/.test(idTexto)) {
+        return res.status(400).json({
+            mensaje: "El ID de categoría debe ser un entero positivo",
+        });
+    }
+
+    const id = Number(idTexto);
+
+    if (!Number.isSafeInteger(id) || id > 2147483647) {
+        return res.status(400).json({
+            mensaje: "ID de categoría inválido",
+        });
+    }
+
+    try {
+        const resultado = await desactivarCategoriaPersonal(id, req.usuario.id);
+
+        if (resultado.estado === "no_encontrada") {
+            return res.status(404).json({
+                mensaje: "Categoría no encontrada",
+            });
+        }
+
+        if (resultado.estado === "sin_permiso") {
+            return res.status(403).json({
+                mensaje: "No tienes permiso para desactivar esta categoría",
+            });
+        }
+
+        if (resultado.estado === "ya_inactiva") {
+            return res.status(409).json({
+                mensaje: "La categoría ya está desactivada",
+            });
+        }
+
+        return res.status(200).json({
+            mensaje: "Categoría personal desactivada correctamente",
+            categoria: resultado.categoria,
+        });
+    } catch (error) {
+        console.error("Error al desactivar categoría personal:", error);
 
         return res.status(500).json({
             mensaje: "Error interno al desactivar la categoría",

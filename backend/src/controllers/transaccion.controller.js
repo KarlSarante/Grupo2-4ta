@@ -149,13 +149,14 @@ export async function editarTransaccion(req, res) {
        FROM categorias_generales
        WHERE id = ? AND tipo = ?
          AND (usuario_id IS NULL OR usuario_id = ?)
+         AND (activo = TRUE OR id = ?)
        LIMIT 1`,
-      [categoria_id, transaccion.tipo, usuarioId]
+      [categoria_id, transaccion.tipo, usuarioId, transaccion.categoria_id]
     );
 
     if (categorias.length === 0) {
       return res.status(400).json({
-        mensaje: `La categoría seleccionada no existe o no es de ${transaccion.tipo}`,
+        mensaje: `La categoría seleccionada no existe, no es de ${transaccion.tipo}, está inactiva o no te pertenece`,
       });
     }
 
