@@ -26,6 +26,9 @@ export default function MetasFinancierasPanel() {
   const [paginaActual, setPaginaActual] = useState(1);
   const [metaAportacionId, setMetaAportacionId] = useState(null);
   const [metaEliminacionId, setMetaEliminacionId] = useState(null);
+  const [modalEliminacionAbierto, setModalEliminacionAbierto] =
+    useState(false);
+  const [avisoEliminacion, setAvisoEliminacion] = useState("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -37,6 +40,8 @@ export default function MetasFinancierasPanel() {
   const dialogoAportacionRef = useRef(null);
   const botonAportarRef = useRef(null);
   const botonAportarIdRef = useRef(null);
+  const dialogoEliminacionRef = useRef(null);
+  const botonEliminarRef = useRef(null);
   const [avisoAportacion, setAvisoAportacion] = useState("");
   const [metaEdicionId, setMetaEdicionId] = useState(null);
   const [modalEdicionAbierto, setModalEdicionAbierto] = useState(false);
@@ -105,6 +110,51 @@ export default function MetasFinancierasPanel() {
     setAvisoEdicion("");
     setModalEdicionAbierto(true);
   }
+
+  function abrirConfirmacionEliminacion(metaSeleccionada, boton) {
+    if (modalEliminacionAbierto || !metaSeleccionada) return;
+
+    botonEliminarRef.current = boton;
+    setMetaEliminacionId(metaSeleccionada.id);
+    setAvisoEliminacion("");
+    setModalEliminacionAbierto(true);
+  }
+
+  function restaurarFocoEliminacion() {
+    const boton = botonEliminarRef.current;
+    if (boton?.isConnected && !boton.disabled) {
+      boton.focus();
+    } else {
+      botonAbrirRef.current?.focus();
+    }
+  }
+
+  function cerrarConfirmacionEliminacion() {
+    dialogoEliminacionRef.current?.close();
+    setModalEliminacionAbierto(false);
+    setMetaEliminacionId(null);
+    restaurarFocoEliminacion();
+  }
+
+  function confirmarEliminacion() {
+    if (!metaEliminacion) return;
+
+    setAvisoEliminacion(
+      `Confirmación recibida para «${metaEliminacion.nombre}». ` +
+      "La solicitud de eliminación se conectará en el siguiente paso."
+    );
+    cerrarConfirmacionEliminacion();
+  }
+
+  useEffect(() => {
+    if (
+      modalEliminacionAbierto &&
+      dialogoEliminacionRef.current &&
+      !dialogoEliminacionRef.current.open
+    ) {
+      dialogoEliminacionRef.current.showModal();
+    }
+  }, [modalEliminacionAbierto]);
 
   function restaurarFocoEdicion() {
     const boton = botonEditarRef.current;
@@ -577,7 +627,12 @@ export default function MetasFinancierasPanel() {
                           aria-pressed={
                             String(meta.id) === String(metaEliminacionId)
                           }
-                          onClick={() => setMetaEliminacionId(meta.id)}
+                          onClick={(evento) =>
+                            abrirConfirmacionEliminacion(
+                              meta,
+                              evento.currentTarget
+                            )
+                          }
                         >
                           Eliminar
                         </button>
@@ -660,6 +715,55 @@ export default function MetasFinancierasPanel() {
         <p className="fintrack-aportacion-estado" role="status">
           Meta «{metaEliminacion.nombre}» seleccionada para eliminar.
         </p>
+      )}
+
+      {avisoEliminacion && (
+        <p className="fintrack-aportacion-estado" role="status">
+          {avisoEliminacion}
+        </p>
+      )}
+
+      {modalEliminacionAbierto && metaEliminacion && (
+        <dialog
+          ref={dialogoEliminacionRef}
+          className="fintrack-modal-meta fintrack-modal-eliminacion"
+          aria-labelledby="fintrack-eliminar-meta-titulo"
+          aria-describedby="fintrack-eliminar-meta-descripcion"
+          onCancel={(evento) => {
+            evento.preventDefault();
+            cerrarConfirmacionEliminacion();
+          }}
+          onClose={() => {
+            setModalEliminacionAbierto(false);
+            setMetaEliminacionId(null);
+            restaurarFocoEliminacion();
+          }}
+        >
+          <h2 id="fintrack-eliminar-meta-titulo">
+            ¿Eliminar meta financiera?
+          </h2>
+          <p id="fintrack-eliminar-meta-descripcion">
+            ¿Deseas eliminar la meta «{metaEliminacion.nombre}»? Esta acción
+            no modificará tus ingresos ni gastos.
+          </p>
+          <div className="fintrack-meta-eliminacion-acciones">
+            <button
+              type="button"
+              className="fintrack-nueva-meta-cancelar"
+              autoFocus
+              onClick={cerrarConfirmacionEliminacion}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="fintrack-meta-eliminar-confirmar"
+              onClick={confirmarEliminacion}
+            >
+              Eliminar
+            </button>
+          </div>
+        </dialog>
       )}
 
       {modalEdicionAbierto && metaEdicion && (

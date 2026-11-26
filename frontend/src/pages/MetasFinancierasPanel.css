@@ -725,6 +725,53 @@
   border-color: #ffb8b3;
 }
 
+.fintrack-usuario .fintrack-modal-meta.fintrack-modal-eliminacion {
+  width: min(94vw, 480px);
+  max-width: 480px;
+  padding: 28px;
+}
+
+.fintrack-modal-eliminacion h2 {
+  margin: 0 42px 12px 0;
+  color: #ffffff;
+  font-size: 1.35rem;
+}
+
+.fintrack-modal-eliminacion p {
+  margin: 0;
+  color: #d2e8dc;
+  line-height: 1.55;
+}
+
+.fintrack-meta-eliminacion-acciones {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.fintrack-meta-eliminacion-acciones button {
+  min-height: 44px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fintrack-meta-eliminacion-acciones .fintrack-meta-eliminar-confirmar {
+  border: 1px solid #d88a84;
+  background: #713532;
+  color: #fff0ee;
+}
+
+.fintrack-meta-eliminacion-acciones
+.fintrack-meta-eliminar-confirmar:hover {
+  border-color: #ffb8b3;
+  background: #87413d;
+}
+
 /* FINTRACK V12 - Separacion Editar y Aportar */
 .fintrack-usuario .fintrack-contenido
 .fintrack-metas .fintrack-meta-acciones {
@@ -733,4 +780,19 @@
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .fintrack-usuario .fintrack-modal-meta.fintrack-modal-eliminacion {
+    width: calc(100vw - 16px);
+    padding: 56px 16px 20px;
+  }
+
+  .fintrack-meta-eliminacion-acciones {
+    flex-direction: column-reverse;
+  }
+
+  .fintrack-meta-eliminacion-acciones button {
+    width: 100%;
+  }
 }
