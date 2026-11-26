@@ -137,3 +137,107 @@ export async function desactivarUsuarioController(req, res) {
     }
   }
 }
+
+// HU-015: Reactivar una cuenta de usuario.
+export async function reactivarUsuarioController(req, res) {
+  const idTexto = req.params.id;
+
+  if (typeof idTexto !== "string" || !/^[1-9]\d*$/.test(idTexto)) {
+    return res.status(400).json({
+      mensaje: "El ID de usuario debe ser un entero positivo",
+    });
+  }
+
+  const id = Number(idTexto);
+
+  if (!Number.isSafeInteger(id) || id > 2147483647) {
+    return res.status(400).json({
+      mensaje: "ID de usuario inválido",
+    });
+  }
+
+  let connection;
+  let transaccionIniciada = false;
+
+  try {
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+    transaccionIniciada = true;
+
+    const [usuarios] = await connection.execute(
+      `SELECT id, rol, activo
+       FROM usuarios
+       WHERE id = ?
+       LIMIT 1
+       FOR UPDATE`,
+      [id]
+    );
+
+    if (usuarios.length === 0) {
+      await connection.rollback();
+      transaccionIniciada = false;
+
+      return res.status(404).json({
+        mensaje: "Usuario no encontrado",
+      });
+    }
+
+    if (usuarios[0].rol !== "usuario") {
+      await connection.rollback();
+      transaccionIniciada = false;
+
+      return res.status(403).json({
+        mensaje: "Solo se pueden reactivar cuentas de usuario",
+      });
+    }
+
+    if (usuarios[0].activo) {
+      await connection.rollback();
+      transaccionIniciada = false;
+
+      return res.status(409).json({
+        mensaje: "La cuenta ya se encuentra activa",
+      });
+    }
+
+    const [resultado] = await connection.execute(
+      `UPDATE usuarios
+       SET activo = TRUE
+       WHERE id = ? AND rol = 'usuario' AND activo = FALSE`,
+      [id]
+    );
+
+    if (resultado.affectedRows !== 1) {
+      throw new Error("No se pudo completar la reactivación");
+    }
+
+    await connection.commit();
+    transaccionIniciada = false;
+
+    return res.status(200).json({
+      mensaje: "Cuenta reactivada correctamente",
+      usuario: {
+        id,
+        activo: true,
+      },
+    });
+  } catch (error) {
+    if (connection && transaccionIniciada) {
+      try {
+        await connection.rollback();
+      } catch (errorRollback) {
+        console.error("Error al revertir reactivación:", errorRollback);
+      }
+    }
+
+    console.error("Error al reactivar cuenta:", error);
+
+    return res.status(500).json({
+      mensaje: "Error interno al reactivar la cuenta",
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+}

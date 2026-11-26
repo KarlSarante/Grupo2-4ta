@@ -1228,6 +1228,54 @@ button.categoria-estado-accion:focus-visible {
     box-shadow 150ms ease;
 }
 
+.fintrack-admin-v12 button.usuario-activar-accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+  padding: 9px 15px;
+  border: 1px solid #6be6a2;
+  border-radius: 10px;
+  background: #104d38;
+  color: #b9f9d2;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: normal;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.fintrack-admin-v12 button.usuario-activar-accion:hover {
+  background: #176449;
+  border-color: #b9f9d2;
+}
+
+.fintrack-admin-v12 button.usuario-activar-accion:focus-visible {
+  outline: 2px solid #c5ff42;
+  outline-offset: 3px;
+}
+
+.fintrack-admin-v12 .usuario-activar-confirmar {
+  border: 1px solid #6be6a2 !important;
+  background: #6be6a2 !important;
+  color: #092f27 !important;
+}
+
+.fintrack-admin-v12 .usuario-activar-confirmar:hover:not(:disabled) {
+  background: #9af0bf !important;
+}
+
+.fintrack-admin-v12 .usuario-activacion-exito {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid #328c60;
+  border-radius: 9px;
+  background: #104d38;
+  color: #b9f9d2;
+  line-height: 1.5;
+}
+
 .fintrack-admin-v12 button.usuario-desactivar-accion:hover {
   background: #d8ff80;
   border-color: #d8ff80;

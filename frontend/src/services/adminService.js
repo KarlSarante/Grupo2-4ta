@@ -63,3 +63,53 @@ export async function desactivarUsuario(id, token) {
 
   return datos;
 }
+
+export async function reactivarUsuario(id, token) {
+  if (!Number.isSafeInteger(Number(id)) || Number(id) <= 0) {
+    throw new Error("El ID del usuario no es válido");
+  }
+
+  let respuesta;
+
+  try {
+    respuesta = await fetch(
+      `${API_URL}/admin/${Number(id)}/reactivar`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+  } catch {
+    throw new Error(
+      "No se pudo conectar con el servidor. Inténtalo nuevamente."
+    );
+  }
+
+  let datos = {};
+  try {
+    datos = await respuesta.json();
+  } catch {
+    // El estado HTTP sigue permitiendo mostrar un error útil si el cuerpo no es JSON.
+  }
+
+  if (!respuesta.ok) {
+    const mensajes = {
+      400: "El ID del usuario no es válido",
+      401: "Tu sesión no es válida o ha expirado",
+      403: "No tienes permisos para reactivar esta cuenta",
+      404: "El usuario no fue encontrado",
+      409: "La cuenta ya se encuentra activa",
+      500: "Error interno al reactivar la cuenta",
+    };
+
+    throw new Error(
+      datos.mensaje ||
+      mensajes[respuesta.status] ||
+      "No se pudo reactivar la cuenta"
+    );
+  }
+
+  return datos;
+}

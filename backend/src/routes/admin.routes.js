@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { autenticarToken } from "../middlewares/auth.middleware.js";
 import { autorizarRoles } from "../middlewares/role.middleware.js";
-import { consultarUsuarios, desactivarUsuarioController } from "../controllers/admin.controller.js";
+import {
+  consultarUsuarios,
+  desactivarUsuarioController,
+  reactivarUsuarioController,
+} from "../controllers/admin.controller.js";
 
 const router = Router();
 
@@ -22,4 +26,8 @@ router.get("/usuarios", consultarUsuarios);
 
 // HU-014: Desactivar cuentas de usuarios.
 router.patch("/:id/desactivar", desactivarUsuarioController);
+
+// HU-015: Reactivar cuentas de usuarios.
+router.patch("/:id/reactivar", reactivarUsuarioController);
+
 export default router;
