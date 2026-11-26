@@ -4,6 +4,7 @@ import {
   consultarObjetivos,
   registrarAportacion,
   actualizarObjetivo,
+  eliminarObjetivo,
 } from "../models/objetivo.model.js";
 
 const objetivoSchema = z.strictObject({
@@ -138,6 +139,52 @@ export async function listarMetasFinancieras(req, res) {
     console.error("Error al consultar objetivos:", error);
     return res.status(500).json({
       mensaje: "Error interno al consultar las metas financieras",
+    });
+  }
+}
+
+export async function eliminarMetaFinanciera(req, res) {
+  const usuarioId = req.usuario?.id;
+  const idTexto = req.params.id;
+
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(401).json({
+      mensaje: "Usuario autenticado no válido",
+    });
+  }
+
+  if (typeof idTexto !== "string" || !/^[1-9]\d*$/.test(idTexto)) {
+    return res.status(400).json({
+      mensaje: "El ID de la meta financiera no es válido",
+    });
+  }
+
+  const objetivoId = Number(idTexto);
+
+  if (!Number.isSafeInteger(objetivoId) || objetivoId > 2147483647) {
+    return res.status(400).json({
+      mensaje: "El ID de la meta financiera no es válido",
+    });
+  }
+
+  try {
+    const eliminada = await eliminarObjetivo(usuarioId, objetivoId);
+
+    if (!eliminada) {
+      return res.status(404).json({
+        mensaje: "La meta financiera no existe",
+      });
+    }
+
+    return res.status(200).json({
+      mensaje: "Meta financiera eliminada correctamente",
+      id: objetivoId,
+    });
+  } catch (error) {
+    console.error("Error al eliminar meta financiera:", error);
+
+    return res.status(500).json({
+      mensaje: "Error interno al eliminar la meta financiera",
     });
   }
 }

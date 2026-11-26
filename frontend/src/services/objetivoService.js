@@ -87,3 +87,17 @@ export function actualizarObjetivo(objetivoId, datos) {
     body: JSON.stringify(datos),
   });
 }
+
+export function eliminarObjetivo(objetivoId) {
+  if (
+    !Number.isSafeInteger(objetivoId) ||
+    objetivoId <= 0 ||
+    objetivoId > 2147483647
+  ) {
+    throw new Error("El ID de la meta financiera no es válido.");
+  }
+
+  return solicitar(`/metas/${objetivoId}`, {
+    method: "DELETE",
+  });
+}
