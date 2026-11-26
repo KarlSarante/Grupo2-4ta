@@ -20,6 +20,100 @@ export async function crearCategoria(nombre, tipo, usuarioId = null) {
   return { id: resultado.insertId, usuario_id: usuarioId, nombre, tipo };
 }
 
+export async function actualizarCategoriaPersonal(id, usuarioId, nombre, tipo) {
+  const conexion = await pool.getConnection();
+
+  try {
+    await conexion.beginTransaction();
+
+    const [categorias] = await conexion.execute(
+      `SELECT id, usuario_id, nombre, tipo, activo
+       FROM categorias_generales
+       WHERE id = ?
+       FOR UPDATE`,
+      [id]
+    );
+    const categoria = categorias[0];
+
+    if (!categoria) {
+      await conexion.rollback();
+      return { estado: "no_encontrada" };
+    }
+
+    if (
+      categoria.usuario_id === null ||
+      Number(categoria.usuario_id) !== Number(usuarioId)
+    ) {
+      await conexion.rollback();
+      return { estado: "sin_permiso" };
+    }
+
+    if (categoria.tipo !== tipo) {
+      const [transacciones] = await conexion.execute(
+        `SELECT id
+         FROM transacciones
+         WHERE categoria_id = ?
+         LIMIT 1`,
+        [id]
+      );
+
+      if (transacciones.length > 0) {
+        await conexion.rollback();
+        return { estado: "tipo_bloqueado" };
+      }
+    }
+
+    if (categoria.nombre === nombre && categoria.tipo === tipo) {
+      await conexion.commit();
+      return { estado: "actualizada", categoria };
+    }
+
+    const [duplicadas] = await conexion.execute(
+      `SELECT id
+       FROM categorias_generales
+       WHERE usuario_id = ?
+         AND nombre = ?
+         AND tipo = ?
+         AND id <> ?
+       LIMIT 1`,
+      [usuarioId, nombre, tipo, id]
+    );
+
+    if (duplicadas.length > 0) {
+      await conexion.rollback();
+      return { estado: "duplicada" };
+    }
+
+    const [resultado] = await conexion.execute(
+      `UPDATE categorias_generales
+       SET nombre = ?, tipo = ?
+       WHERE id = ? AND usuario_id = ?`,
+      [nombre, tipo, id, usuarioId]
+    );
+
+    if (resultado.affectedRows !== 1) {
+      await conexion.rollback();
+      return { estado: "no_encontrada" };
+    }
+
+    await conexion.commit();
+
+    return {
+      estado: "actualizada",
+      categoria: {
+        ...categoria,
+        nombre,
+        tipo,
+      },
+    };
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
+}
+
 // Nunca devolver categorías privadas de otros usuarios, incluso a administradores.
 export async function consultarCategorias(tipo = null, usuarioId = null) {
   const parametros = [];

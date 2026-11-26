@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { crearCategoria, obtenerCategorias } from "../services/categoriaService.js";
+import {
+  actualizarCategoriaPersonal,
+  crearCategoria,
+  obtenerCategorias,
+} from "../services/categoriaService.js";
 import "./CategoriasPanel.css";
 
 const filtros = [
@@ -7,6 +11,13 @@ const filtros = [
   { id: "gasto", texto: "Gastos" },
   { id: "ingreso", texto: "Ingresos" },
 ];
+
+function contieneCaracteresDeControl(valor) {
+  return Array.from(valor).some((caracter) => {
+    const codigo = caracter.charCodeAt(0);
+    return codigo <= 31 || codigo === 127;
+  });
+}
 
 export default function CategoriasPanel({ token }) {
   const [categorias, setCategorias] = useState([]);
@@ -22,6 +33,8 @@ export default function CategoriasPanel({ token }) {
   const [guardando, setGuardando] = useState(false);
   const [errorFormulario, setErrorFormulario] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [categoriaEnEdicion, setCategoriaEnEdicion] = useState(null);
+  const [erroresCampos, setErroresCampos] = useState({});
   const dialogo = useRef(null);
 
   useEffect(() => {
@@ -50,9 +63,21 @@ export default function CategoriasPanel({ token }) {
   }, [token, recarga]);
 
   function abrir() {
+    setCategoriaEnEdicion(null);
     setNombre("");
     setTipo("gasto");
     setErrorFormulario("");
+    setErroresCampos({});
+    setMensaje("");
+    dialogo.current?.showModal();
+  }
+
+  function abrirEdicion(categoria) {
+    setCategoriaEnEdicion(categoria);
+    setNombre(categoria.nombre);
+    setTipo(categoria.tipo);
+    setErrorFormulario("");
+    setErroresCampos({});
     setMensaje("");
     dialogo.current?.showModal();
   }
@@ -61,6 +86,8 @@ export default function CategoriasPanel({ token }) {
     if (guardando) return;
     dialogo.current?.close();
     setErrorFormulario("");
+    setErroresCampos({});
+    setCategoriaEnEdicion(null);
   }
 
   async function guardar(evento) {
@@ -68,34 +95,71 @@ export default function CategoriasPanel({ token }) {
     if (guardando) return;
 
     const limpio = nombre.trim();
+    const errores = {};
 
-    if (
-      !limpio ||
-      limpio.length > 100 ||
-      /[\x00-\x1F\x7F]/.test(limpio)
-    ) {
-      setErrorFormulario(
-        "Introduce un nombre válido de 1 a 100 caracteres."
-      );
+    if (!limpio) {
+      errores.nombre = "El nombre de la categoría es obligatorio.";
+    } else if (limpio.length > 100) {
+      errores.nombre = "El nombre no puede superar los 100 caracteres.";
+    } else if (contieneCaracteresDeControl(limpio)) {
+      errores.nombre = "El nombre contiene caracteres no permitidos.";
+    }
+
+    if (!["ingreso", "gasto"].includes(tipo)) {
+      errores.tipo = "Selecciona Ingreso o Gasto.";
+    }
+
+    if (Object.keys(errores).length > 0) {
+      setErroresCampos(errores);
+      setErrorFormulario("");
       return;
     }
 
     setGuardando(true);
     setErrorFormulario("");
+    setErroresCampos({});
 
     try {
-      await crearCategoria(
-        { nombre: limpio, tipo },
-        token
-      );
+      if (categoriaEnEdicion) {
+        const resultado = await actualizarCategoriaPersonal(
+          categoriaEnEdicion.id,
+          { nombre: limpio, tipo },
+          token
+        );
+
+        setCategorias((actuales) =>
+          actuales.map((categoria) =>
+            categoria.id === categoriaEnEdicion.id
+              ? resultado.categoria
+              : categoria
+          )
+        );
+        setMensaje("Categoría actualizada correctamente.");
+      } else {
+        await crearCategoria({ nombre: limpio, tipo }, token);
+        setMensaje("Categoría creada correctamente.");
+        setPaginaCategorias(1);
+        setRecarga((valor) => valor + 1);
+      }
 
       dialogo.current?.close();
-      setMensaje("Categoría creada correctamente.");
-      setPaginaCategorias(1);
-      setRecarga((valor) => valor + 1);
+      setCategoriaEnEdicion(null);
     } catch (error) {
+      const erroresServidor = Array.isArray(error.errores)
+        ? error.errores
+        : [];
+      const erroresPorCampo = Object.fromEntries(
+        erroresServidor
+          .filter((item) => ["nombre", "tipo"].includes(item.campo))
+          .map((item) => [item.campo, item.mensaje])
+      );
+
+      setErroresCampos(erroresPorCampo);
       setErrorFormulario(
-        error.message || "No se pudo crear la categoría."
+        Object.keys(erroresPorCampo).length > 0
+          ? ""
+          : error.message ||
+            `No se pudo ${categoriaEnEdicion ? "actualizar" : "crear"} la categoría.`
       );
     } finally {
       setGuardando(false);
@@ -290,6 +354,15 @@ export default function CategoriasPanel({ token }) {
                     ? "Ingreso"
                     : "Gasto"}
                 </span>
+                {categoria.usuario_id != null && (
+                  <button
+                    type="button"
+                    className="fintrack-categorias-editar"
+                    onClick={() => abrirEdicion(categoria)}
+                  >
+                    Editar
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -361,7 +434,9 @@ export default function CategoriasPanel({ token }) {
         >
           <div className="fintrack-categorias-modal-cabecera">
             <h2 id="fintrack-categorias-modal-titulo">
-              Nueva categoría
+              {categoriaEnEdicion
+                ? "Editar categoría"
+                : "Nueva categoría"}
             </h2>
 
             <button
@@ -386,11 +461,30 @@ export default function CategoriasPanel({ token }) {
             autoComplete="off"
             placeholder="Ej. Alimentación"
             value={nombre}
-            onChange={(evento) =>
-              setNombre(evento.target.value)
+            aria-invalid={Boolean(erroresCampos.nombre)}
+            aria-describedby={
+              erroresCampos.nombre
+                ? "fintrack-categorias-nombre-error"
+                : undefined
             }
+            onChange={(evento) => {
+              setNombre(evento.target.value)
+              setErroresCampos((actuales) => ({
+                ...actuales,
+                nombre: "",
+              }));
+            }}
             disabled={guardando}
           />
+          {erroresCampos.nombre && (
+            <p
+              id="fintrack-categorias-nombre-error"
+              className="fintrack-categorias-error-campo"
+              role="alert"
+            >
+              {erroresCampos.nombre}
+            </p>
+          )}
 
           <fieldset disabled={guardando}>
             <legend>Tipo</legend>
@@ -401,7 +495,19 @@ export default function CategoriasPanel({ token }) {
                 name="fintrack-categoria-tipo"
                 value="gasto"
                 checked={tipo === "gasto"}
-                onChange={() => setTipo("gasto")}
+                aria-invalid={Boolean(erroresCampos.tipo)}
+                aria-describedby={
+                  erroresCampos.tipo
+                    ? "fintrack-categorias-tipo-error"
+                    : undefined
+                }
+                onChange={() => {
+                  setTipo("gasto");
+                  setErroresCampos((actuales) => ({
+                    ...actuales,
+                    tipo: "",
+                  }));
+                }}
               />
               Gasto
             </label>
@@ -412,11 +518,39 @@ export default function CategoriasPanel({ token }) {
                 name="fintrack-categoria-tipo"
                 value="ingreso"
                 checked={tipo === "ingreso"}
-                onChange={() => setTipo("ingreso")}
+                aria-invalid={Boolean(erroresCampos.tipo)}
+                aria-describedby={
+                  erroresCampos.tipo
+                    ? "fintrack-categorias-tipo-error"
+                    : undefined
+                }
+                onChange={() => {
+                  setTipo("ingreso");
+                  setErroresCampos((actuales) => ({
+                    ...actuales,
+                    tipo: "",
+                  }));
+                }}
               />
               Ingreso
             </label>
           </fieldset>
+
+          {categoriaEnEdicion && (
+            <p className="fintrack-categorias-ayuda">
+              Si ya tiene transacciones, puedes cambiar el nombre, pero no el
+              tipo.
+            </p>
+          )}
+          {erroresCampos.tipo && (
+            <p
+              id="fintrack-categorias-tipo-error"
+              className="fintrack-categorias-error-campo"
+              role="alert"
+            >
+              {erroresCampos.tipo}
+            </p>
+          )}
 
           {errorFormulario && (
             <p
@@ -443,8 +577,12 @@ export default function CategoriasPanel({ token }) {
               disabled={guardando}
             >
               {guardando
-                ? "Creando categoría..."
-                : "Crear categoría"}
+                ? categoriaEnEdicion
+                  ? "Guardando cambios..."
+                  : "Creando categoría..."
+                : categoriaEnEdicion
+                  ? "Guardar cambios"
+                  : "Crear categoría"}
             </button>
           </div>
         </form>

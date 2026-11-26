@@ -127,6 +127,20 @@
   border-bottom: 0;
 }
 
+.fintrack-categorias-editar {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--cat-borde);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--cat-acento);
+}
+
+.fintrack-categorias-editar:hover {
+  border-color: var(--cat-acento);
+  background: var(--cat-tarjeta);
+}
+
 .fintrack-categorias-identidad {
   display: flex;
   flex-direction: column;
@@ -197,6 +211,19 @@
   border: 1px solid #9e5550;
   background: #542d2c;
   color: var(--cat-peligro);
+}
+
+.fintrack-categorias-error-campo {
+  margin: -10px 0 0;
+  color: var(--cat-peligro);
+  font-size: 0.9rem;
+}
+
+.fintrack-categorias-ayuda {
+  margin: 0;
+  color: var(--cat-secundario);
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
 
 /* Dialog se renderiza en la capa superior del navegador. */
