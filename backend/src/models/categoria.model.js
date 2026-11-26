@@ -177,12 +177,19 @@ export async function reactivarCategoriaPersonal(id, usuarioId) {
 }
 
 // Nunca devolver categorías privadas de otros usuarios, incluso a administradores.
-export async function consultarCategorias(tipo = null, usuarioId = null) {
+export async function consultarCategorias(
+  tipo = null,
+  usuarioId = null,
+  incluirInactivas = false
+) {
   const parametros = [];
   const filtros = [];
   if (tipo !== null) { filtros.push("tipo = ?"); parametros.push(tipo); }
   if (usuarioId === null) {
     filtros.push("usuario_id IS NULL");
+  } else if (incluirInactivas) {
+    filtros.push("(usuario_id IS NULL AND activo = TRUE OR usuario_id = ?)");
+    parametros.push(usuarioId);
   } else {
     filtros.push("(usuario_id IS NULL OR usuario_id = ?)");
     parametros.push(usuarioId);

@@ -3,6 +3,7 @@ import {
   actualizarCategoriaPersonal,
   crearCategoria,
   obtenerCategorias,
+  reactivarCategoriaPersonal,
 } from "../services/categoriaService.js";
 import "./CategoriasPanel.css";
 
@@ -17,6 +18,14 @@ function contieneCaracteresDeControl(valor) {
     const codigo = caracter.charCodeAt(0);
     return codigo <= 31 || codigo === 127;
   });
+}
+
+function categoriaInactiva(categoria) {
+  return (
+    categoria.activo === false ||
+    categoria.activo === 0 ||
+    categoria.activo === "0"
+  );
 }
 
 export default function CategoriasPanel({ token }) {
@@ -35,14 +44,19 @@ export default function CategoriasPanel({ token }) {
   const [mensaje, setMensaje] = useState("");
   const [categoriaEnEdicion, setCategoriaEnEdicion] = useState(null);
   const [erroresCampos, setErroresCampos] = useState({});
+  const [categoriaPorReactivar, setCategoriaPorReactivar] = useState(null);
+  const [reactivando, setReactivando] = useState(false);
+  const [errorReactivacion, setErrorReactivacion] = useState("");
   const dialogo = useRef(null);
+  const dialogoReactivacion = useRef(null);
+  const botonReactivacion = useRef(null);
 
   useEffect(() => {
     let vigente = true;
     setCargando(true);
     setErrorCarga("");
 
-    obtenerCategorias(token)
+    obtenerCategorias(token, null, true)
       .then((datos) => {
         if (vigente) setCategorias(datos);
       })
@@ -163,6 +177,41 @@ export default function CategoriasPanel({ token }) {
       );
     } finally {
       setGuardando(false);
+    }
+  }
+
+  function confirmarAperturaReactivacion(categoria, boton) {
+    setCategoriaPorReactivar(categoria);
+    setErrorReactivacion("");
+    botonReactivacion.current = boton;
+    dialogoReactivacion.current?.showModal();
+  }
+
+  async function reactivarCategoria(evento) {
+    evento.preventDefault();
+    if (!categoriaPorReactivar || reactivando) return;
+
+    setReactivando(true);
+    setErrorReactivacion("");
+
+    try {
+      await reactivarCategoriaPersonal(categoriaPorReactivar.id, token);
+
+      setCategorias((actuales) =>
+        actuales.map((categoria) =>
+          categoria.id === categoriaPorReactivar.id
+            ? { ...categoria, activo: true }
+            : categoria
+        )
+      );
+      setMensaje("Categoría reactivada correctamente.");
+      dialogoReactivacion.current?.close();
+    } catch (error) {
+      setErrorReactivacion(
+        error.message || "No se pudo reactivar la categoría."
+      );
+    } finally {
+      setReactivando(false);
     }
   }
 
@@ -346,6 +395,15 @@ export default function CategoriasPanel({ token }) {
 
                 <span
                   className={
+                    `fintrack-categorias-estado-categoria ` +
+                    (categoriaInactiva(categoria) ? "inactivo" : "activo")
+                  }
+                >
+                  {categoriaInactiva(categoria) ? "Inactivo" : "Activo"}
+                </span>
+
+                <span
+                  className={
                     `fintrack-categorias-tipo ` +
                     `fintrack-categorias-tipo-${categoria.tipo}`
                   }
@@ -355,13 +413,29 @@ export default function CategoriasPanel({ token }) {
                     : "Gasto"}
                 </span>
                 {categoria.usuario_id != null && (
-                  <button
-                    type="button"
-                    className="fintrack-categorias-editar"
-                    onClick={() => abrirEdicion(categoria)}
-                  >
-                    Editar
-                  </button>
+                  <div className="fintrack-categorias-acciones-lista">
+                    {categoriaInactiva(categoria) && (
+                      <button
+                        type="button"
+                        className="fintrack-categorias-activar"
+                        onClick={(evento) =>
+                          confirmarAperturaReactivacion(
+                            categoria,
+                            evento.currentTarget
+                          )
+                        }
+                      >
+                        Activar
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="fintrack-categorias-editar"
+                      onClick={() => abrirEdicion(categoria)}
+                    >
+                      Editar
+                    </button>
+                  </div>
                 )}
               </li>
             ))}
@@ -583,6 +657,69 @@ export default function CategoriasPanel({ token }) {
                 : categoriaEnEdicion
                   ? "Guardar cambios"
                   : "Crear categoría"}
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog
+        ref={dialogoReactivacion}
+        className="fintrack-categorias-dialogo"
+        aria-labelledby="fintrack-categorias-reactivar-titulo"
+        onCancel={(evento) => {
+          if (reactivando) evento.preventDefault();
+        }}
+        onClose={() => {
+          setCategoriaPorReactivar(null);
+          setErrorReactivacion("");
+          botonReactivacion.current?.focus();
+        }}
+      >
+        <form
+          onSubmit={reactivarCategoria}
+          className="fintrack-categorias-formulario"
+        >
+          <div className="fintrack-categorias-modal-cabecera">
+            <h2 id="fintrack-categorias-reactivar-titulo">
+              Activar categoría
+            </h2>
+            <button
+              type="button"
+              aria-label="Cerrar confirmación"
+              onClick={() => dialogoReactivacion.current?.close()}
+              disabled={reactivando}
+            >
+              ×
+            </button>
+          </div>
+
+          <p>
+            ¿Deseas activar la categoría{" "}
+            <strong>{categoriaPorReactivar?.nombre}</strong>? Volverá a estar
+            disponible para registrar nuevos ingresos o gastos.
+          </p>
+
+          {errorReactivacion && (
+            <p className="fintrack-categorias-error" role="alert">
+              {errorReactivacion}
+            </p>
+          )}
+
+          <div className="fintrack-categorias-acciones">
+            <button
+              type="button"
+              className="fintrack-categorias-secundario"
+              disabled={reactivando}
+              onClick={() => dialogoReactivacion.current?.close()}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="fintrack-categorias-primario"
+              disabled={reactivando}
+            >
+              {reactivando ? "Activando..." : "Confirmar"}
             </button>
           </div>
         </form>

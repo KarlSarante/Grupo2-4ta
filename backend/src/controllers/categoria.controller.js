@@ -243,12 +243,21 @@ export async function reactivarCategoriaPersonalController(req, res) {
  * ?tipo=ingreso o ?tipo=gasto
  */
 export async function listarCategorias(req, res) {
-  const { tipo } = req.query;
+  const { tipo, incluir_inactivas: incluirInactivasQuery } = req.query;
 
   // Validar el filtro cuando se proporciona.
   if (tipo !== undefined && !["ingreso", "gasto"].includes(tipo)) {
     return res.status(400).json({
       mensaje: "El tipo debe ser ingreso o gasto",
+    });
+  }
+
+  if (
+    incluirInactivasQuery !== undefined &&
+    !["true", "false"].includes(incluirInactivasQuery)
+  ) {
+    return res.status(400).json({
+      mensaje: "El filtro incluir_inactivas debe ser true o false",
     });
   }
 
@@ -259,7 +268,11 @@ export async function listarCategorias(req, res) {
         ? null
         : req.usuario.id;
 
-    const categorias = await consultarCategorias(tipo ?? null, usuarioId);
+    const categorias = await consultarCategorias(
+      tipo ?? null,
+      usuarioId,
+      req.usuario.rol === "usuario" && incluirInactivasQuery === "true"
+    );
 
     return res.status(200).json({
       mensaje: "Categorías consultadas correctamente",
