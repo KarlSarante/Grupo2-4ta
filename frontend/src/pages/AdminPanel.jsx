@@ -1,7 +1,11 @@
 import "./AdminPanelV12.css";
 import AdminHome from "./AdminHome.jsx";
 import { useEffect, useRef, useState } from "react";
-import { obtenerUsuarios, desactivarUsuario } from "../services/adminService.js";
+import {
+  obtenerUsuarios,
+  desactivarUsuario,
+  reactivarUsuario,
+} from "../services/adminService.js";
 import { crearCategoria, desactivarCategoria, obtenerCategorias } from "../services/categoriaService.js";
 
 function AdminPanel({ usuario, token, onLogout }) {
@@ -43,6 +47,13 @@ function AdminPanel({ usuario, token, onLogout }) {
   const referenciaDialogoDesactivarUsuario = useRef(null);
   const referenciaBotonDesactivarUsuario = useRef(null);
   const bloqueoDesactivacionUsuario = useRef(false);
+  const [usuarioPorActivar, setUsuarioPorActivar] = useState(null);
+  const [activandoUsuario, setActivandoUsuario] = useState(false);
+  const [errorActivacionUsuario, setErrorActivacionUsuario] = useState("");
+  const [mensajeActivacionUsuario, setMensajeActivacionUsuario] = useState("");
+  const referenciaDialogoActivarUsuario = useRef(null);
+  const referenciaBotonActivarUsuario = useRef(null);
+  const bloqueoActivacionUsuario = useRef(false);
 
   // HU-014: Control del diálogo y restauración del foco.
   useEffect(() => {
@@ -60,6 +71,22 @@ function AdminPanel({ usuario, token, onLogout }) {
       referenciaBotonDesactivarUsuario.current?.focus();
     };
   }, [usuarioPorDesactivar]);
+
+  useEffect(() => {
+    if (!usuarioPorActivar) return;
+
+    const dialogo = referenciaDialogoActivarUsuario.current;
+    if (!dialogo) return;
+
+    if (!dialogo.open) dialogo.showModal();
+    dialogo.querySelector("button[type='button']")?.focus();
+
+    return () => {
+      if (dialogo.open) dialogo.close();
+      referenciaBotonActivarUsuario.current?.focus();
+    };
+  }, [usuarioPorActivar]);
+
   const [busqueda, setBusqueda] = useState("");
   const [filtroRol, setFiltroRol] = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
@@ -424,6 +451,82 @@ function AdminPanel({ usuario, token, onLogout }) {
       setDesactivandoUsuario(false);
     }
   }
+
+  function solicitarActivacionUsuario(cuenta, evento) {
+    if (
+      bloqueoActivacionUsuario.current ||
+      cuenta.rol !== "usuario" ||
+      Number(cuenta.activo) !== 0
+    ) {
+      return;
+    }
+
+    referenciaBotonActivarUsuario.current = evento.currentTarget;
+    setMensajeActivacionUsuario("");
+    setErrorActivacionUsuario("");
+    setUsuarioPorActivar(cuenta);
+  }
+
+  function cancelarActivacionUsuario() {
+    if (bloqueoActivacionUsuario.current) return;
+
+    setUsuarioPorActivar(null);
+    setErrorActivacionUsuario("");
+  }
+
+  async function confirmarActivacionUsuario(evento) {
+    evento.preventDefault();
+
+    if (!usuarioPorActivar || bloqueoActivacionUsuario.current) return;
+
+    const id = Number(usuarioPorActivar.id);
+    if (
+      !Number.isSafeInteger(id) ||
+      id <= 0 ||
+      usuarioPorActivar.rol !== "usuario" ||
+      Number(usuarioPorActivar.activo) !== 0
+    ) {
+      setErrorActivacionUsuario("La cuenta seleccionada no puede activarse");
+      return;
+    }
+
+    bloqueoActivacionUsuario.current = true;
+    setActivandoUsuario(true);
+    setErrorActivacionUsuario("");
+
+    try {
+      const resultado = await reactivarUsuario(id, token);
+
+      if (
+        Number(resultado.usuario?.id) !== id ||
+        resultado.usuario?.activo !== true
+      ) {
+        throw new Error(
+          "El servidor no confirmó la activación de la cuenta"
+        );
+      }
+
+      setUsuarios((anteriores) =>
+        anteriores.map((cuenta) =>
+          Number(cuenta.id) === id
+            ? { ...cuenta, activo: true }
+            : cuenta
+        )
+      );
+      setUsuarioPorActivar(null);
+      setMensajeActivacionUsuario(
+        `La cuenta de ${usuarioPorActivar.nombre} se activó correctamente.`
+      );
+    } catch (err) {
+      setErrorActivacionUsuario(
+        err.message || "No se pudo activar la cuenta"
+      );
+    } finally {
+      bloqueoActivacionUsuario.current = false;
+      setActivandoUsuario(false);
+    }
+  }
+
   async function confirmarDesactivacionCategoria(evento) {
     evento.preventDefault();
 
@@ -827,6 +930,11 @@ function AdminPanel({ usuario, token, onLogout }) {
 
               {!cargando && !error && usuarios.length > 0 && (
                 <div className="usuarios-tabla-contenedor">
+                  {mensajeActivacionUsuario && (
+                    <p className="usuario-activacion-exito" role="status">
+                      {mensajeActivacionUsuario}
+                    </p>
+                  )}
                   <table className="usuarios-tabla">
                     <thead>
                       <tr>
@@ -855,9 +963,9 @@ function AdminPanel({ usuario, token, onLogout }) {
                             </span>
                           </td>
                           <td>
-                            {cuenta.rol === "usuario" &&
+                            {cuenta.rol === "usuario" && (
                               Number(cuenta.activo) === 1 &&
-                              Number(cuenta.id) !== Number(usuario?.id) && (
+                              Number(cuenta.id) !== Number(usuario?.id) ? (
                                 <button
                                   type="button"
                                   className="usuario-desactivar-accion"
@@ -868,13 +976,90 @@ function AdminPanel({ usuario, token, onLogout }) {
                                 >
                                   Desactivar
                                 </button>
-                              )}
+                              ) : Number(cuenta.activo) === 0 ? (
+                                <button
+                                  type="button"
+                                  className="usuario-activar-accion"
+                                  onClick={(evento) =>
+                                    solicitarActivacionUsuario(cuenta, evento)
+                                  }
+                                  aria-label={`Activar cuenta de ${cuenta.nombre}`}
+                                >
+                                  Activar
+                                </button>
+                              ) : null
+                            )}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+              )}
+
+              {usuarioPorActivar && (
+                <dialog
+                  ref={referenciaDialogoActivarUsuario}
+                  className="fintrack-modal-usuario"
+                  aria-label="Confirmar activación de cuenta"
+                  onCancel={(evento) => {
+                    evento.preventDefault();
+                    cancelarActivacionUsuario();
+                  }}
+                >
+                  <form
+                    className="usuario-desactivar-formulario"
+                    onSubmit={confirmarActivacionUsuario}
+                  >
+                    <h3>Activar cuenta</h3>
+                    <p>
+                      ¿Deseas reactivar esta cuenta de usuario?
+                    </p>
+
+                    <div className="usuario-desactivar-detalle">
+                      <p>
+                        <strong>Nombre:</strong>{" "}
+                        {usuarioPorActivar.nombre}
+                      </p>
+                      <p>
+                        <strong>Correo electrónico:</strong>{" "}
+                        {usuarioPorActivar.email}
+                      </p>
+                    </div>
+
+                    <p>
+                      El usuario recuperará el acceso a Fintrack y podrá
+                      consultar su información financiera existente.
+                    </p>
+
+                    {errorActivacionUsuario && (
+                      <p role="alert" aria-live="assertive">
+                        {errorActivacionUsuario}
+                      </p>
+                    )}
+
+                    <div className="usuario-desactivar-botones">
+                      <button
+                        type="button"
+                        className="usuario-desactivar-cancelar"
+                        disabled={activandoUsuario}
+                        onClick={cancelarActivacionUsuario}
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        type="submit"
+                        className="usuario-activar-confirmar"
+                        disabled={activandoUsuario}
+                      >
+                        {activandoUsuario
+                          ? "Activando..."
+                          : "Confirmar activación"}
+                      </button>
+                    </div>
+                  </form>
+                </dialog>
               )}
 
               {/* HU-014: Confirmación de desactivación de usuario. */}
