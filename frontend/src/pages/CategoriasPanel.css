@@ -117,6 +117,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 16px;
   min-width: 0;
   padding: 17px 4px;
@@ -136,9 +137,43 @@
   color: var(--cat-acento);
 }
 
-.fintrack-categorias-editar:hover {
+.fintrack-categorias-activar {
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--cat-acento);
+  border-radius: 9px;
+  background: var(--cat-tarjeta);
+  color: var(--cat-acento);
+}
+
+.fintrack-categorias-editar:hover,
+.fintrack-categorias-activar:hover {
   border-color: var(--cat-acento);
   background: var(--cat-tarjeta);
+}
+
+.fintrack-categorias-acciones-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fintrack-categorias-estado-categoria {
+  flex-shrink: 0;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.fintrack-categorias-estado-categoria.activo {
+  background: #104d38;
+  color: #68f4a0;
+}
+
+.fintrack-categorias-estado-categoria.inactivo {
+  background: #542d2c;
+  color: var(--cat-peligro);
 }
 
 .fintrack-categorias-identidad {

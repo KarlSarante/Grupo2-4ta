@@ -6,6 +6,7 @@ import {
     consultarCategorias,
     consultarCategoriaPorId,
     desactivarCategoriaGeneral,
+    reactivarCategoriaPersonal,
 } from "../models/categoria.model.js";
 
 const categoriaSchema = z.strictObject({
@@ -181,6 +182,57 @@ export async function actualizarCategoriaPersonalController(req, res) {
     }
 }
 
+export async function reactivarCategoriaPersonalController(req, res) {
+    const idTexto = req.params.id;
+
+    if (typeof idTexto !== "string" || !/^[1-9]\d*$/.test(idTexto)) {
+        return res.status(400).json({
+            mensaje: "El ID de categoría debe ser un entero positivo",
+        });
+    }
+
+    const id = Number(idTexto);
+
+    if (!Number.isSafeInteger(id) || id > 2147483647) {
+        return res.status(400).json({
+            mensaje: "ID de categoría inválido",
+        });
+    }
+
+    try {
+        const resultado = await reactivarCategoriaPersonal(id, req.usuario.id);
+
+        if (resultado.estado === "no_encontrada") {
+            return res.status(404).json({
+                mensaje: "Categoría no encontrada",
+            });
+        }
+
+        if (resultado.estado === "sin_permiso") {
+            return res.status(403).json({
+                mensaje: "No tienes permiso para reactivar esta categoría",
+            });
+        }
+
+        if (resultado.estado === "ya_activa") {
+            return res.status(409).json({
+                mensaje: "La categoría ya está activa",
+            });
+        }
+
+        return res.status(200).json({
+            mensaje: "Categoría personal reactivada correctamente",
+            categoria: resultado.categoria,
+        });
+    } catch (error) {
+        console.error("Error al reactivar categoría personal:", error);
+
+        return res.status(500).json({
+            mensaje: "Error interno al reactivar la categoría",
+        });
+    }
+}
+
 /**
  * HU-016: Consultar categorías generales.
  *
@@ -191,12 +243,21 @@ export async function actualizarCategoriaPersonalController(req, res) {
  * ?tipo=ingreso o ?tipo=gasto
  */
 export async function listarCategorias(req, res) {
-  const { tipo } = req.query;
+  const { tipo, incluir_inactivas: incluirInactivasQuery } = req.query;
 
   // Validar el filtro cuando se proporciona.
   if (tipo !== undefined && !["ingreso", "gasto"].includes(tipo)) {
     return res.status(400).json({
       mensaje: "El tipo debe ser ingreso o gasto",
+    });
+  }
+
+  if (
+    incluirInactivasQuery !== undefined &&
+    !["true", "false"].includes(incluirInactivasQuery)
+  ) {
+    return res.status(400).json({
+      mensaje: "El filtro incluir_inactivas debe ser true o false",
     });
   }
 
@@ -207,7 +268,11 @@ export async function listarCategorias(req, res) {
         ? null
         : req.usuario.id;
 
-    const categorias = await consultarCategorias(tipo ?? null, usuarioId);
+    const categorias = await consultarCategorias(
+      tipo ?? null,
+      usuarioId,
+      req.usuario.rol === "usuario" && incluirInactivasQuery === "true"
+    );
 
     return res.status(200).json({
       mensaje: "Categorías consultadas correctamente",
