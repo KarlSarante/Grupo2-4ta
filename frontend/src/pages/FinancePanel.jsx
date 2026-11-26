@@ -1885,9 +1885,11 @@ function FinancePanel({ usuario, token, onLogout }) {
         {pestanaActiva === "presupuestos" && (
           <PresupuestosPanel
             token={token}
-            onPresupuestoEliminado={() =>
+            onPresupuestoEliminado={() => {
+              setAvisosPresupuesto([]);
+              setAdvertenciaPresupuesto("");
               setRecargaNotificaciones((anterior) => anterior + 1)
-            }
+            }}
           />
         )}
 
