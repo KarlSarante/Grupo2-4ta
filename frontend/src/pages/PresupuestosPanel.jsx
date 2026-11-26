@@ -3,6 +3,7 @@ import { obtenerCategorias } from "../services/categoriaService.js";
 import {
   obtenerPresupuestos,
   guardarPresupuesto,
+  eliminarPresupuesto,
 } from "../services/presupuestoService.js";
 import "./PresupuestosPanel.css";
 
@@ -11,6 +12,17 @@ const MAX_MONTO = 9999999999.99;
 function mesLocal() {
   const hoy = new Date();
   return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function formatoMes(mes) {
+  const [anio, numeroMes] = String(mes).split("-").map(Number);
+  if (!anio || !numeroMes) return mes;
+
+  return new Intl.DateTimeFormat("es-DO", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(anio, numeroMes - 1, 1)));
 }
 
 function formatoDinero(valor) {
@@ -89,7 +101,7 @@ function validarFormulario(formulario) {
   return errores;
 }
 
-export default function PresupuestosPanel({ token }) {
+export default function PresupuestosPanel({ token, onPresupuestoEliminado }) {
   const [mes, setMes] = useState(mesLocal);
   const [presupuestos, setPresupuestos] = useState([]);
   const [categorias, setCategorias] = useState([]);
@@ -105,11 +117,17 @@ export default function PresupuestosPanel({ token }) {
   );
   const [errores, setErrores] = useState({});
   const [guardando, setGuardando] = useState(false);
+  const [presupuestoAEliminar, setPresupuestoAEliminar] = useState(null);
+  const [eliminando, setEliminando] = useState(false);
+  const [errorEliminacion, setErrorEliminacion] = useState("");
   const [recarga, setRecarga] = useState(0);
   const dialogoPresupuestoRef = useRef(null);
+  const dialogoEliminacionRef = useRef(null);
   const consultaActual = useRef(0);
   const categoriasActual = useRef(0);
   const guardadoActual = useRef(0);
+  const eliminacionActual = useRef(0);
+  const eliminacionEnCurso = useRef(false);
   const mesActualRef = useRef(mes);
   const montado = useRef(true);
 
@@ -122,6 +140,7 @@ export default function PresupuestosPanel({ token }) {
       consultaActual.current += 1;
       categoriasActual.current += 1;
       guardadoActual.current += 1;
+      eliminacionActual.current += 1;
     };
   }, []);
 
@@ -292,6 +311,71 @@ const registros = useMemo(
       }
     };
   }, [formularioVisible]);
+
+  function solicitarEliminacion(presupuesto) {
+    if (eliminando) return;
+    setMensaje("");
+    setErrorEliminacion("");
+    setPresupuestoAEliminar(presupuesto);
+  }
+
+  function cancelarEliminacion() {
+    if (eliminacionEnCurso.current) return;
+    setPresupuestoAEliminar(null);
+    setErrorEliminacion("");
+  }
+
+  useEffect(() => {
+    const dialogo = dialogoEliminacionRef.current;
+    if (!dialogo || !presupuestoAEliminar) return;
+
+    if (!dialogo.open) {
+      dialogo.showModal();
+    }
+
+    return () => {
+      if (dialogo.open) {
+        dialogo.close();
+      }
+    };
+  }, [presupuestoAEliminar]);
+
+  async function confirmarEliminacion() {
+    if (!presupuestoAEliminar || eliminacionEnCurso.current) return;
+
+    const presupuesto = presupuestoAEliminar;
+    const id = ++eliminacionActual.current;
+    eliminacionEnCurso.current = true;
+    setEliminando(true);
+    setErrorEliminacion("");
+
+    try {
+      await eliminarPresupuesto(presupuesto.id);
+      onPresupuestoEliminado?.();
+
+      if (!montado.current || id !== eliminacionActual.current) return;
+
+      setPresupuestos((actuales) =>
+        actuales.filter((actual) => String(actual.id) !== String(presupuesto.id))
+      );
+      setPresupuestoAEliminar(null);
+      setMensaje(
+        `Presupuesto de ${presupuesto.categoria} eliminado correctamente.`
+      );
+    } catch (error) {
+      if (!montado.current || id !== eliminacionActual.current) return;
+
+      setErrorEliminacion(
+        error.message || "No se pudo eliminar el presupuesto."
+      );
+    } finally {
+      eliminacionEnCurso.current = false;
+      if (montado.current && id === eliminacionActual.current) {
+        setEliminando(false);
+      }
+    }
+  }
+
   function cambiarCampo(evento) {
     const { name, value } = evento.target;
 
@@ -496,14 +580,24 @@ const registros = useMemo(
                     </span>
                   </div>
 
-                  <button
-                    type="button"
-                    className="fp-boton fp-boton-secundario"
-                    onClick={() => abrirEdicion(p)}
-                    disabled={guardando}
-                  >
-                    Editar
-                  </button>
+                  <div className="fp-registro-acciones">
+                    <button
+                      type="button"
+                      className="fp-boton fp-boton-secundario"
+                      onClick={() => abrirEdicion(p)}
+                      disabled={guardando || eliminando}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      className="fp-boton fp-boton-peligro"
+                      onClick={() => solicitarEliminacion(p)}
+                      disabled={guardando || eliminando}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
 
                 <div className="fp-registro-valores">
@@ -711,6 +805,61 @@ const registros = useMemo(
               </button>
             </div>
           </form>
+        </dialog>
+      )}
+
+      {presupuestoAEliminar && (
+        <dialog
+          ref={dialogoEliminacionRef}
+          className="fp-formulario-panel fp-confirmacion-panel"
+          aria-labelledby="fp-confirmacion-eliminacion-titulo"
+          aria-describedby="fp-confirmacion-eliminacion-descripcion"
+          aria-busy={eliminando}
+          onCancel={(evento) => {
+            evento.preventDefault();
+            if (!eliminando) cancelarEliminacion();
+          }}
+        >
+          <div className="fp-formulario-cabecera">
+            <h3 id="fp-confirmacion-eliminacion-titulo">
+              ¿Eliminar presupuesto?
+            </h3>
+          </div>
+
+          <p className="fp-confirmacion-detalle">
+            Presupuesto de <strong>{presupuestoAEliminar.categoria}</strong> para{" "}
+            <strong>{formatoMes(presupuestoAEliminar.mes)}</strong>.
+          </p>
+          <p id="fp-confirmacion-eliminacion-descripcion">
+            Se eliminará este presupuesto mensual, pero los gastos registrados
+            permanecerán intactos.
+          </p>
+
+          {errorEliminacion && (
+            <p className="fp-mensaje fp-mensaje-error" role="alert">
+              {errorEliminacion}
+            </p>
+          )}
+
+          <div className="fp-formulario-acciones">
+            <button
+              type="button"
+              className="fp-boton fp-boton-secundario"
+              onClick={cancelarEliminacion}
+              disabled={eliminando}
+              autoFocus
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="fp-boton fp-boton-peligro"
+              onClick={confirmarEliminacion}
+              disabled={eliminando}
+            >
+              {eliminando ? "Eliminando..." : "Eliminar"}
+            </button>
+          </div>
         </dialog>
       )}
     </section>

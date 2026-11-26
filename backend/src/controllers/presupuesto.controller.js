@@ -4,6 +4,7 @@ import {
   guardarPresupuesto,
   consultarPresupuestos,
   consultarNotificaciones,
+  eliminarPresupuesto,
 } from "../models/presupuesto.model.js";
 
 const presupuestoSchema = z.strictObject({
@@ -90,6 +91,36 @@ export async function listarNotificaciones(req, res) {
     console.error("Error al consultar notificaciones:", error);
     return res.status(500).json({
       mensaje: "Error interno al consultar las notificaciones",
+    });
+  }
+}
+
+export async function eliminarPresupuestoController(req, res) {
+  const usuarioId = req.usuario?.id;
+  const id = Number(req.params.id);
+
+  if (!Number.isInteger(usuarioId) || usuarioId <= 0) {
+    return res.status(401).json({ mensaje: "Usuario autenticado no válido" });
+  }
+
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ mensaje: "El ID del presupuesto no es válido" });
+  }
+
+  try {
+    const eliminado = await eliminarPresupuesto(id, usuarioId);
+    if (!eliminado) {
+      return res.status(404).json({ mensaje: "El presupuesto no existe" });
+    }
+
+    return res.status(200).json({
+      mensaje: "Presupuesto eliminado correctamente",
+      id,
+    });
+  } catch (error) {
+    console.error("Error al eliminar presupuesto:", error);
+    return res.status(500).json({
+      mensaje: "Error interno al eliminar el presupuesto",
     });
   }
 }

@@ -138,6 +138,17 @@
   border-color: #c9fa55;
 }
 
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-peligro {
+  background: #9e3434;
+  color: #fff;
+  border-color: var(--fp-peligro);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-boton-peligro:hover:not(:disabled) {
+  background: #812929;
+  border-color: #ffaaa6;
+}
+
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-boton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -217,6 +228,13 @@
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-cabecera {
   align-items: flex-start;
   margin-bottom: 17px;
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-estado-etiqueta {
@@ -351,6 +369,21 @@
   background: rgba(0, 0, 0, 0.72);
 }
 
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-confirmacion-panel {
+  width: min(460px, calc(100vw - 32px));
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-confirmacion-detalle {
+  padding: 12px;
+  border: 1px solid var(--fp-borde);
+  border-radius: 10px;
+  background: var(--fp-fondo);
+}
+
+.fintrack-usuario .fintrack-presupuestos-v12 .fp-confirmacion-panel strong {
+  color: var(--fp-texto);
+}
+
 .fintrack-usuario .fintrack-presupuestos-v12 .fp-formulario-cabecera {
   margin-bottom: 18px;
 }
@@ -418,6 +451,14 @@
 @media (max-width: 480px) {
   .fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-valores {
     grid-template-columns: 1fr;
+  }
+
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-acciones {
+    width: 100%;
+  }
+
+  .fintrack-usuario .fintrack-presupuestos-v12 .fp-registro-acciones .fp-boton {
+    flex: 1;
   }
 
   .fintrack-usuario .fintrack-presupuestos-v12 .fp-listado,

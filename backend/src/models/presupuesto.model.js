@@ -51,3 +51,13 @@ export async function consultarNotificaciones(usuarioId) {
   );
   return filas;
 }
+
+export async function eliminarPresupuesto(id, usuarioId) {
+  const [resultado] = await pool.execute(
+    `DELETE FROM presupuestos_mensuales
+     WHERE id = ? AND usuario_id = ?`,
+    [id, usuarioId]
+  );
+
+  return resultado.affectedRows === 1;
+}

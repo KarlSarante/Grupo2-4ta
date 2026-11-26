@@ -63,6 +63,12 @@ export function obtenerPresupuestos(mes) {
   return solicitar(`/finanzas/presupuestos?mes=${encodeURIComponent(mes)}`);
 }
 
+export function eliminarPresupuesto(id) {
+  return solicitar(`/finanzas/presupuestos/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
+}
+
 export function obtenerNotificaciones() {
   return solicitar("/finanzas/notificaciones");
 }
