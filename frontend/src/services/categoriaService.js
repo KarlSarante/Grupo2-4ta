@@ -45,6 +45,54 @@ export async function crearCategoria(categoria, token) {
 }
 
 /**
+ * Actualiza una categoría personal del usuario autenticado.
+ *
+ * PUT /api/categorias/:id
+ *
+ * @param {number} id - ID de la categoría personal.
+ * @param {Object} categoria - Nombre y tipo actualizados.
+ * @param {string} token - Token JWT del usuario.
+ * @returns {Promise<Object>} Respuesta de la API.
+ */
+export async function actualizarCategoriaPersonal(id, categoria, token) {
+  if (!Number.isSafeInteger(id) || id < 1 || id > 2147483647) {
+    throw new Error("ID de categoría inválido");
+  }
+
+  let respuesta;
+
+  try {
+    respuesta = await fetch(`${API_URL}/categorias/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(categoria),
+    });
+  } catch {
+    throw new Error(
+      "No se pudo conectar con el servidor. Inténtalo nuevamente."
+    );
+  }
+
+  const datos = await respuesta.json();
+
+  if (!respuesta.ok) {
+    const error = new Error(
+      datos.mensaje || "No se pudo actualizar la categoría"
+    );
+
+    error.estado = respuesta.status;
+    error.errores = datos.errores ?? [];
+
+    throw error;
+  }
+
+  return datos;
+}
+
+/**
  * HU-016: Obtener categorías generales.
  *
  * GET /api/categorias

@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { crearCategoria, buscarCategoriaPorNombreYTipo, consultarCategorias, consultarCategoriaPorId, desactivarCategoriaGeneral } from "../models/categoria.model.js";
+import {
+    actualizarCategoriaPersonal,
+    crearCategoria,
+    buscarCategoriaPorNombreYTipo,
+    consultarCategorias,
+    consultarCategoriaPorId,
+    desactivarCategoriaGeneral,
+} from "../models/categoria.model.js";
 
 const categoriaSchema = z.strictObject({
     nombre: z.string()
@@ -83,6 +90,93 @@ export async function registrarCategoria(req, res) {
 
         return res.status(500).json({
             mensaje: "Error interno al crear la categoría",
+        });
+    }
+}
+
+export async function actualizarCategoriaPersonalController(req, res) {
+    const idTexto = req.params.id;
+
+    if (typeof idTexto !== "string" || !/^[1-9]\d*$/.test(idTexto)) {
+        return res.status(400).json({
+            mensaje: "El ID de categoría debe ser un entero positivo",
+        });
+    }
+
+    const id = Number(idTexto);
+
+    if (!Number.isSafeInteger(id) || id > 2147483647) {
+        return res.status(400).json({
+            mensaje: "ID de categoría inválido",
+        });
+    }
+
+    const resultado = categoriaSchema.safeParse(req.body);
+
+    if (!resultado.success) {
+        return res.status(400).json({
+            mensaje: "Datos de categoría inválidos",
+            errores: formatearErrores(resultado.error.issues),
+        });
+    }
+
+    try {
+        const resultadoActualizacion = await actualizarCategoriaPersonal(
+            id,
+            req.usuario.id,
+            resultado.data.nombre,
+            resultado.data.tipo
+        );
+
+        if (resultadoActualizacion.estado === "no_encontrada") {
+            return res.status(404).json({
+                mensaje: "Categoría no encontrada",
+            });
+        }
+
+        if (resultadoActualizacion.estado === "sin_permiso") {
+            return res.status(403).json({
+                mensaje: "No tienes permiso para editar esta categoría",
+            });
+        }
+
+        if (resultadoActualizacion.estado === "tipo_bloqueado") {
+            const mensaje =
+                "No se puede cambiar el tipo de una categoría que tiene transacciones asociadas";
+
+            return res.status(409).json({
+                mensaje,
+                errores: [{ campo: "tipo", mensaje }],
+            });
+        }
+
+        if (resultadoActualizacion.estado === "duplicada") {
+            const mensaje = "Ya existe una categoría con ese nombre y tipo";
+
+            return res.status(409).json({
+                mensaje,
+                errores: [{ campo: "nombre", mensaje }],
+            });
+        }
+
+        return res.status(200).json({
+            mensaje: "Categoría actualizada correctamente",
+            categoria: resultadoActualizacion.categoria,
+        });
+    } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            const mensaje = "Ya existe una categoría con ese nombre y tipo";
+
+            return res.status(409).json({
+                mensaje,
+                errores: [{ campo: "nombre", mensaje }],
+            });
+        }
+
+        console.error("Error al actualizar categoría personal:", error);
+
+        return res.status(500).json({
+            mensaje: "Error interno al actualizar la categoría",
         });
     }
 }
