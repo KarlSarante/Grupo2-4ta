@@ -973,6 +973,23 @@ button.categoria-estado-accion:not(:disabled):hover {
   border-color: #d8ff80;
 }
 
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.categoria-acciones {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fintrack-admin-v12
+.admin-seccion[aria-label="Gestión de categorías"]
+.categoria-acciones button {
+  padding-right: 10px;
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
 /* Navegación mediante teclado. */
 .fintrack-admin-v12
 .admin-seccion[aria-label="Gestión de categorías"]
@@ -1020,6 +1037,39 @@ button.categoria-estado-accion:focus-visible {
   color: #ffffff;
 }
 
+.fintrack-admin-v12 .categorias-notificacion-exito {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 20px;
+  padding: 14px 18px;
+  border: 1px solid rgba(197, 255, 66, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(110deg, #0c382e, #155540);
+  color: #ffffff;
+  animation: categoria-notificacion-entrada 180ms ease-out;
+}
+
+.fintrack-admin-v12 .categorias-notificacion-exito p {
+  margin: 0;
+  color: #c5ff42;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+@keyframes categoria-notificacion-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .fintrack-admin-v12 .categorias-notificacion-icono {
   display: inline-flex;
   align-items: center;
@@ -1046,6 +1096,12 @@ button.categoria-estado-accion:focus-visible {
   color: #ffffff;
   font-size: 13px;
   line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fintrack-admin-v12 .categorias-notificacion-exito {
+    animation: none;
+  }
 }
 /* DIALOGO DESACTIVAR USUARIO */
 

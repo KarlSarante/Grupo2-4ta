@@ -6,7 +6,12 @@ import {
   desactivarUsuario,
   reactivarUsuario,
 } from "../services/adminService.js";
-import { crearCategoria, desactivarCategoria, obtenerCategorias } from "../services/categoriaService.js";
+import {
+  actualizarCategoriaGeneral,
+  crearCategoria,
+  desactivarCategoria,
+  obtenerCategorias,
+} from "../services/categoriaService.js";
 
 function AdminPanel({ usuario, token, onLogout }) {
   const [usuarios, setUsuarios] = useState([]);
@@ -26,6 +31,7 @@ function AdminPanel({ usuario, token, onLogout }) {
   const [notificacionDesactivacion, setNotificacionDesactivacion] = useState(null);
   const [errorCreacionCategoria, setErrorCreacionCategoria] = useState("");
   const [categorias, setCategorias] = useState([]);
+  const [categoriaEnEdicion, setCategoriaEnEdicion] = useState(null);
   const CATEGORIAS_POR_PAGINA = 7;
   const [paginaCategorias, setPaginaCategorias] = useState(1);
   const [vistaCategorias, setVistaCategorias] = useState("listado");
@@ -116,6 +122,7 @@ function AdminPanel({ usuario, token, onLogout }) {
   function cerrarModalCategoria() {
     if (guardandoCategoria) return;
     setVistaCategorias("listado");
+    setCategoriaEnEdicion(null);
   }
   useEffect(() => {
     sessionStorage.setItem("fintrack-admin-pestana", pestanaActiva);
@@ -292,23 +299,38 @@ function AdminPanel({ usuario, token, onLogout }) {
     setGuardandoCategoria(true);
 
     try {
-      const resultado = await crearCategoria(
-        {
-          nombre: nombreCategoria.trim(),
-          tipo: tipoCategoria,
-        },
-        token
-      );
+      const datosCategoria = {
+        nombre: nombreCategoria.trim(),
+        tipo: tipoCategoria,
+      };
+      const resultado = categoriaEnEdicion
+        ? await actualizarCategoriaGeneral(
+            Number(categoriaEnEdicion.id),
+            datosCategoria,
+            token
+          )
+        : await crearCategoria(datosCategoria, token);
 
-      // Incorporar la categoría creada al listado actual.
-      setCategorias((anteriores) => [
-        ...anteriores,
-        { ...resultado.categoria, activo: true },
-      ]);
+      if (categoriaEnEdicion) {
+        setCategorias((anteriores) =>
+          anteriores.map((categoria) =>
+            Number(categoria.id) === Number(categoriaEnEdicion.id)
+              ? { ...categoria, ...resultado.categoria }
+              : categoria
+          )
+        );
+      } else {
+        setCategorias((anteriores) => [
+          ...anteriores,
+          { ...resultado.categoria, activo: true },
+        ]);
+      }
 
-      // Mostrar la confirmación en el listado.
       setMensajeCategoria(
-        resultado.mensaje || "Categoría creada correctamente"
+        resultado.mensaje ||
+          (categoriaEnEdicion
+            ? "Categoría actualizada correctamente"
+            : "Categoría creada correctamente")
       );
 
       // Restablecer el formulario.
@@ -316,17 +338,31 @@ function AdminPanel({ usuario, token, onLogout }) {
       setTipoCategoria("gasto");
       setErrorNombreCategoria("");
       setErrorTipoCategoria("");
+      setCategoriaEnEdicion(null);
 
       // Regresar automáticamente al listado.
       setVistaCategorias("listado");
     } catch (err) {
       setErrorCreacionCategoria(
-        err.message || "No se pudo crear la categoría"
+        err.message ||
+          (categoriaEnEdicion
+            ? "No se pudo actualizar la categoría"
+            : "No se pudo crear la categoría")
       );
     } finally {
       setGuardandoCategoria(false);
     }
   }
+
+  useEffect(() => {
+    if (!mensajeCategoria) return;
+
+    const temporizador = setTimeout(() => {
+      setMensajeCategoria("");
+    }, 4000);
+
+    return () => clearTimeout(temporizador);
+  }, [mensajeCategoria]);
 
   useEffect(() => {
     if (!notificacionDesactivacion) return;
@@ -538,7 +574,7 @@ function AdminPanel({ usuario, token, onLogout }) {
     setErrorDesactivacion("");
 
     try {
-      const resultado = await desactivarCategoria(id, token);
+      await desactivarCategoria(id, token);
 
       setCategorias((anteriores) =>
         anteriores.map((categoria) =>
@@ -1189,6 +1225,7 @@ function AdminPanel({ usuario, token, onLogout }) {
                         setErrorCreacionCategoria("");
                         setErrorNombreCategoria("");
                         setErrorTipoCategoria("");
+                        setCategoriaEnEdicion(null);
                         setNombreCategoria("");
                         setTipoCategoria("gasto");
                         setVistaCategorias("formulario");
@@ -1218,9 +1255,19 @@ function AdminPanel({ usuario, token, onLogout }) {
                     </div>
                   )}
                   {mensajeCategoria && (
-                    <p className="categorias-exito" role="status">
-                      {mensajeCategoria}
-                    </p>
+                    <div
+                      className="categorias-notificacion-exito"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="categorias-notificacion-icono"
+                      >
+                        ✓
+                      </span>
+                      <p>{mensajeCategoria}</p>
+                    </div>
                   )}
 
                   {cargandoCategorias && <p>Cargando categorías...</p>}
@@ -1249,7 +1296,7 @@ function AdminPanel({ usuario, token, onLogout }) {
                                 <th>Nombre</th>
                                 <th>Tipo</th>
                                 <th>Estado</th>
-                                <th>Acción</th>
+                                <th>Acciones</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1278,32 +1325,54 @@ function AdminPanel({ usuario, token, onLogout }) {
                                     </span>
                                   </td>
                                   <td>
-                                    <button
-                                      type="button"
-                                      className="categoria-estado-accion"
-                                      disabled={
-                                        categoria.activo === false ||
-                                        categoria.activo === 0 ||
-                                        categoria.activo === "0" ||
-                                        desactivandoCategoria
-                                      }
-                                      title={
-                                        categoria.activo === false ||
-                                        categoria.activo === 0 ||
-                                        categoria.activo === "0"
-                                          ? "Categoría inactiva; reactivación pendiente"
-                                          : "Desactivar categoría general"
-                                      }
-                                      onClick={(evento) =>
-                                        solicitarDesactivacionCategoria(categoria, evento)
-                                      }
-                                    >
-                                      {desactivandoCategoria &&
-                                      Number(categoriaPorDesactivar?.id) ===
-                                        Number(categoria.id)
-                                        ? "Desactivando..."
-                                        : "Desactivar"}
-                                    </button>
+                                    <div className="categoria-acciones">
+                                      <button
+                                        type="button"
+                                        className="categoria-estado-accion"
+                                        disabled={guardandoCategoria}
+                                        aria-label={`Editar categoría ${categoria.nombre}`}
+                                        onClick={(evento) => {
+                                          referenciaAbrirCategoria.current =
+                                            evento.currentTarget;
+                                          setMensajeCategoria("");
+                                          setErrorCreacionCategoria("");
+                                          setErrorNombreCategoria("");
+                                          setErrorTipoCategoria("");
+                                          setCategoriaEnEdicion(categoria);
+                                          setNombreCategoria(categoria.nombre);
+                                          setTipoCategoria(categoria.tipo);
+                                          setVistaCategorias("formulario");
+                                        }}
+                                      >
+                                        Editar
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="categoria-estado-accion"
+                                        disabled={
+                                          categoria.activo === false ||
+                                          categoria.activo === 0 ||
+                                          categoria.activo === "0" ||
+                                          desactivandoCategoria
+                                        }
+                                        title={
+                                          categoria.activo === false ||
+                                          categoria.activo === 0 ||
+                                          categoria.activo === "0"
+                                            ? "Categoría inactiva; reactivación pendiente"
+                                            : "Desactivar categoría general"
+                                        }
+                                        onClick={(evento) =>
+                                          solicitarDesactivacionCategoria(categoria, evento)
+                                        }
+                                      >
+                                        {desactivandoCategoria &&
+                                        Number(categoriaPorDesactivar?.id) ===
+                                          Number(categoria.id)
+                                          ? "Desactivando..."
+                                          : "Desactivar"}
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
                               ))}
@@ -1417,7 +1486,7 @@ function AdminPanel({ usuario, token, onLogout }) {
                 <dialog
                   ref={referenciaDialogoCategoria}
                   className="fintrack-modal-categoria"
-                  aria-label="Crear categoría"
+                  aria-label={categoriaEnEdicion ? "Editar categoría" : "Crear categoría"}
                   onCancel={(evento) => {
                     evento.preventDefault();
                     cerrarModalCategoria();
@@ -1438,7 +1507,7 @@ function AdminPanel({ usuario, token, onLogout }) {
                     className="categorias-formulario"
                     onSubmit={manejarEnvioCategoria}
                   >
-                    <h3>Crear categoría</h3>
+                    <h3>{categoriaEnEdicion ? "Editar categoría" : "Crear categoría"}</h3>
                     <button
                       type="button"
                       className="fintrack-modal-categoria-cerrar"
@@ -1522,13 +1591,20 @@ function AdminPanel({ usuario, token, onLogout }) {
                       </label>
                     </fieldset>
 
+                    {categoriaEnEdicion && (
+                      <p>
+                        Si ya tiene transacciones, puedes cambiar el nombre,
+                        pero no el tipo.
+                      </p>
+                    )}
+
                     {errorTipoCategoria && (
                       <p className="categorias-error" role="alert">
                         {errorTipoCategoria}
                       </p>
                     )}
 
-                                        <div className="fintrack-modal-categoria-acciones">
+                    <div className="fintrack-modal-categoria-acciones">
                       <button
                         type="button"
                         className="categorias-volver"
@@ -1538,14 +1614,30 @@ function AdminPanel({ usuario, token, onLogout }) {
                         Cancelar
                       </button>
                       <button type="submit" disabled={guardandoCategoria}>
-                        {guardandoCategoria ? "Creando categoría..." : "Crear categoría"}
+                        {guardandoCategoria
+                          ? categoriaEnEdicion
+                            ? "Guardando cambios..."
+                            : "Creando categoría..."
+                          : categoriaEnEdicion
+                            ? "Guardar cambios"
+                            : "Crear categoría"}
                       </button>
                     </div>
 
                     {mensajeCategoria && (
-                      <p className="categorias-exito" role="status">
-                        {mensajeCategoria}
-                      </p>
+                      <div
+                        className="categorias-notificacion-exito"
+                        role="status"
+                        aria-live="polite"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="categorias-notificacion-icono"
+                        >
+                          ✓
+                        </span>
+                        <p>{mensajeCategoria}</p>
+                      </div>
                     )}
 
                     {errorCreacionCategoria && (
