@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
     actualizarCategoriaPersonal,
+    actualizarCategoriaGeneral,
     crearCategoria,
     buscarCategoriaPorNombreYTipo,
     consultarCategorias,
@@ -183,6 +184,98 @@ export async function actualizarCategoriaPersonalController(req, res) {
     }
 }
 
+export async function actualizarCategoriaGeneralController(req, res) {
+    if (req.usuario?.rol !== "administrador") {
+        return res.status(403).json({
+            mensaje: "No tienes permiso para editar categorías generales",
+        });
+    }
+
+    const idTexto = req.params.id;
+
+    if (typeof idTexto !== "string" || !/^[1-9]\d*$/.test(idTexto)) {
+        return res.status(400).json({
+            mensaje: "El ID de categoría debe ser un entero positivo",
+        });
+    }
+
+    const id = Number(idTexto);
+
+    if (!Number.isSafeInteger(id) || id > 2147483647) {
+        return res.status(400).json({
+            mensaje: "ID de categoría inválido",
+        });
+    }
+
+    const resultado = categoriaSchema.safeParse(req.body);
+
+    if (!resultado.success) {
+        return res.status(400).json({
+            mensaje: "Datos de categoría inválidos",
+            errores: formatearErrores(resultado.error.issues),
+        });
+    }
+
+    try {
+        const actualizacion = await actualizarCategoriaGeneral(
+            id,
+            resultado.data.nombre,
+            resultado.data.tipo
+        );
+
+        if (actualizacion.estado === "no_encontrada") {
+            return res.status(404).json({
+                mensaje: "Categoría no encontrada",
+            });
+        }
+
+        if (actualizacion.estado === "no_general") {
+            return res.status(403).json({
+                mensaje: "No se pueden editar categorías personales desde administración",
+            });
+        }
+
+        if (actualizacion.estado === "tipo_bloqueado") {
+            const mensaje =
+                "No se puede cambiar el tipo de una categoría que tiene transacciones asociadas";
+
+            return res.status(409).json({
+                mensaje,
+                errores: [{ campo: "tipo", mensaje }],
+            });
+        }
+
+        if (actualizacion.estado === "duplicada") {
+            const mensaje = "Ya existe una categoría con ese nombre y tipo";
+
+            return res.status(409).json({
+                mensaje,
+                errores: [{ campo: "nombre", mensaje }],
+            });
+        }
+
+        return res.status(200).json({
+            mensaje: "Categoría general actualizada correctamente",
+            categoria: actualizacion.categoria,
+        });
+    } catch (error) {
+        if (error.code === "ER_DUP_ENTRY") {
+            const mensaje = "Ya existe una categoría con ese nombre y tipo";
+
+            return res.status(409).json({
+                mensaje,
+                errores: [{ campo: "nombre", mensaje }],
+            });
+        }
+
+        console.error("Error al actualizar categoría general:", error);
+
+        return res.status(500).json({
+            mensaje: "Error interno al actualizar la categoría",
+        });
+    }
+}
+
 export async function reactivarCategoriaPersonalController(req, res) {
     const idTexto = req.params.id;
 
@@ -244,48 +337,48 @@ export async function reactivarCategoriaPersonalController(req, res) {
  * ?tipo=ingreso o ?tipo=gasto
  */
 export async function listarCategorias(req, res) {
-  const { tipo, incluir_inactivas: incluirInactivasQuery } = req.query;
+    const { tipo, incluir_inactivas: incluirInactivasQuery } = req.query;
 
-  // Validar el filtro cuando se proporciona.
-  if (tipo !== undefined && !["ingreso", "gasto"].includes(tipo)) {
-    return res.status(400).json({
-      mensaje: "El tipo debe ser ingreso o gasto",
-    });
-  }
+    // Validar el filtro cuando se proporciona.
+    if (tipo !== undefined && !["ingreso", "gasto"].includes(tipo)) {
+        return res.status(400).json({
+            mensaje: "El tipo debe ser ingreso o gasto",
+        });
+    }
 
-  if (
-    incluirInactivasQuery !== undefined &&
-    !["true", "false"].includes(incluirInactivasQuery)
-  ) {
-    return res.status(400).json({
-      mensaje: "El filtro incluir_inactivas debe ser true o false",
-    });
-  }
+    if (
+        incluirInactivasQuery !== undefined &&
+        !["true", "false"].includes(incluirInactivasQuery)
+    ) {
+        return res.status(400).json({
+            mensaje: "El filtro incluir_inactivas debe ser true o false",
+        });
+    }
 
-  try {
-    // Reutilizar la consulta existente del modelo.
-    const usuarioId =
-      req.usuario.rol === "administrador"
-        ? null
-        : req.usuario.id;
+    try {
+        // Reutilizar la consulta existente del modelo.
+        const usuarioId =
+            req.usuario.rol === "administrador"
+                ? null
+                : req.usuario.id;
 
-    const categorias = await consultarCategorias(
-      tipo ?? null,
-      usuarioId,
-      req.usuario.rol === "usuario" && incluirInactivasQuery === "true"
-    );
+        const categorias = await consultarCategorias(
+            tipo ?? null,
+            usuarioId,
+            req.usuario.rol === "usuario" && incluirInactivasQuery === "true"
+        );
 
-    return res.status(200).json({
-      mensaje: "Categorías consultadas correctamente",
-      categorias,
-    });
-  } catch (error) {
-    console.error("Error al consultar categorías:", error);
+        return res.status(200).json({
+            mensaje: "Categorías consultadas correctamente",
+            categorias,
+        });
+    } catch (error) {
+        console.error("Error al consultar categorías:", error);
 
-    return res.status(500).json({
-      mensaje: "Error interno al consultar las categorías",
-    });
-  }
+        return res.status(500).json({
+            mensaje: "Error interno al consultar las categorías",
+        });
+    }
 }
 
 /**

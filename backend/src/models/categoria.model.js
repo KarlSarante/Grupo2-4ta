@@ -267,26 +267,118 @@ export async function consultarCategorias(
 
 // HU-018: Desactivar exclusivamente una categoria general activa.
 export async function desactivarCategoriaGeneral(id) {
-    const [resultado] = await pool.execute(
-        `UPDATE categorias_generales
+  const [resultado] = await pool.execute(
+    `UPDATE categorias_generales
          SET activo = FALSE
          WHERE id = ?
            AND usuario_id IS NULL
            AND activo = TRUE`,
-        [id]
-    );
+    [id]
+  );
 
-    return resultado.affectedRows;
+  return resultado.affectedRows;
 }
 
 // HU-018: Consultar el estado y propietario de una categoria por ID.
 export async function consultarCategoriaPorId(id) {
-    const [categorias] = await pool.execute(
-        `SELECT id, usuario_id, activo
+  const [categorias] = await pool.execute(
+    `SELECT id, usuario_id, activo
          FROM categorias_generales
          WHERE id = ?`,
+    [id]
+  );
+
+  return categorias[0] ?? null;
+}
+
+// La edición administrativa solo puede modificar categorías generales.
+export async function actualizarCategoriaGeneral(id, nombre, tipo) {
+  const conexion = await pool.getConnection();
+
+  try {
+    await conexion.beginTransaction();
+
+    const [categorias] = await conexion.execute(
+      `SELECT id, usuario_id, nombre, tipo, activo
+             FROM categorias_generales
+             WHERE id = ?
+             FOR UPDATE`,
+      [id]
+    );
+    const categoria = categorias[0];
+
+    if (!categoria) {
+      await conexion.rollback();
+      return { estado: "no_encontrada" };
+    }
+
+    if (categoria.usuario_id !== null) {
+      await conexion.rollback();
+      return { estado: "no_general" };
+    }
+
+    if (categoria.nombre === nombre && categoria.tipo === tipo) {
+      await conexion.commit();
+      return { estado: "actualizada", categoria };
+    }
+
+    if (categoria.tipo !== tipo) {
+      const [transacciones] = await conexion.execute(
+        `SELECT id
+                 FROM transacciones
+                 WHERE categoria_id = ?
+                 LIMIT 1`,
         [id]
+      );
+
+      if (transacciones.length > 0) {
+        await conexion.rollback();
+        return { estado: "tipo_bloqueado" };
+      }
+    }
+
+    const [duplicadas] = await conexion.execute(
+      `SELECT id
+             FROM categorias_generales
+             WHERE usuario_id IS NULL
+               AND nombre = ?
+               AND tipo = ?
+               AND id <> ?
+             LIMIT 1`,
+      [nombre, tipo, id]
     );
 
-    return categorias[0] ?? null;
+    if (duplicadas.length > 0) {
+      await conexion.rollback();
+      return { estado: "duplicada" };
+    }
+
+    const [resultado] = await conexion.execute(
+      `UPDATE categorias_generales
+             SET nombre = ?, tipo = ?
+             WHERE id = ? AND usuario_id IS NULL`,
+      [nombre, tipo, id]
+    );
+
+    if (resultado.affectedRows !== 1) {
+      await conexion.rollback();
+      return { estado: "no_encontrada" };
+    }
+
+    await conexion.commit();
+
+    return {
+      estado: "actualizada",
+      categoria: {
+        ...categoria,
+        nombre,
+        tipo,
+      },
+    };
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
 }

@@ -4,6 +4,7 @@ import { autorizarRoles } from "../middlewares/role.middleware.js";
 import {
   registrarCategoria,
   listarCategorias,
+  actualizarCategoriaGeneralController,
   desactivarCategoriaController,
   desactivarCategoriaPersonalController,
   actualizarCategoriaPersonalController,
@@ -30,11 +31,18 @@ router.post(
   registrarCategoria
 );
 
+// HU-017: Editar categoria general (como administrador)
 router.put(
   "/:id",
   autenticarToken,
   autorizarRoles("administrador", "usuario"),
-  actualizarCategoriaPersonalController
+  (req, res, next) => {
+    const controlador = req.usuario.rol === "administrador"
+      ? actualizarCategoriaGeneralController
+      : actualizarCategoriaPersonalController;
+
+    return controlador(req, res, next);
+  }
 );
 
 router.patch(
