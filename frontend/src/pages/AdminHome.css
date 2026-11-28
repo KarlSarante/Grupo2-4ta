@@ -83,10 +83,8 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: conic-gradient(
-    #c5ff42 0 var(--porcentaje-activos),
-    #427664 var(--porcentaje-activos) 100%
-  );
+  background: conic-gradient(#c5ff42 0 var(--porcentaje-activos),
+      #427664 var(--porcentaje-activos) 100%);
 }
 
 .fintrack-admin-v12 .fintrack-admin-home-centro {

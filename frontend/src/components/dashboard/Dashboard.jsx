@@ -93,12 +93,34 @@ function Dashboard({ transacciones = [], transaccionesHistoricas = [], mesSelecc
     { ingresos: 0, gastos: 0 }
   );
 
-  const valores = {
-    balance: totales.ingresos - totales.gastos,
-    ingresos: totales.ingresos,
-    gastos: totales.gastos,
-  };
+  // Balance acumulado hasta el mes seleccionado.
+const balanceAcumulado = transaccionesHistoricas.reduce(
+  (acumulado, transaccion) => {
+    const fechaMes = String(transaccion.fecha ?? "").slice(0, 7);
+    const monto = Number(transaccion.monto);
 
+    if (fechaMes > mesSeleccionado || !Number.isFinite(monto)) {
+      return acumulado;
+    }
+
+    if (transaccion.tipo === "ingreso") {
+      return acumulado + monto;
+    }
+
+    if (transaccion.tipo === "gasto") {
+      return acumulado - monto;
+    }
+
+    return acumulado;
+  },
+  0
+);
+
+const valores = {
+  balance: balanceAcumulado,
+  ingresos: totales.ingresos,
+  gastos: totales.gastos,
+};
   // Flujo de ingresos: seis meses reales.
   const mesesFlujo = Array.from({ length: 6 }, (_, indice) => {
     const [anio, mes] = mesSeleccionado.split("-").map(Number);
