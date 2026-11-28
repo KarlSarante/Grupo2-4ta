@@ -423,6 +423,12 @@ export default function CategoriasPanel({ token }) {
           </p>
         ) : (
           <ul className="fintrack-categorias-lista">
+            <li className="fintrack-categorias-columnas" aria-hidden="true">
+              <span>Descripción</span>
+              <span>Estado</span>
+              <span>Tipo</span>
+              <span>Acciones</span>
+            </li>
             {categoriasVisibles.map((categoria) => (
               <li key={categoria.id}>
                 <div className="fintrack-categorias-identidad">
@@ -453,45 +459,47 @@ export default function CategoriasPanel({ token }) {
                     ? "Ingreso"
                     : "Gasto"}
                 </span>
-                {categoria.usuario_id != null && (
-                  <div className="fintrack-categorias-acciones-lista">
-                    {categoriaInactiva(categoria) && (
+                <div className="fintrack-categorias-acciones-lista">
+                  {categoria.usuario_id != null && (
+                    <>
+                      {categoriaInactiva(categoria) && (
+                        <button
+                          type="button"
+                          className="fintrack-categorias-activar"
+                          onClick={(evento) =>
+                            confirmarAperturaReactivacion(
+                              categoria,
+                              evento.currentTarget
+                            )
+                          }
+                        >
+                          Activar
+                        </button>
+                      )}
+                      {!categoriaInactiva(categoria) && (
+                        <button
+                          type="button"
+                          className="fintrack-categorias-desactivar"
+                          onClick={(evento) =>
+                            confirmarAperturaDesactivacion(
+                              categoria,
+                              evento.currentTarget
+                            )
+                          }
+                        >
+                          Desactivar
+                        </button>
+                      )}
                       <button
                         type="button"
-                        className="fintrack-categorias-activar"
-                        onClick={(evento) =>
-                          confirmarAperturaReactivacion(
-                            categoria,
-                            evento.currentTarget
-                          )
-                        }
+                        className="fintrack-categorias-editar"
+                        onClick={() => abrirEdicion(categoria)}
                       >
-                        Activar
+                        Editar
                       </button>
-                    )}
-                    {!categoriaInactiva(categoria) && (
-                      <button
-                        type="button"
-                        className="fintrack-categorias-desactivar"
-                        onClick={(evento) =>
-                          confirmarAperturaDesactivacion(
-                            categoria,
-                            evento.currentTarget
-                          )
-                        }
-                      >
-                        Desactivar
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="fintrack-categorias-editar"
-                      onClick={() => abrirEdicion(categoria)}
-                    >
-                      Editar
-                    </button>
-                  </div>
-                )}
+                    </>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
