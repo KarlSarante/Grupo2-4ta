@@ -2,6 +2,8 @@ import { z } from "zod";
 import { useEffect, useRef, useState } from "react";
 import { obtenerCategorias } from "../services/categoriaService.js";
 import { registrarGasto } from "../services/gastoService.js";
+import { obtenerPresupuestos } from "../services/presupuestoService.js";
+import { calcularProyeccionPresupuesto } from "../utils/presupuestoUtils.js";
 
 // HU005 / #75: Comprueba que la fecha exista en el calendario.
 function esFechaValida(fecha) {
@@ -74,7 +76,10 @@ const gastoFormSchema = z.object({
 function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada, onEstadoGuardando }) {
     const [monto, setMonto] = useState("");
     const [categoria, setCategoria] = useState("");
-    const [fecha, setFecha] = useState("");
+    const [fecha, setFecha] = useState(() => {
+        const hoy = new Date();
+        return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+    });
     const [descripcion, setDescripcion] = useState("");
     const [errores, setErrores] = useState({});
     const [categoriasGasto, setCategoriasGasto] = useState([]);
@@ -87,6 +92,27 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada, onEstadoGuar
     }, [guardandoGasto, onEstadoGuardando]);
     const [errorRegistro, setErrorRegistro] = useState("");
     const [confirmacion, setConfirmacion] = useState("");
+
+    // HU-034: Consulta presupuestaria del mes seleccionado.
+    const [consultaPresupuesto, setConsultaPresupuesto] = useState({
+        mes: "",
+        estado: "inactivo",
+        presupuestos: [],
+        error: "",
+    });
+
+    const [reintentoPresupuesto, setReintentoPresupuesto] = useState(0);
+    const cachePresupuesto = useRef(null);
+
+    const mesPresupuesto = esFechaValida(fecha)
+        ? fecha.slice(0, 7)
+        : "";
+
+    const tieneCategoria =
+        Number.isSafeInteger(Number(categoria)) &&
+        Number(categoria) > 0;
+
+    const mesConsulta = tieneCategoria ? mesPresupuesto : "";
 
     // Referencia al campo para abrir el calendario.
     const referenciaFecha = useRef(null);
@@ -156,6 +182,180 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada, onEstadoGuar
             activo = false;
         };
     }, [onSesionExpirada]);
+
+    // HU-034: Consultar presupuestos del mes seleccionado.
+    useEffect(() => {
+        if (!mesConsulta) {
+            return;
+        }
+
+        let activo = true;
+
+        async function consultarPresupuesto() {
+            const cache = cachePresupuesto.current;
+
+            if (
+                cache?.mes === mesConsulta &&
+                cache?.reintento === reintentoPresupuesto
+            ) {
+                setConsultaPresupuesto({
+                    mes: mesConsulta,
+                    estado: "listo",
+                    presupuestos: cache.presupuestos,
+                    error: "",
+                });
+                return;
+            }
+
+            cachePresupuesto.current = null;
+
+            setConsultaPresupuesto({
+                mes: mesConsulta,
+                estado: "cargando",
+                presupuestos: [],
+                error: "",
+            });
+
+            try {
+                const respuesta = await obtenerPresupuestos(mesConsulta);
+
+                if (!activo) {
+                    return;
+                }
+
+                if (!Array.isArray(respuesta?.presupuestos)) {
+                    throw new Error("Respuesta presupuestaria no valida.");
+                }
+
+                cachePresupuesto.current = {
+                    mes: mesConsulta,
+                    reintento: reintentoPresupuesto,
+                    presupuestos: respuesta.presupuestos,
+                };
+
+                setConsultaPresupuesto({
+                    mes: mesConsulta,
+                    estado: "listo",
+                    presupuestos: respuesta.presupuestos,
+                    error: "",
+                });
+            } catch (error) {
+                if (!activo) {
+                    return;
+                }
+
+                if (error?.status === 401) {
+                    onSesionExpirada?.();
+                    return;
+                }
+
+                setConsultaPresupuesto({
+                    mes: mesConsulta,
+                    estado: "error",
+                    presupuestos: [],
+                    error: error?.status === 403
+                        ? "No tienes permiso para consultar presupuestos."
+                        : "No se pudo consultar el presupuesto.",
+                });
+            }
+        }
+
+        consultarPresupuesto();
+
+        return () => {
+            activo = false;
+        };
+    }, [mesConsulta, reintentoPresupuesto, onSesionExpirada]);
+
+    const estadoConsultaPresupuesto =
+        consultaPresupuesto.mes === mesConsulta
+            ? consultaPresupuesto.estado
+            : "cargando";
+
+    const presupuestoSeleccionado =
+        mesConsulta && estadoConsultaPresupuesto === "listo"
+            ? consultaPresupuesto.presupuestos.find(
+                (item) => String(item?.categoria_id) === String(categoria)
+            )
+            : undefined;
+
+    // HU-034: Proyeccion basada en datos reales.
+    const validacionMontoPresupuesto =
+        gastoFormSchema.shape.monto.safeParse(monto);
+
+    const proyeccionPresupuesto = presupuestoSeleccionado
+        ? calcularProyeccionPresupuesto(
+            presupuestoSeleccionado,
+            validacionMontoPresupuesto.success
+                ? Number(validacionMontoPresupuesto.data)
+                : ""
+        )
+        : null;
+
+    const estadosPresupuesto = {
+        normal: {
+            texto: "Dentro del l\u00edmite",
+        },
+        medio: {
+            texto: "Advertencia",
+        },
+        alto: {
+            texto: "Alerta alta",
+        },
+        agotado: {
+            texto: "Presupuesto agotado",
+        },
+        excedido: {
+            texto: "Presupuesto excedido",
+        },
+    };
+
+    const estadoVisualPresupuesto = proyeccionPresupuesto
+        ? estadosPresupuesto[proyeccionPresupuesto.estado]
+        : null;
+
+    function formatoPresupuesto(centavos) {
+        return new Intl.NumberFormat("es-DO", {
+            style: "currency",
+            currency: "DOP",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(centavos / 100);
+    }
+
+    function mensajePresupuesto(proyeccion) {
+        const proyectado = proyeccion.montoValido;
+
+        switch (proyeccion.estado) {
+            case "normal":
+                return proyectado
+                    ? "Este gasto se mantiene dentro del presupuesto."
+                    : "Tu consumo actual se mantiene dentro del presupuesto.";
+
+            case "medio":
+                return proyectado
+                    ? `Con este gasto alcanzas o superas el umbral medio (${proyeccion.umbralMedio}%).`
+                    : `Has alcanzado o superado el umbral medio (${proyeccion.umbralMedio}%).`;
+
+            case "alto":
+                return proyectado
+                    ? `Con este gasto alcanzas o superas el umbral alto (${proyeccion.umbralAlto}%).`
+                    : `Has alcanzado o superado el umbral alto (${proyeccion.umbralAlto}%).`;
+
+            case "agotado":
+                return proyectado
+                    ? "Con este gasto agotas tu presupuesto mensual."
+                    : "Tu presupuesto mensual se ha agotado.";
+
+            case "excedido":
+                return proyectado
+                    ? `Con este gasto excedes el presupuesto por ${formatoPresupuesto(-proyeccion.disponibleCentavos)}.`
+                    : `Has excedido el presupuesto por ${formatoPresupuesto(-proyeccion.disponibleCentavos)}.`;
+
+            default:
+                return "";
+        }
+    }
 
     // HU005 / #75: Validar y registrar gastos mediante la API.
     async function manejarEnvio(evento) {
@@ -256,7 +456,10 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada, onEstadoGuar
             // Limpiar campos tras registrar con éxito.
             setMonto("");
             setCategoria("");
-            setFecha("");
+            setFecha(() => {
+                const hoy = new Date();
+                return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+            });
             setDescripcion("");
             setConfirmacion(mensajeExito);
 
@@ -467,6 +670,147 @@ function GastoForm({ onVolver, onGastoRegistrado, onSesionExpirada, onEstadoGuar
                         )}
 
                     </div>
+
+                    {/* HU-034: Resumen presupuestario dinamico. */}
+                    {tieneCategoria && (
+                        <section
+                            className="gasto-presupuesto"
+                            aria-label="Resumen presupuestario"
+                            aria-live="polite"
+                            data-estado={proyeccionPresupuesto?.estado || "neutro"}
+                        >
+                            <div className="gasto-presupuesto-header">
+                                <strong>Presupuesto mensual</strong>
+                                {estadoVisualPresupuesto && (
+                                    <span
+                                        className="gasto-presupuesto-status"
+                                    >
+                                        {estadoVisualPresupuesto.texto}
+                                    </span>
+                                )}
+                            </div>
+
+                            {!mesConsulta ? (
+                                <p className="gasto-presupuesto-mensaje">
+                                    Selecciona una fecha v&aacute;lida.
+                                </p>
+                            ) : estadoConsultaPresupuesto === "cargando" ? (
+                                <p className="gasto-presupuesto-mensaje">
+                                    Consultando presupuesto...
+                                </p>
+                            ) : estadoConsultaPresupuesto === "error" ||
+                                (presupuestoSeleccionado && !proyeccionPresupuesto) ? (
+                                <div>
+                                    <p className="gasto-presupuesto-mensaje">
+                                        {consultaPresupuesto.error ||
+                                            "No se pudieron interpretar los datos del presupuesto."}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        className="gasto-presupuesto-reintentar"
+                                        onClick={() => setReintentoPresupuesto(
+                                            (valor) => valor + 1
+                                        )}
+                                    >
+                                        Reintentar
+                                    </button>
+                                </div>
+                            ) : !presupuestoSeleccionado ? (
+                                <p className="gasto-presupuesto-mensaje">
+                                    No hay presupuesto asignado para esta
+                                    categor&iacute;a en el mes seleccionado.
+                                </p>
+                            ) : proyeccionPresupuesto && (
+                                <>
+                                    <div className="gasto-presupuesto-grid">
+                                        <div>
+                                            <span>L&iacute;mite mensual</span>
+                                            <strong>
+                                                {formatoPresupuesto(
+                                                    proyeccionPresupuesto.limiteCentavos
+                                                )}
+                                            </strong>
+                                        </div>
+                                        <div>
+                                            <span>Gastado actualmente</span>
+                                            <strong>
+                                                {formatoPresupuesto(
+                                                    proyeccionPresupuesto.gastadoCentavos
+                                                )}
+                                            </strong>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                {proyeccionPresupuesto.montoValido
+                                                    ? "Gasto proyectado"
+                                                    : "Gasto acumulado"}
+                                            </span>
+                                            <strong>
+                                                {formatoPresupuesto(
+                                                    proyeccionPresupuesto.proyectadoCentavos
+                                                )}
+                                            </strong>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                {proyeccionPresupuesto.montoValido
+                                                    ? "Disponible despu\u00e9s del gasto"
+                                                    : "Disponible actualmente"}
+                                            </span>
+                                            <strong>
+                                                {formatoPresupuesto(
+                                                    proyeccionPresupuesto.disponibleCentavos
+                                                )}
+                                            </strong>
+                                        </div>
+                                    </div>
+
+                                    <div className="gasto-presupuesto-consumo">
+                                        <span>
+                                            {proyeccionPresupuesto.montoValido
+                                                ? "Consumo proyectado"
+                                                : "Consumo actual"}
+                                        </span>
+                                        <strong
+                                        >
+                                            {proyeccionPresupuesto.porcentaje.toFixed(1)}%
+                                        </strong>
+                                    </div>
+
+                                    <div
+                                        className="gasto-presupuesto-track"
+                                        role="progressbar"
+                                        aria-label={
+                                            proyeccionPresupuesto.montoValido
+                                                ? "Consumo proyectado"
+                                                : "Consumo actual"
+                                        }
+                                        aria-valuemin={0}
+                                        aria-valuemax={100}
+                                        aria-valuenow={
+                                            proyeccionPresupuesto.porcentajeBarra
+                                        }
+                                        aria-valuetext={
+                                            `${proyeccionPresupuesto.porcentaje.toFixed(1)}%`
+                                        }
+                                    >
+                                        <div
+                                            className="gasto-presupuesto-fill"
+                                            style={{
+                                                width: `${proyeccionPresupuesto.porcentajeBarra}%`,
+                                            }}
+                                        />
+                                    </div>
+
+                                    <p
+                                        className="gasto-presupuesto-warning"
+                                    >
+                                        {mensajePresupuesto(proyeccionPresupuesto)}
+                                    </p>
+                                </>
+                            )}
+                        </section>
+                    )}
 
                     {/* Fecha correspondiente al gasto. */}
                     <div className="categorias-campo">

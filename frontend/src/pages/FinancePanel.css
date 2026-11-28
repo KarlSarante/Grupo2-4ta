@@ -2288,3 +2288,143 @@ button.fintrack-eliminar-transaccion {
     max-width: calc(100vw - 32px);
   }
 }
+
+/* HU-034: Resumen presupuestario del formulario de gastos */
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto {
+  --gasto-presupuesto-color: #a9c7ba;
+  grid-column: 1 / -1;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #386e5b;
+  border-radius: 12px;
+  background: #092f27;
+  color: #ffffff;
+  display: grid;
+  gap: 12px;
+}
+
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto[data-estado="normal"] {
+  --gasto-presupuesto-color: #51c78d;
+}
+
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto[data-estado="medio"] {
+  --gasto-presupuesto-color: #e4ba59;
+}
+
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto[data-estado="alto"] {
+  --gasto-presupuesto-color: #f09a5c;
+}
+
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto[data-estado="agotado"],
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto[data-estado="excedido"] {
+  --gasto-presupuesto-color: #f47d79;
+}
+
+.gasto-presupuesto .gasto-presupuesto-header,
+.gasto-presupuesto .gasto-presupuesto-consumo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gasto-presupuesto .gasto-presupuesto-status {
+  color: var(--gasto-presupuesto-color);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gasto-presupuesto .gasto-presupuesto-mensaje {
+  margin: 0;
+  color: #a9c7ba;
+  font-size: 11px;
+}
+
+.gasto-presupuesto .gasto-presupuesto-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+
+.gasto-presupuesto .gasto-presupuesto-grid > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.gasto-presupuesto .gasto-presupuesto-grid span,
+.gasto-presupuesto .gasto-presupuesto-consumo span {
+  color: #a9c7ba;
+  font-size: 13px;
+}
+
+.gasto-presupuesto .gasto-presupuesto-grid strong {
+  color: #ffffff;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+.gasto-presupuesto .gasto-presupuesto-consumo strong {
+  color: var(--gasto-presupuesto-color);
+  font-size: 18px;
+}
+
+.gasto-presupuesto .gasto-presupuesto-track {
+  height: 9px;
+  border-radius: 999px;
+  background: #315141;
+  overflow: hidden;
+}
+
+.gasto-presupuesto .gasto-presupuesto-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gasto-presupuesto-color);
+}
+
+.gasto-presupuesto .gasto-presupuesto-warning {
+  margin: 0;
+  color: var(--gasto-presupuesto-color);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto button.gasto-presupuesto-reintentar {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: 1px solid #386e5b;
+  border-radius: 8px;
+  background: #176b45;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto button.gasto-presupuesto-reintentar:hover:not(:disabled) {
+  background: #125536;
+}
+
+.fintrack-usuario .fintrack-modal-gasto .gasto-presupuesto button.gasto-presupuesto-reintentar:focus-visible {
+  outline: 2px solid #c9fa55;
+  outline-offset: 2px;
+}
+
+@media (max-width: 380px) {
+  .gasto-presupuesto .gasto-presupuesto-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* FIN HU-034: Resumen presupuestario */
+
+
+/* HU-034: Compactar descripcion */
+.fintrack-usuario .fintrack-modal-gasto .ingreso-formulario .categorias-campo textarea {
+  height: 52px;
+  min-height: 52px;
+  box-sizing: border-box;
+  resize: vertical;
+}
