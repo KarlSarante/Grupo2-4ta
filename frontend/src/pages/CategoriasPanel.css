@@ -114,62 +114,100 @@
 }
 
 .fintrack-categorias-lista li {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) 1fr 1fr 224px;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
   gap: 16px;
   min-width: 0;
   padding: 17px 4px;
   border-bottom: 1px solid var(--cat-borde);
 }
 
+.fintrack-categorias-lista li > :nth-child(2),
+.fintrack-categorias-lista li > :nth-child(3) {
+  justify-self: center;
+}
+
+.fintrack-categorias-lista li.fintrack-categorias-columnas {
+  color: var(--cat-secundario);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.fintrack-categorias-columnas > :last-child {
+  text-align: center;
+}
+
 .fintrack-categorias-lista li:last-child {
   border-bottom: 0;
 }
 
-.fintrack-categorias-editar {
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid var(--cat-borde);
-  border-radius: 9px;
-  background: transparent;
-  color: var(--cat-acento);
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-editar,
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-activar,
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-desactivar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex: 0 0 102px;
+  width: 102px;
+  height: 38px;
+  min-width: 102px;
+  min-height: 38px;
+  margin: 0;
+  padding: 9px 15px;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: normal;
+  text-align: center;
+  box-shadow: none;
 }
 
-.fintrack-categorias-activar {
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid var(--cat-acento);
-  border-radius: 9px;
-  background: var(--cat-tarjeta);
-  color: var(--cat-acento);
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-editar,
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-activar {
+  background: #176b45;
+  border: 0;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
 }
 
-.fintrack-categorias-desactivar {
-  min-height: 36px;
-  padding: 7px 12px;
-  border: 1px solid #9e5550;
-  border-radius: 9px;
-  background: transparent;
-  color: var(--cat-peligro);
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-desactivar {
+  background: #8f3b3b;
+  border: 1px solid #d87878;
+  border-radius: 10px;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
 }
 
-.fintrack-categorias-editar:hover,
-.fintrack-categorias-activar:hover {
-  border-color: var(--cat-acento);
-  background: var(--cat-tarjeta);
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-editar:hover,
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-activar:hover {
+  background: #125536;
+  color: #ffffff;
 }
 
-.fintrack-categorias-desactivar:hover {
-  border-color: var(--cat-peligro);
-  background: #542d2c;
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-desactivar:hover {
+  background: #7e3030;
+  color: #ffffff;
+}
+
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-editar:focus-visible,
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-activar:focus-visible {
+  outline: 3px solid #c5ff42;
+  outline-offset: 3px;
+}
+
+.fintrack-categorias .fintrack-categorias-acciones-lista button.fintrack-categorias-desactivar:focus-visible {
+  outline: 2px solid #ffaaaa;
+  outline-offset: 2px;
 }
 
 .fintrack-categorias-acciones-lista {
   display: flex;
+  align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 20px;
+  min-width: 0;
 }
 
 .fintrack-categorias-estado-categoria {
@@ -701,5 +739,47 @@ dialog.fintrack-categorias-dialogo::backdrop {
     justify-content: space-between;
     width: 100%;
     margin-left: 0;
+  }
+}
+
+/* Distribucion responsive del listado de categorias. */
+.fintrack-categorias .fintrack-categorias-tarjeta {
+  container-type: inline-size;
+  container-name: categorias-listado;
+}
+
+@container categorias-listado (max-width: 600px) {
+  .fintrack-categorias-lista li {
+    grid-template-columns: minmax(0, 1fr) 76px 76px;
+    column-gap: 10px;
+    row-gap: 12px;
+  }
+
+  .fintrack-categorias-columnas > :last-child {
+    display: none;
+  }
+
+  .fintrack-categorias-acciones-lista {
+    grid-column: 1 / -1;
+  }
+
+  .fintrack-categorias-acciones-lista:empty {
+    display: none;
+  }
+}
+
+@container categorias-listado (max-width: 320px) {
+  .fintrack-categorias-lista li {
+    grid-template-columns: minmax(0, 1fr) 68px 68px;
+    column-gap: 6px;
+    row-gap: 10px;
+  }
+
+  .fintrack-categorias-lista li.fintrack-categorias-columnas {
+    font-size: 0.75rem;
+  }
+
+  .fintrack-categorias-acciones-lista {
+    gap: 10px;
   }
 }

@@ -533,7 +533,7 @@
   line-height: normal;
   vertical-align: middle;
 }
-.fintrack-usuario .fintrack-eliminar-transaccion:hover,
+.fintrack-usuario button.fintrack-eliminar-transaccion:hover:not(:disabled),
 .fintrack-usuario .fintrack-confirmar-eliminacion:hover {
   background: #7e3030;
   color: #ffffff;
